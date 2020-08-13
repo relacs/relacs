@@ -45,6 +45,7 @@ PNSubtraction::PNSubtraction( const string &name,
   addNumber( "pulseduration", "Pulse duration", 0.1, 0.0, 1000.0, 0.001, "sec", "ms").setActivation( "qualitycontrol", "true" );
   addNumber( "f0", "minimum pulse frequency", 10.0, 0.0, 1000.0, 1.0, "Hz", "Hz" ).setActivation( "qualitycontrol", "true" );
   addNumber( "f1", "maximum pulse frequency", 500.0, 0.0, 5000.0, 1.0, "Hz", "Hz" ).setActivation( "qualitycontrol", "true" );
+  addNumber( "PCS_derivativekernelwidth", "derivative kernel width", 1.0, 1.0, 1000.0, 1.0 ).setActivation( "qualitycontrol", "true" );
 }
 
 int PNSubtraction::main( void )
@@ -56,6 +57,7 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
   int pn = number( "pn" );
   double samplerate = signal.sampleRate();
   bool qualitycontrol = boolean( "qualitycontrol" );
+
   double pulseduration = number( "pulseduration" );
   double f0 = number( "f0" );
   double f1 = number( "f1" );
@@ -107,18 +109,22 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
   };
   
   // make short quality assuring test-pulse
+//  ArrayD I;
+//  ArrayD Vp;
+
+  double stepduration = 0.010;
   if ( qualitycontrol ) {
     OutData qc_signal1;
     qc_signal1.setTrace( PotentialOutput[0] );
-    qc_signal1.constWave( 0.010, -1.0, -100 );
+    qc_signal1.constWave( stepduration, -1.0, -100 );
 
     OutData qc_signal2;
     qc_signal2.setTrace( PotentialOutput[0] );
-    qc_signal2.constWave( 0.010, -1.0, -170 );
+    qc_signal2.constWave( stepduration, -1.0, -170 );
     
     OutData qc_signal3;
     qc_signal3.setTrace( PotentialOutput[0] );
-    qc_signal3.constWave( 0.010, -1.0, -135 );
+    qc_signal3.constWave( stepduration, -1.0, -135 );
 
     OutData qc_signal4;
     qc_signal4.setTrace( PotentialOutput[0] );
@@ -146,6 +152,14 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
 
     write(qc_signal1);
     sleep(pause);
+
+    SampleDataD currenttrace(0.0, 3 * stepduration + pulseduration, trace(CurrentTrace[0]).stepsize(), 0.0 );
+    trace(CurrentTrace[0]).copy(signalTime(), currenttrace );
+    SampleDataD potentialtrace(0.0, 3 * stepduration + pulseduration, trace(SpikeTrace[0]).stepsize(), 0.0 );
+    trace(SpikeTrace[0]).copy(signalTime(), potentialtrace );
+
+    PCS_currenttrace = currenttrace;
+    PCS_potentialtrace = potentialtrace;
   };
 
   signal.description().setType( "stimulus/Trace" );
@@ -153,10 +167,45 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
   write(signal);
   sleep(pause);
 
-  SampleDataD currenttrace( mintime, maxtime, trace(CurrentTrace[0]).stepsize(), 0.0);
+  SampleDataD currenttrace( mintime-0.01, maxtime+0.01, trace(CurrentTrace[0]).stepsize(), 0.0);
   trace(CurrentTrace[0]).copy(signalTime(), currenttrace );
 
-  if ( pn != 0 )
+  SampleDataD potentialtrace( mintime-0.01, maxtime+0.01, trace(SpikeTrace[0]).stepsize(), 0.0);
+  trace(SpikeTrace[0]).copy(signalTime(), potentialtrace );
+
+
+
+  if ( qualitycontrol ) {
+    dt = PCS_currenttrace.stepsize();
+    Vp = PCS_potentialtrace.array();
+    dVp = dxdt( Vp, dt );
+    d2Vp = dxdt( dVp, dt );
+    I = PCS_currenttrace.array();
+    dI = dxdt( I, dt );
+
+    ArrayD param = pcsFitLeak( stepduration );
+    pcsFitCapacitiveCurrents( param, stepduration );
+    pcsFitAllParams( param, stepduration );
+    cerr << param << "\n";
+    double a = param[0];
+    double b = param[1];
+    double c = param[2];
+    double d = param[3];
+    double e = param[4];
+
+    gL = (d*b - a*b*c) / (a*a*b - a*c + d);
+    Rs = a*a / (a*c - d);
+    Cm = (a*c - d) * (a*c - d) / (a*a*c - a*d - a*a*a*b);
+    Cp = d / a;
+    EL = e / b;
+    cerr << "gL=" << gL << ", Rs=" << Rs << ", Cm=" << Cm << ", Cp=" << Cp << ", EL=" << EL << "\n";
+
+    ArrayD dpotential_p = dxdt( potentialtrace, dt );
+    ArrayD d2potential_p = dxdt( dpotential_p, dt );
+    ArrayD dcurrent = dxdt( currenttrace, dt );
+    currenttrace = currenttrace + a*dcurrent - b*potentialtrace - c*dpotential_p - d*d2potential_p + e;
+  }
+  else if ( pn != 0 )
   {
     currenttrace -= pn / ::abs(pn) * pn_trace;// - currenttrace.mean(signalTime() + t0 - 0.001, signalTime() + t0);
     currenttrace -= currenttrace.mean(-samplerate / 500, 0);
@@ -165,114 +214,206 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
 };
 
 
-double currentPulseFuncDerivs(  double t, const ArrayD &p, ArrayD &dfdp ) {
-  double dT = p[4];
-  double tau = p[0];
-  double V0 = p[1];
-  double V1 = p[2];
-  double V2 = p[3];
-  double y = 0.0;
+//ArrayD PNSubtraction::dxdt( const ArrayD &x, const double &dt ) {
+//  ArrayD dx( x.size() );
+//  for ( int i = 1; i<(x.size()-1); i++ ) {
+//    dx[i] = (x[i + 1] - x[i - 1]) / (2 * dt);
+//  }
+//  dx[0] = 2 * dx[1] - dx[2];
+//  dx[x.size() - 1] = 2 * dx[x.size() - 2] - dx[x.size() - 3];
+//  return dx;
+//}
 
-  double V11 = (V0 - V1) * ::exp( -dT / tau ) + V1;
-  double V21 = (V11- V2) * ::exp( -dT / tau ) + V2;
 
-  double ex1 = ::exp( - (t - 1*dT) / tau);
-  double ex2 = ::exp( - (t - 2*dT) / tau);
-  double ex3 = ::exp( - (t - 3*dT) / tau);
+ArrayD PNSubtraction::dxdt( const ArrayD &x, const double &dt ) {
+  double kernelsize = number( "PCS_derivativekernelwidth");
+  ArrayD x2( x.size() );
+  ArrayD dx( x.size() );
 
-  if (t < dT ) {
-    y = V0;
-    dfdp[0] = 0.0;
-    dfdp[1] = 1.0;
-    dfdp[2] = 0.0;
-    dfdp[3] = 0.0;
+  // convolve x with ArrayD (kernelsize, 1/kernelsize)
+  if ( kernelsize > 1.0 ) {
+    int khalf = floor(kernelsize / 2.0);
+    for ( int i = khalf; i < (x.size() - khalf); i++ ) {
+      double s = 0.0;
+      for ( int j = (i-khalf); j < (i+khalf); j++ ) {
+        s += x[j];
+      }
+      x2[i] = s/kernelsize;
+    }
+    for ( int i = 0; i < khalf; i++ ) {
+      int firstidx = khalf - i - 1;
+      int lastidx = x2.size() - khalf + i;
+      x2[firstidx] = 2*x2[firstidx+1] - x2[firstidx+2];
+      x2[lastidx] =  2*x2[lastidx -1] - x2[lastidx -2];
+    }
   }
-  else if ( t < 2*dT ) {
-    y = ( V0 - V1 ) * ex1 + V1;
-    dfdp[0] = (t-dT) / (tau*tau) * (V0-V1) * ex1;
-    dfdp[1] = ex1;
-    dfdp[2] = - ex1 + 1.0;
-    dfdp[3] = 0.0;
+  else {
+    x2 = x;
   }
-  else if ( t < 3*dT ) {
-    y = ( V11 - V2 ) * ex2 + V2;
-    dfdp[0] = (t-1*dT) / (tau*tau) * (V0-V1) * ex1 +
-              (t-2*dT) / (tau*tau) * (V1-V2) * ex2;
-    dfdp[1] = ex1;
-    dfdp[2] = - ex1 + ex2;
-    dfdp[3] = - ex2 + 1.0;
+  // derive smoothed trace
+  for ( int i = 1; i<(x.size()-1); i++ ) {
+    dx[i] = (x2[i + 1] - x2[i - 1]) / (2 * dt);
   }
-  else if ( t < 4*dT ) {
-    y = ( V21 - V0 ) * ex3 + V0;
-    dfdp[0] = (t-1*dT) / (tau*tau) * (V0-V1) * ex1 +
-              (t-2*dT) / (tau*tau) * (V1-V2) * ex2 +
-              (t-3*dT) / (tau*tau) * (V2-V0) * ex3;
-    dfdp[1] = ex1 - ex3 + 1.0;
-    dfdp[2] = - ex1 + ex2;
-    dfdp[3] = - ex2 + ex3;
-  };
-  dfdp[4] = 0.0;
-  return y;
+  dx[0] = 2 * dx[1] - dx[2];
+  dx[x.size() - 1] = 2 * dx[x.size() - 2] - dx[x.size() - 3];
+  return dx;
 };
 
 
-double linearFuncDerivs( double x, const ArrayD &p, ArrayD &dfdp ) {
-  double m = p[0];
+double PNSubtraction::passiveMembraneFuncDerivs( double t, const ArrayD &p, ArrayD &dfdp ) {
+
+  double a = p[0];
   double b = p[1];
-  double y = m * x + b;
-  dfdp[0] = x;
-  dfdp[1] = 1.0;
+  double c = p[2];
+  double d = p[3];
+  double e = p[4];
+
+  int idx = t/dt;
+  double y = I[idx] + a * dI[idx] - b * Vp[idx] - c * dVp[idx] - d * d2Vp[idx] + e;
+  dfdp[0] = dI[idx];
+  dfdp[1] = -Vp[idx];
+  dfdp[2] = -dVp[idx];
+  dfdp[3] = -d2Vp[idx];
+  dfdp[4] = 1.0;
+//  cerr << "y="<< y << "\n";
+//  double y = 0.0;
   return y;
 };
 
 
-void PNSubtraction::analyzeCurrentPulse( SampleDataD voltagetrace, double I0 ) {
-  double pulseamplitude = number( "pulseamplitude" );
-  double pulseduration = number( "pulseduration" );
-  double samplerate = trace( SpikeTrace[0] ).sampleRate();
-  const InData &intrace = trace( SpikeTrace[0] );
-  int dT = intrace.indices(pulseduration);
+ArrayD PNSubtraction::pcsFitLeak( double stepduration ) {
+   //first step
+  int idx00 = 0.5 * stepduration / dt;
+  int idx01 = 1.0 * stepduration / dt - 2;
+  //second step
+  int idx10 = 1.5 * stepduration / dt;
+  int idx11 = 2.0 * stepduration / dt - 2;
+  //third step
+  int idx20 = 2.5 * stepduration / dt;
+  int idx21 = 3.0 * stepduration / dt - 2;
 
-  // Fit exponentials to CurrentPulse
-  ArrayD param( 5, 1.0 );
-  param[0] = .05;
-  param[1] = mean(voltagetrace.begin(), voltagetrace.begin()+10) + 1;
-  param[2] = mean(voltagetrace.begin() + 2*dT - 10, voltagetrace.begin() + 2*dT ) + 1;
-  param[3] = mean(voltagetrace.begin() + 3*dT - 10, voltagetrace.begin() + 3*dT ) + 3;
-  param[4] = pulseduration;
-  ArrayD error( voltagetrace.size(), 1.0 );
-  ArrayD uncertainty( 5, 0.0 );
-  ArrayI paramfit( 5, 1 );
-  paramfit[4] = 0;
+  ArrayD time( idx01-idx00 + idx11-idx10 + idx21-idx20 );
+  ArrayD y( idx01-idx00 + idx11-idx10 + idx21-idx20 );
+
+  //fill arrays
+  int i = -1;
+  for ( int j = idx00; j < idx01; j++) {
+    i += 1;
+    time[i] = j*dt;
+    y[i] = 0.0;
+  }
+  for ( int j = idx10; j < idx11; j++) {
+    i += 1;
+    time[i] = j*dt;
+    y[i] = 0.0;
+  }
+  for ( int j = idx20; j < idx21; j++) {
+    i += 1;
+    time[i] = j*dt;
+    y[i] = 0.0;
+  }
+
+
+//  // Fit leak current
+  ArrayD param(5, 0.0);
+  param[1] = gL / (1 + gL * Rs);
+  param[4] = 0.0;//EL * gL / (1 + gL * Rs);
+  ArrayI pf(5, 0);
+  pf[1] = 1;
+  pf[4] = 1;
+  ArrayD err( time.size(), 1.0);
+  ArrayD uncert(5, 0.0);
   double chisq = 0.0;
 
-  marquardtFit( voltagetrace.range(), voltagetrace, error, currentPulseFuncDerivs,
-          param, paramfit, uncertainty, chisq );
+  ArrayD dparam(5, 0.0);
+  marquardtfit( time, y, err, param, pf, uncert, chisq );
+  return param;
+};
 
-  // Fit leak current
-  ArrayD I_leak( 3, 1.0 ); I_leak[0] = I0; I_leak[1] = I0 + 2*pulseamplitude; I_leak[2] = I0 + pulseamplitude;
-  ArrayD V_leak( 3, 1.0 ); V_leak[0] = param[1]; V_leak[1] = param[2]; V_leak[2] = param[3];
-  ArrayD p_leak( 2, 1.0 ); p_leak[0] = 0.1; p_leak[1] = 0.0;
-  ArrayD err_leak( 2, 1.0 );
-  ArrayD uncert_leak( 2, 0.0 );
-  ArrayI pf_leak( 2, 1 );
-  marquardtFit( V_leak, I_leak, err_leak, linearFuncDerivs, p_leak, pf_leak, uncert_leak, chisq );
 
-  // Compute error and expected error
-  ArrayD errV( voltagetrace.size(), 1.0);
-  for ( int i=0; i<voltagetrace.size(); i++ ) {
-    errV[i] = voltagetrace[i] - currentPulseFuncDerivs( i/samplerate, param, uncertainty );
+void PNSubtraction::pcsFitCapacitiveCurrents( ArrayD &param, double &stepduration ) {
+  double pulseduration = number( "pulseduration" );
+  // chirp index
+  int idx30 = 7/2 * stepduration / dt;
+  int idx31 = idx30 + pulseduration / dt - 2;
+  ArrayD time( idx31 - idx30 );
+  ArrayD y( idx31 - idx30 );
+  //fill arrays
+  int i = -1;
+  for ( int j = idx30; j < idx31; j++) {
+    i += 1;
+    time[i] = j * dt;
+    y[i] = 0.0;
+  }
+////  // Fit leak current
+  param[0] = Cm * Rs / (1 + gL * Rs);
+  param[2] = Cp + Cm / (1 + gL * Rs);
+  param[3] = Cm * Cp * Rs / (1 + gL * Rs);
+
+  ArrayI pf(5, 0);
+  pf[0] = 1;
+  pf[2] = 1;
+  pf[3] = 1;
+  ArrayD err( time.size(), 1.0);
+  ArrayD uncert(5, 0.0);
+  double chisq = 0.0;
+
+  marquardtfit( time, y, err, param, pf, uncert, chisq );
+};
+
+
+
+void PNSubtraction::pcsFitAllParams( ArrayD &param, double &stepduration ) {
+  double pulseduration = number( "pulseduration" );
+  //first step
+  int idx00 = 1 / 2 * stepduration / dt;
+  int idx01 = 2 * stepduration / dt - 2;
+  //second step
+  int idx10 = 3 / 2 * stepduration / dt;
+  int idx11 = 3 * stepduration / dt - 2;
+  //third
+  int idx20 = 5 / 2 * stepduration / dt;
+  int idx21 = 4 * stepduration / dt - 2;
+  //chirp index
+  int idx30 = 7 / 2 * stepduration / dt;
+  int idx31 = idx30 + pulseduration / dt - 2;
+
+//
+  ArrayD time( idx01-idx00 + idx11-idx10 + idx21-idx20 + idx31-idx30 );
+  ArrayD y( idx01-idx00 + idx11-idx10 + idx21-idx20 + idx31-idx30 );
+//
+  //fill arrays
+  int i = -1;
+  for ( int j = idx00; j < idx01; j++) {
+    i += 1;
+    time[i] = j*dt;
+    y[i] = 0.0;
+  }
+  for ( int j = idx10; j < idx11; j++) {
+    i += 1;
+    time[i] = j*dt;
+    y[i] = 0.0;
+  }
+  for ( int j = idx20; j < idx21; j++) {
+    i += 1;
+    time[i] = j*dt;
+    y[i] = 0.0;
+  }
+  for ( int j = idx30; j < idx31; j++) {
+    i += 1;
+    time[i] = j * dt;
+    y[i] = 0.0;
+  }
+////  // Fit leak current
+  ArrayI pf(5, 1);
+  pf[4] = 0;
+  ArrayD err( time.size(), 1.0);
+  ArrayD uncert(5, 0.0);
+  double chisq = 0.0;
+
+  marquardtfit( time, y, err, param, pf, uncert, chisq );
   };
 
-  gL = p_leak[0];
-  EL = p_leak[1];
-  tau = param[0];
-  Cm = tau * gL;
-
-  cerr << "tau=" << param[0]*1000.0 << "ms, Cm=" << Cm*1000.0 << "pF\n";
-  cerr << "with std=" << errV.stdev() << " and expected min std of " << voltagetrace.stdev( 0.0, pulseduration - 1/samplerate ) << "\n";
-
-};
 
 }; /* namespace voltageclamp */
 

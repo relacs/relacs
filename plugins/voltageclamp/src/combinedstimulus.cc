@@ -41,7 +41,8 @@ CombinedStimulus::CombinedStimulus( void )
   addNumber( "noiseVbase", "Base Potential (ColoredNoise)", -60.0, -200.0, 200.0, 0.1, "mV" );
   addNumber( "noisefrequencyconstant", "Frequency Constant (ColoredNoise)", 800.0, 0.001, 10000.0, 0.001, "Hz" );
   addNumber( "noisestd", "Standard Deviation (ColoredNoise)", 80.0, 1.0, 200.0, 1.0, "mV" );
-  addNumber( "noisemaxamplitude", "Maximum Amplitude (ColoredNoise)", 110.0, 0.0, 200.0, 1.0, "mV" );
+  addNumber( "noisemaxamplitude", "Maximum Amplitude (ColoredNoise)", 100.0, 0.0, 200.0, 1.0, "mV" );
+  addNumber( "noiseminamplitude", "Minumum Amplitude (ColoredNoise)", -190.0, -200.0, 0.0, 1.0, "mV" );
   
   addNumber( "actmintest", "Minimum testing Potential (act/inact)", -120.0, -200.0, 200.0, 1.0, "mV" );
   addNumber( "actmaxtest", "Maximum testing Potential (act/inact)", 60.0, -200.0, 200.0, 5.0, "mV" );
@@ -52,6 +53,13 @@ CombinedStimulus::CombinedStimulus( void )
   addNumber( "tailduration", "Tail test step duration", 0.0007, 0.0, 100.0, 0.0001, "s", "ms" );
   addNumber( "stepsize", "Step testing potential (act/inact/tail)", 5.0, 0.0, 200.0, 1.0, "mV" );
   addNumber( "stepduration", "Duration for each Potential Step (act/inact/tail)", 0.02, 0.0, 1000.0, 0.001, "s", "ms" );
+//
+  addBoolean( "samplingpulses", "Sampling Pulses", false );
+  addNumber( "pulserate", "Rate of sampling pulses", 4.0, 0.0, 1000.0, .01, "Hz" ).setActivation( "samplingpulses", "true" );
+  addNumber( "Vdeact", "Deactivation Potential", -120.0, -200.0, 100.0, 1.0, "mV" ).setActivation( "samplingpulses", "true" );
+  addNumber( "Vact", "Activation Potential", -10.0, -200.0, 100.0, 1.0, "mV" ).setActivation( "samplingpulses", "true" );
+  addNumber( "tdeact", "Deactivation Potential", 0.017, 0.0, 1.0, 0.0001, "s", "ms" ).setActivation( "samplingpulses", "true" );
+  addNumber( "tact", "Deactivation Potential", 0.003, 0.0, 1.0, 0.0001, "s", "ms" ).setActivation( "samplingpulses", "true" );
 
   addNumber( "pause", "Duration of pause between outputs", 0.4, 0.001, 1000.0, 0.001, "s", "ms" );
   addInteger( "repeats", "Repetitions of stimulus", 1, 0, 10000, 1 ).setStyle( OptWidget::SpecialInfinite );
@@ -70,6 +78,9 @@ int CombinedStimulus::main( void )
   double holdingpotential = number( "holdingpotential" );
   double noiseVbase = number( "noiseVbase" );
   double noisemaxamplitude = number( "noisemaxamplitude" );
+  double noiseminamplitude = number( "noiseminamplitude" );
+  bool samplingpulses = boolean( "samplingpulses" );
+  double noiseduration = number( "noiseduration" );
 
   // don't print repro message:
   noMessage();
@@ -97,15 +108,23 @@ int CombinedStimulus::main( void )
   string VUnit = trace( SpikeTrace[0]).unit();
 
   P.lock();
-  P.resize( 2, 2, true );
-  P[0].setXLabel( "Time [ms]" );
-  P[0].setYLabel( trace( CurrentTrace[0] ).ident() + " [" + IUnit + "]"  );
-  P[1].setXLabel( trace( SpikeTrace[0] ).ident() + " [" + VUnit + "]"  );
-  P[1].setYLabel( trace( CurrentTrace[0] ).ident() + " [" + IUnit + "]" );
+  if (noiseduration < 60) {
+    P.resize(2, 2, true);
+    P[0].setXLabel("Time [ms]");
+    P[0].setYLabel(trace(CurrentTrace[0]).ident() + " [" + IUnit + "]");
+    P[1].setXLabel(trace(SpikeTrace[0]).ident() + " [" + VUnit + "]");
+    P[1].setYLabel(trace(CurrentTrace[0]).ident() + " [" + IUnit + "]");
 
-  P[0].clearData();
-  P[1].clearData();
-  P[1].setXRange( noiseVbase - noisemaxamplitude*1.05, noiseVbase + noisemaxamplitude*1.05 );
+    P[0].clearData();
+    P[1].clearData();
+    P[1].setXRange(noiseminamplitude * 1.05, noisemaxamplitude * 1.05);
+  }
+  else {
+    P.resize(1, 1, true);
+    P[0].setXLabel("Time [ms]");
+    P[0].setYLabel(trace(CurrentTrace[0]).ident() + " [" + IUnit + "]");
+    P[0].clearData();
+  }
   P.unlock();
 
   for ( int Count=0; ( repeats <= 0 || Count < repeats ) && softStop() == 0; Count++ ) {
@@ -114,6 +133,10 @@ int CombinedStimulus::main( void )
     signal.constWave( holdingpotential );
   // make short quality assuring test-pulse
     OutData noise = ColoredNoise();
+    cerr << samplingpulses << "\n";
+    if (samplingpulses) {
+      addSamplingPulses( noise );
+    }
     OutData act =   ActInact();
     OutData tail =  Tail();
 
@@ -134,16 +157,31 @@ int CombinedStimulus::main( void )
     // trace
     P[0].plot( currenttrace, 1000.0, Plot::Yellow, 2, Plot::Solid );
     // IV
-    for ( int i=0; i<currenttrace.size(); i++ ) {
-      double x = potentialtrace[i];
-      double y = currenttrace[i];
-      P[1].plotPoint( x, Plot::First, y, Plot::First, 1, Plot::Dot, 1, Plot::First, Plot::Yellow, Plot::Solid );
+    if (noiseduration < 60) {
+      for (int i = 0; i < currenttrace.size(); i++) {
+        double x = potentialtrace[i];
+        double y = currenttrace[i];
+        P[1].plotPoint(x, Plot::First, y, Plot::First, 1, Plot::Dot, 1, Plot::First, Plot::Yellow, Plot::Solid);
+      }
+      P[1].setYRange(min(currenttrace) * 1.05, max(currenttrace) * 1.05);
     }
-    P[1].setYRange( min(currenttrace)*1.05, max(currenttrace)*1.05);
+
+    if (samplingpulses) {
+      ArrayD min_idcs = analyzeSamplingPulses( );//currenttrace );
+      double dt = currenttrace.stepsize();
+      int halfidx = min_idcs.size()/2;
+      for ( int i=0; i<halfidx; i++ ) {
+        double ti = min_idcs[i+halfidx]*dt;
+        double minimum = min_idcs[i];
+        P[0].plotPoint( ti*1000.0, Plot::First, minimum, Plot::First, 0, Plot::Circle, 5, Plot::Pixel, Plot::Green, Plot::Green );
+//        cerr << ti << ", " << minimum << "\n";
+      }
+    }
+
     P.draw();
     P.unlock();
 
-
+    sleep( pause );
   }
   return Completed;
 }
@@ -156,11 +194,12 @@ OutData CombinedStimulus::ColoredNoise() {
   double noisefrequencyconstant = number( "noisefrequencyconstant" );
   double noisestd = number( "noisestd" );
   double noisemaxamplitude = number( "noisemaxamplitude" );
+  double noiseminamplitude = number( "noiseminamplitude" );
 
   // colored noise parameters
   ArrayD expParam( 3, 1.0 );
   expParam[0] = 1;
-  expParam[1] = noisefrequencyconstant;
+  expParam[1] = -noisefrequencyconstant;
   expParam[2] = 0;
 
   //potential base
@@ -186,8 +225,9 @@ OutData CombinedStimulus::ColoredNoise() {
 
   //draw random numbers on fourier space and transfer to time space
   SampleDataD data( power );
-  for ( int k=0; k<data.size(); k++ )
-    data[k] = expFunc2( abs( f[k] ), expParam ) * (rnd() - 0.5);
+  for ( int k=0; k<data.size(); k++ ) {
+    data[k] = expFunc2(abs(f[k]), expParam) * (rnd() - 0.5);
+  }
   hcFFT( data );
   double datastd = 0.0;
   for ( int k=0; k<data.size(); k++ ) {
@@ -203,14 +243,12 @@ OutData CombinedStimulus::ColoredNoise() {
 
   //put stimulus pieces together
   for (int k=0; k<signal.size(); k++) {
-    if (data[k] > noisemaxamplitude) {
-      signal[k] = noiseVbase + noisemaxamplitude;
+    signal[k] += data[k];
+    if (signal[k] > noisemaxamplitude) {
+      signal[k] = noisemaxamplitude;
     }
-    else if (data[k] < -noisemaxamplitude) {
-      signal[k] = noiseVbase - noisemaxamplitude;
-    }
-    else {
-      signal[k] += data[k];
+    else if (signal[k] < noiseminamplitude) {
+      signal[k] = noiseminamplitude;
     }
   }
   signal.append( signal3 );
@@ -291,6 +329,72 @@ OutData CombinedStimulus::Tail() {
   return signal;
 }
 
+
+void CombinedStimulus::addSamplingPulses( OutData &signal ) {
+  double pulserate = number( "pulserate" );
+  double Vdeact = number( "Vdeact" );
+  double Vact = number( "Vact" );
+  double tdeact = number( "tdeact" );
+  double tact = number( "tact" );
+
+  OutData samplingpulse;
+  samplingpulse.setTrace(PotentialOutput[0]);
+  samplingpulse.constWave(tdeact, -1.0, Vdeact );
+
+  OutData samplingpulse2;
+  samplingpulse2.setTrace(PotentialOutput[0]);
+  samplingpulse2.constWave(tact, -1.0, Vact );
+
+  samplingpulse.append( samplingpulse2 );
+
+  double dt = signal.stepsize();
+  int pulseindex = 1/pulserate/dt;
+  int numberofpulses = signal.size()/pulseindex;
+//  cerr << signal.size() << ", " << pulserate << ", " << dt << ", " << pulseindex << ", " << numberofpulses << "\n";
+
+  for ( int i=0; i<numberofpulses; i++ ) {
+    for ( int j=0; j<samplingpulse.size(); j++ ) {
+      if ((j + i*pulseindex) < signal.size() ) {
+        signal[j + i * pulseindex] = samplingpulse[j];
+      }
+    }
+  }
+}
+
+
+ArrayD CombinedStimulus::analyzeSamplingPulses( ) {//const SampleDataD &currenttrace ) {
+  double duration = number( "noiseduration" );
+  SampleDataD ct(0, .01, trace(SpikeTrace[0]).stepsize(), 0.0);
+  trace( CurrentTrace[0] ).copy( signalTime(), ct );
+  double tdeact = number( "tdeact" );
+  double tact = number( "tact" );
+  double pulserate = number( "pulserate" );
+  double dt = ct.stepsize();
+  int pulseindex = 1/pulserate/dt;
+  int numberofpulses = duration/dt/pulseindex;
+  double waittime = 0.0003;
+
+  ArrayD minimas(numberofpulses);
+  ArrayD indeces(numberofpulses);
+
+  for ( int i=0; i<numberofpulses; i++ ) {
+    int idx0 = i*pulseindex + tdeact/dt + waittime/dt;
+    int idx1 = i*pulseindex + (tdeact + tact - waittime)/dt;
+    SampleDataD currenttrace(idx0*dt, idx1*dt, trace(SpikeTrace[0]).stepsize(), 0.0);
+    trace( CurrentTrace[0] ).copy( signalTime(), currenttrace );
+    double dt = currenttrace.stepsize();
+
+    cerr << "get passive parameters from pnsubtraction to make a leak subtraction here !!!!\n";
+
+    minimas[i] = min(currenttrace);
+    indeces[i] = idx0;
+
+//    cerr << min(currenttrace) << ", " << idx0 << "\n";
+
+  }
+  minimas.append(indeces);
+  return minimas;
+}
 
 addRePro( CombinedStimulus, voltageclamp );
 

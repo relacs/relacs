@@ -805,7 +805,7 @@ string HodgkinHuxley::name( void ) const
 
 int HodgkinHuxley::dimension( void ) const
 {
-  return 4;
+  return 5;
 }
 
 
@@ -817,6 +817,7 @@ void HodgkinHuxley::variables( vector< string > &varnames ) const
   varnames.push_back( "m" );
   varnames.push_back( "h" );
   varnames.push_back( "n" );
+  varnames.push_back( "s" );
 }
 
 
@@ -825,6 +826,7 @@ void HodgkinHuxley::units( vector< string > &u ) const
   u.clear();
   u.reserve( dimension() );
   u.push_back( "mV" );
+  u.push_back( "1" );
   u.push_back( "1" );
   u.push_back( "1" );
   u.push_back( "1" );
@@ -846,7 +848,7 @@ void HodgkinHuxley::operator()(  double t, double s, double *x, double *dxdt, in
   double an = fabs( z ) < 1e-4 ? 0.1 : 0.1*z/(1.0-exp(-z));
   double bn = 0.125*exp(-(V+65.0)/80.0);
 
-  GNaGates = GNa*x[1]*x[1]*x[1]*x[2];
+  GNaGates = GNa*x[1]*x[1]*x[1]*x[2]*x[4];
   GKGates = GK*x[3]*x[3]*x[3]*x[3];
 
   INa = GNaGates*(V-ENa);
@@ -857,6 +859,16 @@ void HodgkinHuxley::operator()(  double t, double s, double *x, double *dxdt, in
   /* m */ dxdt[1] = PT*( am*(1.0-x[1]) - x[1]*bm );
   /* h */ dxdt[2] = PT*( ah*(1.0-x[2]) - x[2]*bh );
   /* n */ dxdt[3] = PT*( an*(1.0-x[3]) - x[3]*bn );
+  /* s */
+  if (s_exist) {
+    double as = 0.07*exp(-(V+65+10.0)/20.0) * 1e-3 * 1.0;
+    double bs = 1.0/(1.0+exp(-(V+35.0+10.0)/10.0)) * 1e-3 * 1.0;
+    dxdt[4] = PT*( as*(1.0-x[4]) - x[4]*bs );
+  }
+  else {
+    dxdt[4] = 0.0;
+  }
+
 }
 
 
@@ -866,6 +878,7 @@ void HodgkinHuxley::init( double *x ) const
   x[1] = 0.053;
   x[2] = 0.596;
   x[3] = 0.318;
+  x[4] = 1.0;
 }
 
 
@@ -910,6 +923,7 @@ void HodgkinHuxley::add( void )
   newSection( "Sodium current", ModelFlag );
   addNumber( "gna", "Na conductivity", GNa, 0.0, 10000.0, 0.1, conductanceUnit() ).setFlags( ModelFlag );
   addNumber( "ena", "Na reversal potential", ENa, -200.0, 200.0, 1.0, "mV" ).setFlags( ModelFlag );
+  addBoolean( "slowinact", "with slow inactivation", false );
 
   newSection( "Potassium current", ModelFlag );
   addNumber( "gk", "K conductivity", GK, 0.0, 10000.0, 0.1, conductanceUnit() ).setFlags( ModelFlag );
@@ -936,6 +950,7 @@ void HodgkinHuxley::notify( void )
   GL = number( "gl" );
   C = number( "c" );
   PT = number( "phi" );
+  s_exist = boolean( "slowinact" );
 }
 
 

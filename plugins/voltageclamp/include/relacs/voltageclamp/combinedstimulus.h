@@ -59,6 +59,10 @@ private:
     OutData ColoredNoise();
     OutData ActInact();
     OutData Tail();
+    void addSamplingPulses( OutData &signal );
+    ArrayD analyzeSamplingPulses( );//const SampleDataD &currenttrace );
+//    int numberofpulses;
+//    int pulseindex
 
 protected:
 
