@@ -37,7 +37,9 @@ ColoredNoise::ColoredNoise( void )
   addNumber( "Vbase", "Base Potential", -60.0, -200.0, 200.0, 0.1, "mV" );
   addNumber( "frequencyconstant", "Frequency Constant", 800.0, 0.001, 10000.0, 0.001, "Hz" );
   addNumber( "noisestd", "Standard Deviation", 80.0, 1.0, 200.0, 1.0, "mV" );
-  addNumber( "maxamplitude", "Maximum Amplitude", 110.0, 0.0, 200.0, 1.0, "mV" );
+  addNumber( "noisemaxamplitude", "Maximum Amplitude", 100.0, 0.0, 200.0, 1.0, "mV" );
+  addNumber( "noiseminamplitude", "Minumum Amplitude", -190.0, -200.0, 0.0, 1.0, "mV" );
+  addNumber( "holdingpotential", "Holding potential", -120.0, -200.0, 100.0, 1.0, "mV");
   addNumber( "pause", "Duration of pause bewteen outputs", 0.4, 0.001, 1000.0, 0.001, "s", "ms" );
   addInteger( "repeats", "Repetitions of stimulus", 1, 0, 10000, 1 ).setStyle( OptWidget::SpecialInfinite );
 
@@ -63,9 +65,11 @@ int ColoredNoise::main( void )
   double Vbase = number( "Vbase" );
   double frequencyconstant = number( "frequencyconstant" );
   double noisestd = number( "noisestd" );
-  double maxamplitude = number( "maxamplitude" );
+  double noisemaxamplitude = number( "noisemaxamplitude" );
+  double noiseminamplitude = number( "noiseminamplitude" );
   bool samplingpulses = boolean( "samplingpulses" );
 
+  double maxDurationForIVPlot = 50;
 
   // don't print repro message:
   noMessage();
@@ -93,15 +97,23 @@ int ColoredNoise::main( void )
   string VUnit = trace( SpikeTrace[0]).unit();
 
   P.lock();
-  P.resize( 2, 2, true );
-  P[0].setXLabel( "Time [ms]" );
-  P[0].setYLabel( trace( CurrentTrace[0] ).ident() + " [" + IUnit + "]"  );
-  P[1].setXLabel( trace( SpikeTrace[0] ).ident() + " [" + VUnit + "]"  );
-  P[1].setYLabel( trace( CurrentTrace[0] ).ident() + " [" + IUnit + "]" );
+  if (duration < maxDurationForIVPlot) {
+    P.resize(2, 2, true);
+    P[0].setXLabel("Time [ms]");
+    P[0].setYLabel(trace(CurrentTrace[0]).ident() + " [" + IUnit + "]");
+    P[1].setXLabel(trace(SpikeTrace[0]).ident() + " [" + VUnit + "]");
+    P[1].setYLabel(trace(CurrentTrace[0]).ident() + " [" + IUnit + "]");
 
-  P[0].clearData();
-  P[1].clearData();
-  P[1].setXRange( Vbase - maxamplitude*1.05, Vbase + maxamplitude*1.05 );
+    P[0].clearData();
+    P[1].clearData();
+    P[1].setXRange(noiseminamplitude * 1.05, noisemaxamplitude * 1.05);
+  }
+  else {
+    P.resize(1, 1, true);
+    P[0].setXLabel("Time [ms]");
+    P[0].setYLabel(trace(CurrentTrace[0]).ident() + " [" + IUnit + "]");
+    P[0].clearData();
+  }
   P.unlock();
 
   // colored noise parameters
@@ -114,63 +126,19 @@ int ColoredNoise::main( void )
 
   for ( int Count=0; ( repeats <= 0 || Count < repeats ) && softStop() == 0; Count++ ) {
     //potential base
-    OutData signal;
-    signal.setTrace( PotentialOutput[0] );
-    signal.constWave( duration, -1.0, Vbase );
+//    OutData signal;
+//    signal.setTrace( PotentialOutput[0] );
+//    signal.constWave( duration, -1.0, Vbase );
 
-    // get next power of two
-    int power = 1;
-    while(power < signal.size()) {
-      power *=2;
-    }
-    //frequency range
-    SampleDataD f( power );
-    for (int k=0; k<f.size(); k++) {
-      f[k] = k / (power * signal.stepsize());
-    };
-    SampleDataD f2( power );
-    for (int k=0; k<f2.size(); k++) {
-      f2[k] = -f[f.size()-k];
-    };
-    f.append( f2 );
-
-    //draw random numbers on fourier space and transfer to time space
-    SampleDataD data( power );
-    for ( int k=0; k<data.size(); k++ )
-      data[k] = expFunc2( abs( f[k] ), expParam ) * (rnd() - 0.5);
-    hcFFT( data );
-    double datastd = 0.0;
-    for ( int k=0; k<data.size(); k++ ) {
-      datastd += data[k]*data[k] / (data.size() - 1);
-    }
-    datastd = sqrt(datastd);
-    data *= noisestd/datastd;
-
-    //go back to holdingpotential
-    OutData signal3;
-    signal3.setTrace(PotentialOutput[0]);
-    signal3.constWave(0.0001, -1.0, holdingpotential );
-
-    //put stimulus pieces together
-    for (int k=0; k<signal.size(); k++) {
-      if (data[k] > maxamplitude) {
-        signal[k] = Vbase + maxamplitude;
-      }
-      else if (data[k] < -maxamplitude) {
-        signal[k] = Vbase - maxamplitude;
-      }
-      else {
-        signal[k] += data[k];
-      }
-    }
-    signal.append( signal3 );
+    // make short quality assuring test-pulse
+    OutData signal = getColoredNoiseStimulus();
 
     if ( samplingpulses ) {
       addSamplingPulses( signal );
     }
 
     // nix options
-    Parameter &p1 = signal.description().addNumber( "maxamplitude", maxamplitude, "mV" );
+    Parameter &p1 = signal.description().addNumber( "noisestd", noisestd, "mV" );
     Parameter &p2 = signal.description().addNumber( "frequencyconstant", frequencyconstant, "Hz" );
     Parameter &p3 = signal.description().addNumber( "V_base", Vbase, "mV" );
     Parameter &p4 = signal.description()["Intensity"];
@@ -185,26 +153,128 @@ int ColoredNoise::main( void )
     trace( SpikeTrace[0] ).copy( signalTime(), potentialtrace );
 //    SampleDataD currenttrace = signal;
 
-    // plot
-    // trace
-    P.lock();
-    P[0].plot( currenttrace, 1000.0, Plot::Yellow, 2, Plot::Solid );
-//    P[0].plot( signal, 1000.0, Plot::Yellow, 2, Plot::Solid );
-    // IV
-    for ( int i=0; i<currenttrace.size(); i++ ) {
-      double x = potentialtrace[i];
-      double y = currenttrace[i];
-      P[1].plotPoint( x, Plot::First, y, Plot::First, 1, Plot::Dot, 1, Plot::First, Plot::Yellow, Plot::Solid );
+    if ( duration < maxDurationForIVPlot ) {
+      for (int i = 0; i < currenttrace.size(); i++) {
+        double x = potentialtrace[i];
+        double y = currenttrace[i];
+        P[1].plotPoint(x, Plot::First, y, Plot::First, 1, Plot::Dot, 1, Plot::First, Plot::Yellow, Plot::Solid);
+      }
+      P[1].setYRange(min(currenttrace) * 1.05, max(currenttrace) * 1.05);
     }
-    P[1].setYRange( min(currenttrace)*1.05, max(currenttrace)*1.05);
+
+    if (samplingpulses) {
+      ArrayD min_idcs = analyzeSamplingPulses( );//currenttrace );
+      double dt = currenttrace.stepsize();
+      int halfidx = min_idcs.size()/2;
+      P[0].plot( -currenttrace, 1000.0, Plot::Yellow, 2, Plot::Solid );
+      double absmin = 1000;
+      for ( int i=0; i<halfidx; i++ ) {
+        double ti = min_idcs[i+halfidx]*dt;
+        double minimum = min_idcs[i];
+        P[0].plotPoint( ti*1000.0, Plot::First, -minimum, Plot::First, 0, Plot::Circle, 5, Plot::Pixel, Plot::Green, Plot::Green );
+        if (minimum<absmin){
+          absmin = minimum;
+        }
+        //        cerr << ti << ", " << minimum << "\n";
+        P[0].setYRange(-.05, -absmin*1.05);
+      }
+    }
+    else {
+      P[0].plot( currenttrace, 1000.0, Plot::Yellow, 2, Plot::Solid );
+    }
+
     P.draw();
     P.unlock();
+
+    // plot
+    // trace
+//    P.lock();
+//    P[0].plot( currenttrace, 1000.0, Plot::Yellow, 2, Plot::Solid );
+////    P[0].plot( signal, 1000.0, Plot::Yellow, 2, Plot::Solid );
+//    // IV
+//    for ( int i=0; i<currenttrace.size(); i++ ) {
+//      double x = potentialtrace[i];
+//      double y = currenttrace[i];
+//      P[1].plotPoint( x, Plot::First, y, Plot::First, 1, Plot::Dot, 1, Plot::First, Plot::Yellow, Plot::Solid );
+//    }
+//    P[1].setYRange( min(currenttrace)*1.05, max(currenttrace)*1.05);
+//    P.draw();
+//    P.unlock();
 
     if (interrupt()) {
       break;
     };
   }
   return Completed;
+}
+
+
+OutData ColoredNoise::getColoredNoiseStimulus() {
+  double holdingpotential = number( "holdingpotential" );
+  double noiseduration = number( "duration" );
+  double noiseVbase = number( "Vbase" );
+  double noisefrequencyconstant = number( "frequencyconstant" );
+  double noisestd = number( "noisestd" );
+  double noisemaxamplitude = number( "noisemaxamplitude" );
+  double noiseminamplitude = number( "noiseminamplitude" );
+
+  // colored noise parameters
+  ArrayD expParam( 3, 1.0 );
+  expParam[0] = 1;
+  expParam[1] = -noisefrequencyconstant;
+  expParam[2] = 0;
+
+  //potential base
+  OutData signal;
+  signal.setTrace( PotentialOutput[0] );
+  signal.constWave( noiseduration, -1.0, noiseVbase );
+
+  // get next power of two
+  int power = 1;
+  while(power < signal.size()) {
+    power *=2;
+  }
+  //frequency range
+  SampleDataD f( power );
+  for (int k=0; k<f.size(); k++) {
+    f[k] = k / (power * signal.stepsize());
+  };
+  SampleDataD f2( power );
+  for (int k=0; k<f2.size(); k++) {
+    f2[k] = -f[f.size()-k];
+  };
+  f.append( f2 );
+
+  //draw random numbers on fourier space and transfer to time space
+  SampleDataD data( power );
+  for ( int k=0; k<data.size(); k++ ) {
+    data[k] = expFunc2(abs(f[k]), expParam) * (rnd() - 0.5);
+  }
+  hcFFT( data );
+  double datastd = 0.0;
+  for ( int k=0; k<data.size(); k++ ) {
+    datastd += data[k]*data[k] / (data.size() - 1);
+  }
+  datastd = sqrt(datastd);
+  data *= noisestd/datastd;
+
+  //go back to holdingpotential
+  OutData signal3;
+  signal3.setTrace(PotentialOutput[0]);
+  signal3.constWave(0.0001, -1.0, holdingpotential );
+
+  //put stimulus pieces together
+  for (int k=0; k<signal.size(); k++) {
+    signal[k] += data[k];
+    if (signal[k] > noisemaxamplitude) {
+      signal[k] = noisemaxamplitude;
+    }
+    else if (signal[k] < noiseminamplitude) {
+      signal[k] = noiseminamplitude;
+    }
+  }
+  signal.append( signal3 );
+  return signal;
 }
 
 
@@ -226,8 +296,9 @@ void ColoredNoise::addSamplingPulses( OutData &signal ) {
   samplingpulse.append( samplingpulse2 );
 
   double dt = signal.stepsize();
-  int pulseindex = pulserate/dt;
-  double numberofpulses = signal.size()/pulseindex;
+  int pulseindex = 1/pulserate/dt;
+  int numberofpulses = signal.size()/pulseindex;
+//  cerr << signal.size() << ", " << pulserate << ", " << dt << ", " << pulseindex << ", " << numberofpulses << "\n";
 
   for ( int i=0; i<numberofpulses; i++ ) {
     for ( int j=0; j<samplingpulse.size(); j++ ) {
@@ -236,6 +307,41 @@ void ColoredNoise::addSamplingPulses( OutData &signal ) {
       }
     }
   }
+}
+
+
+ArrayD ColoredNoise::analyzeSamplingPulses( ) {//const SampleDataD &currenttrace ) {
+  double duration = number( "noiseduration" );
+  SampleDataD ct(0, .01, trace(SpikeTrace[0]).stepsize(), 0.0);
+  trace( CurrentTrace[0] ).copy( signalTime(), ct );
+  double tdeact = number( "tdeact" );
+  double tact = number( "tact" );
+  double pulserate = number( "pulserate" );
+  double dt = ct.stepsize();
+  int pulseindex = 1/pulserate/dt;
+  int numberofpulses = duration/dt/pulseindex;
+  double waittime = 0.0003;
+
+  ArrayD minimas(numberofpulses);
+  ArrayD indeces(numberofpulses);
+
+  for ( int i=0; i<numberofpulses; i++ ) {
+    int idx0 = i*pulseindex + tdeact/dt + waittime/dt;
+    int idx1 = i*pulseindex + (tdeact + tact - waittime)/dt;
+    SampleDataD currenttrace(idx0*dt, idx1*dt, trace(SpikeTrace[0]).stepsize(), 0.0);
+    trace( CurrentTrace[0] ).copy( signalTime(), currenttrace );
+    double dt = currenttrace.stepsize();
+
+    cerr << "get passive parameters from pnsubtraction to make a leak subtraction here !!!!\n";
+
+    minimas[i] = min(currenttrace);
+    indeces[i] = idx0;
+
+//    cerr << min(currenttrace) << ", " << idx0 << "\n";
+
+  }
+  minimas.append(indeces);
+  return minimas;
 }
 
 

@@ -54,7 +54,10 @@ public:
 
 private:
 
+    OutData getColoredNoiseStimulus();
     void addSamplingPulses( OutData &signal );
+    ArrayD analyzeSamplingPulses( );//const SampleDataD &currenttrace );
+
 
 protected:
 
