@@ -23,26 +23,26 @@
 #include <relacs/voltageclamp/pnsubtraction.h>
 #include <relacs/ephys/amplifiercontrol.h>
 #include <relacs/fitalgorithm.h>
-#include <relacs/random.h>
-
+#include <relacs/sampledata.h>
+#include <relacs/spectrum.h>
+#include <cmath>
+#include <iostream>
+#include <relacs/multiplot.h>
 using namespace relacs;
 
 namespace voltageclamp {
 
 
 ColoredNoise::ColoredNoise( void )
-  : PNSubtraction( "ColoredNoise", "voltageclamp", "Lukas Sonnenberg", "1.0", "Apr 24, 2020" )
+        : PNSubtraction( "ColoredNoise", "voltageclamp", "Lukas Sonnenberg", "1.0", "May 01, 2020" )
 {
-  addNumber( "duration", "duration", 3, 0.001, 100000.0, 0.001, "s", "s" );
-  addNumber( "Vbase", "Base Potential", -60.0, -200.0, 200.0, 0.1, "mV" );
-  addNumber( "frequencyconstant", "Frequency Constant", 800.0, 0.001, 10000.0, 0.001, "Hz" );
-  addNumber( "noisestd", "Standard Deviation", 80.0, 1.0, 200.0, 1.0, "mV" );
-  addNumber( "noisemaxamplitude", "Maximum Amplitude", 100.0, 0.0, 200.0, 1.0, "mV" );
-  addNumber( "noiseminamplitude", "Minumum Amplitude", -190.0, -200.0, 0.0, 1.0, "mV" );
-  addNumber( "holdingpotential", "Holding potential", -120.0, -200.0, 100.0, 1.0, "mV");
-  addNumber( "pause", "Duration of pause bewteen outputs", 0.4, 0.001, 1000.0, 0.001, "s", "ms" );
-  addInteger( "repeats", "Repetitions of stimulus", 1, 0, 10000, 1 ).setStyle( OptWidget::SpecialInfinite );
-
+  addNumber( "duration", "duration (ColoredNoise)", 3, 0.001, 100000.0, 0.001, "s", "s" );
+  addNumber( "Vbase", "Base Potential (ColoredNoise)", -60.0, -200.0, 200.0, 0.1, "mV" );
+  addNumber( "frequencyconstant", "Frequency Constant (ColoredNoise)", 800.0, 0.001, 10000.0, 0.001, "Hz" );
+  addNumber( "noisestd", "Standard Deviation (ColoredNoise)", 80.0, 1.0, 200.0, 1.0, "mV" );
+  addNumber( "noisemaxamplitude", "Maximum Amplitude (ColoredNoise)", 100.0, 0.0, 200.0, 1.0, "mV" );
+  addNumber( "noiseminamplitude", "Minumum Amplitude (ColoredNoise)", -190.0, -200.0, 0.0, 1.0, "mV" );
+  //
   addBoolean( "samplingpulses", "Sampling Pulses", false );
   addNumber( "pulserate", "Rate of sampling pulses", 4.0, 0.0, 1000.0, .01, "Hz" ).setActivation( "samplingpulses", "true" );
   addNumber( "Vdeact", "Deactivation Potential", -120.0, -200.0, 100.0, 1.0, "mV" ).setActivation( "samplingpulses", "true" );
@@ -50,24 +50,26 @@ ColoredNoise::ColoredNoise( void )
   addNumber( "tdeact", "Deactivation Potential", 0.017, 0.0, 1.0, 0.0001, "s", "ms" ).setActivation( "samplingpulses", "true" );
   addNumber( "tact", "Deactivation Potential", 0.003, 0.0, 1.0, 0.0001, "s", "ms" ).setActivation( "samplingpulses", "true" );
 
+  addNumber( "pause", "Duration of pause between outputs", 0.4, 0.001, 1000.0, 0.001, "s", "ms" );
+  addInteger( "repeats", "Repetitions of stimulus", 1, 0, 10000, 1 ).setStyle( OptWidget::SpecialInfinite );
+  addNumber( "holdingpotential", "Holding potential", -100.0, -200.0, 200.0, 1.0, "mV" );
+
   setWidget( &P );
 }
 
+/////////////////////// STILL NEEDS PLOTS !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ////////////////////////
 
 int ColoredNoise::main( void )
 {
   // get options:
   double pause = number( "pause" );
   int repeats = integer( "repeats" );
-
   double holdingpotential = number( "holdingpotential" );
-  double duration = number( "duration" );
-  double Vbase = number( "Vbase" );
-  double frequencyconstant = number( "frequencyconstant" );
-  double noisestd = number( "noisestd" );
+  double noiseVbase = number( "Vbase" );
   double noisemaxamplitude = number( "noisemaxamplitude" );
   double noiseminamplitude = number( "noiseminamplitude" );
   bool samplingpulses = boolean( "samplingpulses" );
+  double noiseduration = number( "duration" );
 
   double maxDurationForIVPlot = 50;
 
@@ -92,12 +94,12 @@ int ColoredNoise::main( void )
   write( holdingsignal );
   sleep( pause );
 
-// clear plot and set Range
+  // clear plot and set Range
   string IUnit = trace( CurrentTrace[0] ).unit();
   string VUnit = trace( SpikeTrace[0]).unit();
 
   P.lock();
-  if (duration < maxDurationForIVPlot) {
+  if (noiseduration < maxDurationForIVPlot) {
     P.resize(2, 2, true);
     P[0].setXLabel("Time [ms]");
     P[0].setYLabel(trace(CurrentTrace[0]).ident() + " [" + IUnit + "]");
@@ -116,44 +118,32 @@ int ColoredNoise::main( void )
   }
   P.unlock();
 
-  // colored noise parameters
-  ArrayD expParam( 3, 1.0 );
-  expParam[0] = 1;
-  expParam[1] = frequencyconstant;
-  expParam[2] = 0;
-
-  double t0 = -0.002;
-
   for ( int Count=0; ( repeats <= 0 || Count < repeats ) && softStop() == 0; Count++ ) {
-    //potential base
-//    OutData signal;
-//    signal.setTrace( PotentialOutput[0] );
-//    signal.constWave( duration, -1.0, Vbase );
-
+    OutData signal;
+    signal.setTrace( PotentialOutput[0] );
+    signal.constWave( holdingpotential );
     // make short quality assuring test-pulse
-    OutData signal = getColoredNoiseStimulus();
-
-    if ( samplingpulses ) {
-      addSamplingPulses( signal );
+    OutData noise = getColoredNoiseStimulus();
+    cerr << samplingpulses << "\n";
+    if (samplingpulses) {
+      addSamplingPulses( noise );
     }
 
-    // nix options
-    Parameter &p1 = signal.description().addNumber( "noisestd", noisestd, "mV" );
-    Parameter &p2 = signal.description().addNumber( "frequencyconstant", frequencyconstant, "Hz" );
-    Parameter &p3 = signal.description().addNumber( "V_base", Vbase, "mV" );
-    Parameter &p4 = signal.description()["Intensity"];
-    signal.setMutable( p1 );
-    signal.setMutable( p2 );
-    signal.setMutable( p3 );
-    signal.setMutable( p4 );
+    signal.append( noise );
+
     Options opts = signal.description();
-
-    SampleDataD currenttrace = PN_sub( signal, opts, holdingpotential, pause, t0, duration, t0);
-    SampleDataD potentialtrace(t0, duration, trace(SpikeTrace[0]).stepsize(), 0.0);
+    double t0 = -0.002;
+    double dt = signal.stepsize();
+    double dur = signal.size();
+    double maxduration = dt*dur;
+    SampleDataD currenttrace = PN_sub( signal, opts, holdingpotential, pause, t0, maxduration, t0);
+    SampleDataD potentialtrace(t0, maxduration, trace(SpikeTrace[0]).stepsize(), 0.0);
     trace( SpikeTrace[0] ).copy( signalTime(), potentialtrace );
-//    SampleDataD currenttrace = signal;
 
-    if ( duration < maxDurationForIVPlot ) {
+    // plot
+    // trace
+    // IV
+    if (noiseduration < maxDurationForIVPlot) {
       for (int i = 0; i < currenttrace.size(); i++) {
         double x = potentialtrace[i];
         double y = currenttrace[i];
@@ -186,24 +176,7 @@ int ColoredNoise::main( void )
     P.draw();
     P.unlock();
 
-    // plot
-    // trace
-//    P.lock();
-//    P[0].plot( currenttrace, 1000.0, Plot::Yellow, 2, Plot::Solid );
-////    P[0].plot( signal, 1000.0, Plot::Yellow, 2, Plot::Solid );
-//    // IV
-//    for ( int i=0; i<currenttrace.size(); i++ ) {
-//      double x = potentialtrace[i];
-//      double y = currenttrace[i];
-//      P[1].plotPoint( x, Plot::First, y, Plot::First, 1, Plot::Dot, 1, Plot::First, Plot::Yellow, Plot::Solid );
-//    }
-//    P[1].setYRange( min(currenttrace)*1.05, max(currenttrace)*1.05);
-//    P.draw();
-//    P.unlock();
-
-    if (interrupt()) {
-      break;
-    };
+    sleep( pause );
   }
   return Completed;
 }
@@ -211,9 +184,9 @@ int ColoredNoise::main( void )
 
 OutData ColoredNoise::getColoredNoiseStimulus() {
   double holdingpotential = number( "holdingpotential" );
-  double noiseduration = number( "duration" );
-  double noiseVbase = number( "Vbase" );
-  double noisefrequencyconstant = number( "frequencyconstant" );
+  double noiseduration = number( "noiseduration" );
+  double noiseVbase = number( "noiseVbase" );
+  double noisefrequencyconstant = number( "noisefrequencyconstant" );
   double noisestd = number( "noisestd" );
   double noisemaxamplitude = number( "noisemaxamplitude" );
   double noiseminamplitude = number( "noiseminamplitude" );
