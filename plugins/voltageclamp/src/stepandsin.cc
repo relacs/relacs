@@ -111,8 +111,14 @@ int StepAndSin::main( void )
     double dur = signal.size();
     double maxduration = dt*dur;
     SampleDataD currenttrace = PN_sub( signal, opts, holdingpotential, pause, t0, maxduration, t0);
+    if (interrupt()) {
+      break;
+    };
+
     SampleDataD potentialtrace(t0, maxduration, trace(SpikeTrace[0]).stepsize(), 0.0);
     trace( SpikeTrace[0] ).copy( signalTime(), potentialtrace );
+
+
 
 //     plot
     // trace
