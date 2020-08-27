@@ -37,13 +37,19 @@ namespace voltageclamp {
 CombinedStimulus::CombinedStimulus( void )
   : PNSubtraction( "CombinedStimulus", "voltageclamp", "Lukas Sonnenberg", "1.0", "May 01, 2020" )
 {
+  addNumber( "pause", "Duration of pause between outputs", 0.4, 0.001, 1000.0, 0.001, "s", "ms" );
+  addInteger( "repeats", "Repetitions of stimulus", 1, 0, 10000, 1 ).setStyle( OptWidget::SpecialInfinite );
+  addNumber( "holdingpotential", "Holding potential", -100.0, -200.0, 200.0, 1.0, "mV" );
+
+  addSection( "Noise Stimulus" );
   addNumber( "noiseduration", "duration (ColoredNoise)", 3, 0.001, 100000.0, 0.001, "s", "s" );
   addNumber( "noiseVbase", "Base Potential (ColoredNoise)", -60.0, -200.0, 200.0, 0.1, "mV" );
   addNumber( "noisefrequencyconstant", "Frequency Constant (ColoredNoise)", 800.0, 0.001, 10000.0, 0.001, "Hz" );
   addNumber( "noisestd", "Standard Deviation (ColoredNoise)", 80.0, 1.0, 200.0, 1.0, "mV" );
   addNumber( "noisemaxamplitude", "Maximum Amplitude (ColoredNoise)", 100.0, 0.0, 200.0, 1.0, "mV" );
   addNumber( "noiseminamplitude", "Minumum Amplitude (ColoredNoise)", -190.0, -200.0, 0.0, 1.0, "mV" );
-  
+
+  addSection( "Step Stimulus" );
   addNumber( "actmintest", "Minimum testing Potential (act/inact)", -120.0, -200.0, 200.0, 1.0, "mV" );
   addNumber( "actmaxtest", "Maximum testing Potential (act/inact)", 60.0, -200.0, 200.0, 5.0, "mV" );
   addNumber( "inactstep", "Inactivation testing Potential", 10.0, -200.0, 200.0, 1.0, "mV" );
@@ -54,6 +60,7 @@ CombinedStimulus::CombinedStimulus( void )
   addNumber( "stepsize", "Step testing potential (act/inact/tail)", 5.0, 0.0, 200.0, 1.0, "mV" );
   addNumber( "stepduration", "Duration for each Potential Step (act/inact/tail)", 0.02, 0.0, 1000.0, 0.001, "s", "ms" );
 //
+  addSection( "Sampling Pulses" );
   addBoolean( "samplingpulses", "Sampling Pulses", false );
   addNumber( "pulserate", "Rate of sampling pulses", 4.0, 0.0, 1000.0, .01, "Hz" ).setActivation( "samplingpulses", "true" );
   addNumber( "Vdeact", "Deactivation Potential", -120.0, -200.0, 100.0, 1.0, "mV" ).setActivation( "samplingpulses", "true" );
@@ -61,9 +68,6 @@ CombinedStimulus::CombinedStimulus( void )
   addNumber( "tdeact", "Deactivation Potential", 0.017, 0.0, 1.0, 0.0001, "s", "ms" ).setActivation( "samplingpulses", "true" );
   addNumber( "tact", "Deactivation Potential", 0.003, 0.0, 1.0, 0.0001, "s", "ms" ).setActivation( "samplingpulses", "true" );
 
-  addNumber( "pause", "Duration of pause between outputs", 0.4, 0.001, 1000.0, 0.001, "s", "ms" );
-  addInteger( "repeats", "Repetitions of stimulus", 1, 0, 10000, 1 ).setStyle( OptWidget::SpecialInfinite );
-  addNumber( "holdingpotential", "Holding potential", -100.0, -200.0, 200.0, 1.0, "mV" );
 
   setWidget( &P );
 }

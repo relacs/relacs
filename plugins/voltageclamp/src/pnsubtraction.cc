@@ -40,6 +40,7 @@ PNSubtraction::PNSubtraction( const string &name,
   : RePro( name, pluginset, author, version, date )
 {
   // add some options:
+  newSection( "QualityControl" );
   addNumber( "pn", "p/N", -4, -100, 100, 1 );
   addBoolean( "qualitycontrol", "Quality control", true );
   addNumber( "pulseduration", "Pulse duration", 0.1, 0.0, 1000.0, 0.001, "sec", "ms").setActivation( "qualitycontrol", "true" );

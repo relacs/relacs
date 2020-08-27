@@ -34,7 +34,7 @@ SlowInactivation::SlowInactivation( void )
   : PNSubtraction( "SlowInactivation", "voltageclamp", "Lukas Sonnenberg", "1.0", "Jul 25, 2020" )
 {
   // add some options:
-//  addBoolean( "autostim", "Automatic stimulus construction", true );
+  addSection( "Stimulus" );
   addNumber( "mintest", "Minimum testing potential", -120.0, -200.0, 200.0, 1.0, "mV");
   addNumber( "maxtest", "Maximum testing potential", -10.0, -200.0, 200.0, 1.0, "mV");
   addNumber( "teststep", "Step testing potential", 5.0, 0.0, 200.0, 0.1, "mV");
@@ -47,14 +47,15 @@ SlowInactivation::SlowInactivation( void )
   addNumber( "holdingpotential", "Holding potential", -120.0, -200.0, 200.0, 1.0, "mV" );
   addNumber( "adaptationpotential0", "adaptation potential0", -120.0, -200.0, 200.0, 1.0, "mV" );
   addNumber( "adaptationpotential1", "adaptation potential1", 10.0, -200.0, 200.0, 1.0, "mV" );
+  addNumber( "switchpotential", "switch adaptation potential", -47.5, -200.0, 200.0, 0.1, "mV" );
+  addInteger( "noverlap", "overlaping adaptation steps", 1, 0, 10, 1 );
 
+  addSection( "SamplingStimulus" );
   addNumber( "sampleactpot", "activation potential", -10.0, -200.0, 200.0, 1.0, "mV" );
   addNumber( "sampledeactpot", "deactivation potential", -120.0, -200.0, 200.0, 1.0, "mV" );
   addNumber( "sampleacttime", "activation time", 0.003, 0, 0.1, 0.0001, "s", "ms" );
   addNumber( "sampledeacttime", "deactivation time", 0.017, 1.0, 0.0001, 1.0, "s", "ms" );
 
-  addNumber( "switchpotential", "switch adaptation potential", -47.5, -200.0, 200.0, 0.1, "mV" );
-  addInteger( "noverlap", "overlaping adaptation steps", 1, 0, 10, 1 );
 
   // plot
   setWidget( &P );

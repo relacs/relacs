@@ -34,15 +34,12 @@ Tail::Tail( void )
   : PNSubtraction( "Tail", "voltageclamp", "Lukas Sonnenberg", "1.0", "Aug 23, 2018" )
 {
   // add some options:
+  addSection( "TailOptions" );
   addNumber( "duration0", "Stimulus duration0", 0.01, 0.001, 100000.0, 0.001, "s", "ms" );
-//  addNumber( "duration1", "Stimulus duration1", 0.0006, 0.0001, 100000.0, 0.0001, "s", "ms" );
   addNumber( "duration2", "Stimulus duration2", 0.1, 0.001, 100000.0, 0.001, "s", "ms" );
   addNumber( "pause", "Duration of pause bewteen outputs", 0.4, 0.001, 1000.0, 0.001, "sec", "ms" );
   addInteger( "repeats", "Repetitions of stimulus", 1, 0, 10000, 1 ).setStyle( OptWidget::SpecialInfinite );
   addNumber( "holdingpotential0", "Holding potential0", -100.0, -200.0, 200.0, 1.0, "mV" );
-//  addNumber( "holdingpotential1", "Holding potential1", -5.0, -200.0, 200.0, 1.0, "mV" );
-
-//  addNumber( "testingpotential", "Testing potential", -70.0, -200.0, 200.0, 1.0, "mV" );
   addNumber( "mintest", "Minimum testing potential", -100.0, -200.0, 200.0, 5.0, "mV");
   addNumber( "maxtest", "Maximum testing potential", 80.0, -200.0, 200.0, 5.0, "mV");
   addNumber( "teststep", "Step testing potential", 5.0, 0.0, 200.0, 1.0, "mV");
