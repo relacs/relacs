@@ -852,8 +852,6 @@ void HodgkinHuxley::operator()(  double t, double s, double *x, double *dxdt, in
     if ( x[i] < 0.0 ) x[i] = 0.0;
     else if ( x[i] > 1.0 ) x[i] = 1.0;
   }
-
-
   GNaGates = GNa*x[1]*x[1]*x[1]*x[2]*x[4];
   GKGates = GK*x[3]*x[3]*x[3]*x[3];
 
