@@ -40,6 +40,7 @@ PNSubtraction::PNSubtraction( const string &name,
   : RePro( name, pluginset, author, version, date )
 {
   // add some options:
+  newSection( "QualityControl" );
   addNumber( "pn", "p/N", -4, -100, 100, 1 );
   addBoolean( "qualitycontrol", "Quality control", true );
   addNumber( "pulseduration", "Pulse duration", 0.1, 0.0, 1000.0, 0.001, "sec", "ms").setActivation( "qualitycontrol", "true" );
@@ -151,6 +152,9 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
     qc_signal1.setDescription( opts_qc );
 
     write(qc_signal1);
+//    if (interrupt()) {
+//      break;
+//    };
     sleep(pause);
 
     SampleDataD currenttrace(0.0, 3 * stepduration + pulseduration, trace(CurrentTrace[0]).stepsize(), 0.0 );
@@ -165,6 +169,9 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
   signal.description().setType( "stimulus/Trace" );
 
   write(signal);
+//  if (interrupt()) {
+//    break;
+//  };
   sleep(pause);
 
   SampleDataD currenttrace( mintime-0.01, maxtime+0.01, trace(CurrentTrace[0]).stepsize(), 0.0);

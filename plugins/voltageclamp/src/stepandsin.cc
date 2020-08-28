@@ -33,6 +33,7 @@ StepAndSin::StepAndSin( void )
   : PNSubtraction( "StepAndSin", "voltageclamp", "Lukas Sonnenberg", "1.0", "Mai 08, 2020" )
 {
   // add some options:
+//  addSection( "StepAndSin" );
   addNumber( "actmintest", "Minimum testing Potential (act)", -120.0, -200.0, 200.0, 1.0, "mV" );
   addNumber( "actmaxtest", "Maximum testing Potential (act)", 60.0, -200.0, 200.0, 5.0, "mV" );
   addNumber( "stepsize", "Step testing potential (act)", 5.0, 0.0, 200.0, 1.0, "mV" );
@@ -110,19 +111,28 @@ int StepAndSin::main( void )
     double dur = signal.size();
     double maxduration = dt*dur;
     SampleDataD currenttrace = PN_sub( signal, opts, holdingpotential, pause, t0, maxduration, t0);
+    if (interrupt()) {
+      break;
+    };
+
     SampleDataD potentialtrace(t0, maxduration, trace(SpikeTrace[0]).stepsize(), 0.0);
     trace( SpikeTrace[0] ).copy( signalTime(), potentialtrace );
 
-    // plot
+
+
+//     plot
     // trace
+    P.lock();
+    P[0].clearData();
+//    P[1].clearData();
     P[0].plot( currenttrace, 1000.0, Plot::Yellow, 2, Plot::Solid );
     // IV
-    for ( int i=0; i<currenttrace.size(); i++ ) {
-      double x = potentialtrace[i];
-      double y = currenttrace[i];
-      P[1].plotPoint( x, Plot::First, y, Plot::First, 1, Plot::Dot, 1, Plot::First, Plot::Yellow, Plot::Solid );
-    }
-    P[1].setYRange( min(currenttrace)*1.05, max(currenttrace)*1.05);
+//    for ( int i=0; i<currenttrace.size(); i++ ) {
+//      double x = potentialtrace[i];
+//      double y = currenttrace[i];
+//      P[1].plotPoint( x, Plot::First, y, Plot::First, 1, Plot::Dot, 1, Plot::First, Plot::Yellow, Plot::Solid );
+//    }
+//    P[1].setYRange( min(currenttrace)*1.05, max(currenttrace)*1.05);
     P.draw();
     P.unlock();
   }
@@ -186,13 +196,20 @@ OutData StepAndSin::Sins() {
   for ( unsigned j = 0; j < sinamplitudes.size(); j++ ) {
     OutData signal2;
     signal2.setTrace(PotentialOutput[0]);
-    signal2.sineWave( sinduration, -1.0, sinfreqs[j], 0.0, sinamplitudes[j] );
+    signal2.sineWave( sinduration*1.5, -1.0, sinfreqs[j], 0.0, sinamplitudes[j] );
 //    for ( int i=0; i<signal.size(); i++ ) {
 //      signal[i] += signal2[i];
 //    }
     signal = signal + signal2;
   }
-  signal.append( signal3 );
+  OutData signal2;
+  signal2.setTrace(PotentialOutput[0]);
+  signal2.constWave( sinduration, -1.0, 0.0 );
+  for( int j = 0; j<signal2.size(); j++ ) {
+    signal2[j] = signal[j];
+  }
+
+  signal2.append( signal3 );
   return signal;
 }
 

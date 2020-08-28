@@ -32,6 +32,7 @@ SinusSum::SinusSum( void )
   : PNSubtraction( "SinusSum", "voltageclamp", "Lukas Sonnenberg", "1.0", "Sep 06, 2019" )
 {
   // add some options:
+  addSection( "Stimulus" );
   addNumber( "duration", "Stimulus duration", 0.01, 0.001, 100000.0, 0.001, "s", "s" );
   addNumber( "pause", "Duration of pause bewteen outputs", 0.4, 0.001, 1000.0, 0.001, "s", "ms" );
   addInteger( "repeats", "Repetitions of stimulus", 1, 0, 10000, 1 ).setStyle( OptWidget::SpecialInfinite );
