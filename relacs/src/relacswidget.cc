@@ -1106,7 +1106,7 @@ int RELACSWidget::write( OutList &signal, bool setsignaltime, bool blocking )
 int RELACSWidget::directWrite( OutData &signal, bool setsignaltime )
 {
   if ( SF->signalPending() && SF->saving() )
-    printlog( "! warning in write() -> previous signal still pending in SaveFiles !" );
+    printlog( "! warning in directWrite() -> previous signal still pending in SaveFiles !" );
   int r = AQ->directWrite( signal, setsignaltime );
   if ( r == 0 ) {
     if ( ! ReadLoop.isRunning() ) {
@@ -1120,7 +1120,7 @@ int RELACSWidget::directWrite( OutData &signal, bool setsignaltime )
     QCoreApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+2 ) ) );
   }
   else {
-    printlog( "! failed to write signal: " + signal.errorText() );
+    printlog( "! failed to write signal directly: " + signal.errorText() );
     if ( IRawData.failed() )
       printlog( "! error in restarting analog input: " + IRawData.errorText() );
   }
@@ -1131,7 +1131,7 @@ int RELACSWidget::directWrite( OutData &signal, bool setsignaltime )
 int RELACSWidget::directWrite( OutList &signal, bool setsignaltime )
 {
   if ( SF->signalPending() && SF->saving() )
-    printlog( "! warning in write() -> previous signal still pending in SaveFiles !" );
+    printlog( "! warning in directWrite() -> previous signal still pending in SaveFiles !" );
   int r = AQ->directWrite( signal, setsignaltime );
   if ( r == 0 ) {
     if ( ! ReadLoop.isRunning() ) {
@@ -1145,7 +1145,7 @@ int RELACSWidget::directWrite( OutList &signal, bool setsignaltime )
     QCoreApplication::postEvent( this, new QEvent( QEvent::Type( QEvent::User+2 ) ) );
   }
   else {
-    printlog( "! failed to write signals: " + signal.errorText() );
+    printlog( "! failed to write signals directly: " + signal.errorText() );
     if ( IRawData.failed() )
       printlog( "! error in restarting analog input: " + IRawData.errorText() );
   }

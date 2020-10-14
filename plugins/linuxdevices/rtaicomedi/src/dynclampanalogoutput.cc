@@ -632,7 +632,7 @@ int DynClampAnalogOutput::directWrite( OutList &sigs )
   } // unlock
 
   int retval = writeData();
-  //  cerr << "DynClampAnalogOutput::directWrite -> fillWriteBuffer returned " << retval << '\n';
+  //cerr << "DynClampAnalogOutput::directWrite -> fillWriteBuffer returned " << retval << '\n';
 
   QMutexLocker locker( mutex() );
 
@@ -641,7 +641,7 @@ int DynClampAnalogOutput::directWrite( OutList &sigs )
   BufferSize = 0;
   NBuffer = 0;
 
-  if ( retval < 0 )
+  if ( retval < -1 )
     return -1;
 
   // start subdevice:
@@ -895,7 +895,7 @@ int DynClampAnalogOutput::writeData( void )
     bytesConverted *= BufferElemSize;
     NBuffer += bytesConverted;
   }
-
+  
   //  if ( ! Sigs[0].deviceWriting() && NBuffer == 0 )
   if ( NBuffer == 0 )
     return -1;
