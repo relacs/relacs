@@ -249,6 +249,8 @@ if test -z "$1"; then
     download_comedi
     build_comedi
     install_comedi
+    echo
+    echo "Restart the computer to make the new comedi modules available."
     exit 0
 fi
 
