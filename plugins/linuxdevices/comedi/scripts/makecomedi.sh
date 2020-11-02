@@ -105,6 +105,9 @@ function download_comedi {
     cd /usr/local/src
     git clone https://github.com/Linux-Comedi/comedi.git
     cd -
+    cd /usr/local/src/comedi
+    ./autogen.sh
+    cd -
     if $USE_DKMS; then
 	dkms add /usr/local/src/comedi
     fi
