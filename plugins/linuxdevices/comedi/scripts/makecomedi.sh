@@ -105,9 +105,6 @@ function download_comedi {
     cd /usr/local/src
     git clone https://github.com/Linux-Comedi/comedi.git
     cd -
-    cd /usr/local/src/comedi
-    ./autogen.sh
-    cd -
     if $USE_DKMS; then
 	dkms add /usr/local/src/comedi
     fi
@@ -126,6 +123,9 @@ function add_comedi {
 
 function build_comedi {
     if $USE_DKMS; then
+        cd /usr/local/src/comedi
+	./autogen.sh
+	cd -
 	VERSION=$(grep PACKAGE_VERSION /usr/local/src/comedi/dkms.conf | cut -d = -f2)
 	dkms build -m comedi -v $VERSION
     else
