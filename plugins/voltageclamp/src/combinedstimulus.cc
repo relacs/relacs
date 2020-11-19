@@ -114,23 +114,23 @@ int CombinedStimulus::main( void )
   string VUnit = trace( SpikeTrace[0]).unit();
 
   P.lock();
-  if (noiseduration < maxDurationForIVPlot) {
-    P.resize(2, 2, true);
-    P[0].setXLabel("Time [ms]");
-    P[0].setYLabel(trace(CurrentTrace[0]).ident() + " [" + IUnit + "]");
-    P[1].setXLabel(trace(SpikeTrace[0]).ident() + " [" + VUnit + "]");
-    P[1].setYLabel(trace(CurrentTrace[0]).ident() + " [" + IUnit + "]");
+  //if (noiseduration < maxDurationForIVPlot) {
+  //  P.resize(2, 2, true);
+  //  P[0].setXLabel("Time [ms]");
+  //  P[0].setYLabel(trace(CurrentTrace[0]).ident() + " [" + IUnit + "]");
+  //  P[1].setXLabel(trace(SpikeTrace[0]).ident() + " [" + VUnit + "]");
+  //  P[1].setYLabel(trace(CurrentTrace[0]).ident() + " [" + IUnit + "]");
 
-    P[0].clearData();
-    P[1].clearData();
-    P[1].setXRange(noiseminamplitude * 1.05, noisemaxamplitude * 1.05);
-  }
-  else {
-    P.resize(1, 1, true);
-    P[0].setXLabel("Time [ms]");
-    P[0].setYLabel(trace(CurrentTrace[0]).ident() + " [" + IUnit + "]");
-    P[0].clearData();
-  }
+  //  P[0].clearData();
+  //  P[1].clearData();
+  //  P[1].setXRange(noiseminamplitude * 1.05, noisemaxamplitude * 1.05);
+  // }
+  // else {
+  //  P.resize(1, 1, true);
+  //  P[0].setXLabel("Time [ms]");
+  //  P[0].setYLabel(trace(CurrentTrace[0]).ident() + " [" + IUnit + "]");
+  //  P[0].clearData();
+  //}
   P.unlock();
 
   for ( int Count=0; ( repeats <= 0 || Count < repeats ) && softStop() == 0; Count++ ) {
@@ -178,24 +178,24 @@ int CombinedStimulus::main( void )
       ArrayD min_idcs = analyzeSamplingPulses( );//currenttrace );
       double dt = currenttrace.stepsize();
       int halfidx = min_idcs.size()/2;
-      P[0].plot( -currenttrace, 1000.0, Plot::Yellow, 2, Plot::Solid );
+      //P[0].plot( -currenttrace, 1000.0, Plot::Yellow, 2, Plot::Solid );
       double absmin = 1000;
       for ( int i=0; i<halfidx; i++ ) {
         double ti = min_idcs[i+halfidx]*dt;
         double minimum = min_idcs[i];
-        P[0].plotPoint( ti*1000.0, Plot::First, -minimum, Plot::First, 0, Plot::Circle, 5, Plot::Pixel, Plot::Green, Plot::Green );
+        //P[0].plotPoint( ti*1000.0, Plot::First, -minimum, Plot::First, 0, Plot::Circle, 5, Plot::Pixel, Plot::Green, Plot::Green );
         if (minimum<absmin){
           absmin = minimum;
         }
         //        cerr << ti << ", " << minimum << "\n";
-      P[0].setYRange(-.05, -absmin*1.05);
+      //P[0].setYRange(-.05, -absmin*1.05);
       }
     }
-    else {
-      P[0].plot( currenttrace, 1000.0, Plot::Yellow, 2, Plot::Solid );
-    }
+    //else {
+    //  P[0].plot( currenttrace, 1000.0, Plot::Yellow, 2, Plot::Solid );
+    //}
 
-    P.draw();
+    // P.draw();
     P.unlock();
 
     sleep( pause );

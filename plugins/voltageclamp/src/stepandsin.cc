@@ -190,7 +190,7 @@ OutData StepAndSin::Sins() {
   //back to holdingpotential
   OutData signal3;
   signal3.setTrace(PotentialOutput[0]);
-  signal3.constWave( holdingpotential );
+  signal3.constWave( 0.01, -1.0, holdingpotential );
 
 
   for ( unsigned j = 0; j < sinamplitudes.size(); j++ ) {
