@@ -62,7 +62,7 @@ public slots:
 
   void setValues( void );
   void keepValues( void );
-  void resetValues( void );
+  void zeroValues( void );
   void measureVRest( void );
 
 
@@ -73,11 +73,11 @@ protected:
 
   OptWidget STW;
   bool Change;
-  bool Reset;
+  bool Zero;
 
   QPushButton *OKButton;
   QPushButton *CancelButton;
-  QPushButton *ResetButton;
+  QPushButton *ZeroButton;
   QPushButton *VRestButton;
 
 };

@@ -83,12 +83,12 @@ SetLeak::SetLeak( void )
   grabKey( Qt::ALT+Qt::Key_C );
   grabKey( Qt::Key_Escape );
 
-  // Reset button:
-  ResetButton = new QPushButton( "&Reset" );
-  bb->addWidget( ResetButton );
-  connect( ResetButton, SIGNAL( clicked() ),
-	   this, SLOT( resetValues() ) );
-  grabKey( Qt::ALT+Qt::Key_R );
+  // Zero button:
+  ZeroButton = new QPushButton( "&Zero" );
+  bb->addWidget( ZeroButton );
+  connect( ZeroButton, SIGNAL( clicked() ),
+	   this, SLOT( zeroValues() ) );
+  grabKey( Qt::ALT+Qt::Key_Z );
 
   // E to VRest button:
   VRestButton = new QPushButton( "&E to VRest" );
@@ -99,7 +99,7 @@ SetLeak::SetLeak( void )
 
   OKButton->setFixedHeight( OKButton->sizeHint().height() );
   CancelButton->setFixedHeight( OKButton->sizeHint().height() );
-  ResetButton->setFixedHeight( OKButton->sizeHint().height() );
+  ZeroButton->setFixedHeight( OKButton->sizeHint().height() );
   VRestButton->setFixedHeight( OKButton->sizeHint().height() );
   bb->setSpacing( 4 );
 }
@@ -155,7 +155,7 @@ void SetLeak::notify( void )
 void SetLeak::setValues( void )
 {
   Change = true;
-  Reset = false;
+  Zero = false;
   STW.accept();
   wake();
 }
@@ -164,15 +164,15 @@ void SetLeak::setValues( void )
 void SetLeak::keepValues( void )
 {
   Change = false;
-  Reset = false;
+  Zero = false;
   wake();
 }
 
 
-void SetLeak::resetValues( void )
+void SetLeak::zeroValues( void )
 {
   Change = true;
-  Reset = true;
+  Zero = true;
   wake();
 }
 
@@ -237,13 +237,13 @@ int SetLeak::main( void )
     postCustomEvent( 11 ); // STW.setFocus();
     // wait for input:
     Change = false;
-    Reset = false;
+    Zero = false;
     sleepWait();
     postCustomEvent( 12 ); // clearFocus();
     // set new values:
     if ( Change ) {
-      g = Reset ? 0.0 : number( "gdc" );
-      E = Reset ? 0.0 : number( "Edc" );
+      g = Zero ? 0.0 : number( "gdc" );
+      E = Zero ? 0.0 : number( "Edc" );
     }
     else {
       setDefaults();   // calls STW.updateValues() via notify
@@ -289,8 +289,8 @@ void SetLeak::keyPressEvent( QKeyEvent *e )
     CancelButton->animateClick();
     e->accept();
   }
-  else if ( e->key() == Qt::Key_R && ( e->modifiers() & Qt::AltModifier ) ) {
-    ResetButton->animateClick();
+  else if ( e->key() == Qt::Key_Z && ( e->modifiers() & Qt::AltModifier ) ) {
+    ZeroButton->animateClick();
     e->accept();
   }
   else if ( e->key() == Qt::Key_E && ( e->modifiers() & Qt::AltModifier ) ) {

@@ -115,8 +115,6 @@ void Session::initDevices( void )
 	      0, metaDataMutex() );
 
   lockStimulusData();
-  for ( int k=0; k<CurrentOutputs; k++ )
-    stimulusData().setRequest( outTraceName( CurrentOutput[k] ), "DC current " + Str( k+1 ) );
   if ( stimulusData().size( stimulusDataTraceFlag() ) >= 4 ) {
     int n = 0;
     for ( int k=0; k<stimulusData().size(); k++ ) {
