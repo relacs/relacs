@@ -1,7 +1,7 @@
 /*!
 Dynamic clamp model for a passive ionic current,
 a capacitive current and a current offset:
-\f[ I_{inj} = -g \cdot (V-E) - C \cdot \frac{dV}{dt} + I \f]
+\f[ I_{inj} = -g \cdot (V-E) - C \cdot \frac{dV}{dt} \f]
 
 \par Input/Output:
 - V: Measured membrane potential in mV
@@ -11,7 +11,6 @@ a capacitive current and a current offset:
 - g: conductance of passive ionic current in nS
 - E: reversal potential of passive ionic current in mV
 - C: Additional capacity of the neuron in pF
-- I: Additional injected offset current in nA
 */
 
 

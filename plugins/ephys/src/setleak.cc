@@ -300,7 +300,10 @@ int SetLeak::main( void )
   }
 
   // set the requested values:
-  message( "set <b>g=" + Str( g ) + "nS</b> and <b>E=" + Str( E ) + "mV</b>" );
+  string msg = "set <b>g=" + Str( g ) + "nS</b>, <b>E=" + Str( E ) + "mV</b>";
+  if ( HaveC )
+    msg += ", <b>C=" + Str( C ) + "pF</b>";
+  message( msg );
   OutList signal;
   signal.resize( 2 + HaveC );
   signal[0].setTraceName( "g" );
