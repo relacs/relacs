@@ -1,14 +1,17 @@
 /*!
-Dynamic clamp model for a passive ionic current:
-\f[ I_{inj} = -g \cdot (V-E) \f]
+Dynamic clamp model for a passive ionic current,
+a capacitive current and a current offset:
+\f[ I_{inj} = -g \cdot (V-E) - C \cdot \frac{dV}{dt} + I \f]
 
-\par Input/Output
+\par Input/Output:
 - V: Measured membrane potential in mV
 - \f$ I_{inj} \f$ : Injected current in nA
 
-\par Parameter
+\par Parameter:
 - g: conductance of passive ionic current in nS
-- E: reversal potential of passive ionic current in  mV
+- E: reversal potential of passive ionic current in mV
+- C: Additional capacity of the neuron in pF
+- I: Additional injected offset current in nA
 */
 
 
@@ -41,28 +44,41 @@ int outputChannels[OUTPUT_N];
 float output[OUTPUT_N] = { 0.0 };
 
   /*! Parameter that are provided by the model and can be read out. */
-#define PARAMINPUT_N 1
-const char *paramInputNames[PARAMINPUT_N] = { "Leak-Current" };
-const char *paramInputUnits[PARAMINPUT_N] = { "nA" };
-float paramInput[PARAMINPUT_N] = { 0.0 };
+#define PARAMINPUT_N 2
+const char *paramInputNames[PARAMINPUT_N] = { "Leak-current", "Capacitive-current" };
+const char *paramInputUnits[PARAMINPUT_N] = { "nA", "nA" };
+float paramInput[PARAMINPUT_N] = { 0.0, 0.0 };
 
   /*! Parameter that are read by the model and are written to the model. */
-#define PARAMOUTPUT_N 2
-const char *paramOutputNames[PARAMOUTPUT_N] = { "g", "E" };
-const char *paramOutputUnits[PARAMOUTPUT_N] = { "nS", "mV" };
-float paramOutput[PARAMOUTPUT_N] = { 0.0, 0.0 };
+#define PARAMOUTPUT_N 3
+const char *paramOutputNames[PARAMOUTPUT_N] = { "g", "E", "C" };
+const char *paramOutputUnits[PARAMOUTPUT_N] = { "nS", "mV", "pF" };
+float paramOutput[PARAMOUTPUT_N] = { 0.0, 0.0, 0.0 };
+
+  /*! Variables used by the model. */
+#define MAXPREVINPUTS 1
+float previnputs[MAXPREVINPUTS];
 
 void initModel( void )
 {
-  modelName = "leak";
+   int k;
+   modelName = "passivecell";
+   for ( k=0; k<MAXPREVINPUTS; k++ )
+     previnputs[k] = 0.0;
 }
 
 void computeModel( void )
 {
-  // leak:
-  paramInput[0] = -0.001*paramOutput[0]*(input[0]-paramOutput[1]);
-  // total injected current:
-  output[0] = paramInput[0];
+   int k;
+   // leak current:
+   paramInput[0] = -0.001*paramOutput[0]*(input[0]-paramOutput[1]);
+   // capacitive current:
+   paramInput[1] = -1e-6*paramOutput[2]*(input[0]-previnputs[0])*loopRate;
+   for ( k=0; k<MAXPREVINPUTS-1; k++ )
+     previnputs[k] = previnputs[k+1];
+   previnputs[MAXPREVINPUTS-1] = input[0];
+   // total injected current:
+   output[0] = paramInput[0] + paramInput[1];
 }
 
 #endif
@@ -86,4 +102,5 @@ int generateLookupTable( int k, float **x, float **y, int *n )
 }
 
 #endif
+
 #endif
