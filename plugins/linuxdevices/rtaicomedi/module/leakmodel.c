@@ -14,7 +14,7 @@ Dynamic clamp model for a passive ionic current:
 
 #if defined (__KERNEL__) || defined (DYNCLAMPMODEL)
 
-  /*! Name, by which this module is known inside Linux: */
+  /*! Name, by which this model is known inside Linux: */
 const char *modelName;
 
   /*! The period length of the realtime periodic task in seconds. */

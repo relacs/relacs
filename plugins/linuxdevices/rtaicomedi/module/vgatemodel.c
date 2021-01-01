@@ -17,7 +17,7 @@ vgatetau \cdot \frac{dx}{dt} & = & -x + \frac{1}{1+\exp(-vgateslope \cdot (V-vga
 
 #if defined (__KERNEL__) || defined (DYNCLAMPMODEL)
 
-  /*! Name, by which this module is known inside Linux: */
+  /*! Name, by which this model is known inside Linux: */
 const char *modelName;
 
   /*! The period length of the realtime periodic task in seconds. */
@@ -66,7 +66,7 @@ float dx = 1.0;
 
 void initModel( void )
 {
-  modelName = "vgatemodel";
+  modelName = "vgate";
   vgate = 0.0;
 
 #ifdef ENABLE_LOOKUPTABLES

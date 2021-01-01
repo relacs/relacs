@@ -13,7 +13,7 @@ GlobalEField & = & Amplitude \cdot \cos(2 \pi \varphi(t)) \end{array} \f]
 
 #if defined (__KERNEL__) || defined (DYNCLAMPMODEL)
 
-  /*! Name, by which this module is known inside Linux: */
+  /*! Name, by which this model is known inside Linux: */
 const char *modelName;
 
   /*! The period length of the realtime periodic task in seconds. */
