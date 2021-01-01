@@ -34,12 +34,12 @@ SetLeak::SetLeak( void )
 
   // add some options:
   addBoolean( "interactive", "Set values interactively", true ).setFlags( 1 );
-  addSelection( "preset", "Set g and E to", "previous|zero|custom" ).setUnit( "values" ).setFlags( 1 );
+  addSelection( "preset", "Set g, E, and C to", "previous|zero|custom" ).setUnit( "values" ).setFlags( 1 );
   addNumber( "g", "New value of leak conductance", 0.0, -100000.0, 100000.0, 0.1, "nS" ).setActivation( "preset", "custom" ).setFlags( 1 );
   addNumber( "E", "New value of leak reversal potential", 0.0, -10000.0, 10000.0, 1.0, "mV" ).setActivation( "preset", "custom" ).setFlags( 1 );
   addNumber( "C", "New value of membrane capacitance", 0.0, -1.0e9, 1.0e9, 10.0, "pF", "pF", "%.0f" ).setActivation( "preset", "custom" ).setFlags( 1 );
   addBoolean( "reversaltorest", "Set leak reversal-potential to resting potential", true ).setActivation( "preset", "zero", false ).setFlags( 1 );
-  addSelection( "settau", "Setting membrane time constant changes", "g|C" ).setFlags( 1 );
+  addSelection( "settau", "Setting membrane time constant changes", "g|C" ).setActivation( "interactive", "true" ).setFlags( 1 );
   addSelection( "involtage", "Input voltage trace for measuring resting potential", "V-1" ).setFlags( 1 );
   addNumber( "duration", "Duration of resting potential measurement", 0.1, 0.001, 1000.0, 0.001, "sec", "ms" ).setFlags( 1 );
   setConfigSelectMask( 1 );

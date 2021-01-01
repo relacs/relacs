@@ -1,7 +1,7 @@
 /*!
-Dynamic clamp model for a passive ionic current,
-a capacitive current and a current offset:
-\f[ I_{inj} = -g \cdot (V-E) - C \cdot \frac{dV}{dt} + I \f]
+Dynamic clamp model for a voltage gated ionic current:
+\f[ \begin{array}{rcl} I_{inj} & = & -g \cdot (V-E) - gvgate \cdot x \cdot (V-Evgate) \\
+vgatetau \cdot \frac{dx}{dt} & = & -x + \frac{1}{1+\exp(-vgateslope \cdot (V-vgatevmid))} \end{array} \f]
 
 \par Input/Output:
 - V: Measured membrane potential in mV
@@ -10,15 +10,17 @@ a capacitive current and a current offset:
 \par Parameter:
 - g: conductance of passive ionic current in nS
 - E: reversal potential of passive ionic current in mV
-- C: Additional capacity of the neuron in pF
-- I: Additional injected offset current in nA
+- gvgate: conductance of voltage-gated ionic current in nS
+- Evgate: reversal potential of voltage-gated ionic current in mV
+- vgatetau: time constant of the gating variable in ms
+- vgatevmid: midpoint potential of the steady-state activation function in mV
+- vgateslope: slope factor of the steady-state activation function in 1/mV
 */
-
 
 #if defined (__KERNEL__) || defined (DYNCLAMPMODEL)
 
   /*! Name, by which this module is known inside Linux: */
-const char *modelName;
+const char *moduleName;
 
   /*! The period length of the realtime periodic task in seconds. */
 float loopInterval;
@@ -45,40 +47,72 @@ float output[OUTPUT_N] = { 0.0 };
 
   /*! Parameter that are provided by the model and can be read out. */
 #define PARAMINPUT_N 2
-const char *paramInputNames[PARAMINPUT_N] = { "Leak-current", "Capacitive-current" };
+const char *paramInputNames[PARAMINPUT_N] = { "Leak-current", "Voltage-gated current" };
 const char *paramInputUnits[PARAMINPUT_N] = { "nA", "nA" };
 float paramInput[PARAMINPUT_N] = { 0.0, 0.0 };
 
   /*! Parameter that are read by the model and are written to the model. */
-#define PARAMOUTPUT_N 3
-const char *paramOutputNames[PARAMOUTPUT_N] = { "g", "E", "C" };
-const char *paramOutputUnits[PARAMOUTPUT_N] = { "nS", "mV", "pF" };
-float paramOutput[PARAMOUTPUT_N] = { 0.0, 0.0, 0.0 };
+#define PARAMOUTPUT_N 7
+const char *paramOutputNames[PARAMOUTPUT_N] = { "g", "E", "gvgate", "Evgate", "vgatetau", "vgatevmid", "vgateslope" };
+const char *paramOutputUnits[PARAMOUTPUT_N] = { "nS", "mV", "nS", "mV", "ms", "mV", "/mV" };
+float paramOutput[PARAMOUTPUT_N] = { 0.0, 0.0, 0.0, 0.0, 10.0, 0.0, 1.0 };
 
   /*! Variables used by the model. */
-#define MAXPREVINPUTS 1
-float previnputs[MAXPREVINPUTS];
+float vgate = 0.0;
+#ifdef ENABLE_LOOKUPTABLES
+float xmin = 0.0;
+float xmax = 0.0;
+float dx = 1.0;
+#endif
 
 void initModel( void )
 {
-   int k;
-   modelName = "passivecell";
-   for ( k=0; k<MAXPREVINPUTS; k++ )
-     previnputs[k] = 0.0;
+   moduleName = "/dev/dynclamp";
+   vgate = 0.0;
+
+#ifdef ENABLE_LOOKUPTABLES
+  // steady-state activation from lookuptable:
+  if ( lookupn[0] > 0 ) {
+    xmin = lookupx[0][0];
+    xmax = lookupx[0][lookupn[0]-1];
+    dx = (xmax - xmin)/lookupn[0];
+    xmax -= dx;
+  }
+  else {
+    xmin = 0.0;
+    xmax = 0.0;
+    dx = 1.0;
+  }
+#endif
 }
 
 void computeModel( void )
 {
-   int k;
-   // leak current:
-   paramInput[0] = -0.001*paramOutput[0]*(input[0]-paramOutput[1]);
-   // capacitive current:
-   paramInput[1] = -1e-6*paramOutput[2]*(input[0]-previnputs[0])*loopRate;
-   for ( k=0; k<MAXPREVINPUTS-1; k++ )
-     previnputs[k] = previnputs[k+1];
-   previnputs[MAXPREVINPUTS-1] = input[0];
-   // total injected current:
-   output[0] = paramInput[0] + paramInput[1];
+#ifdef ENABLE_LOOKUPTABLES
+  float x;
+  int k;
+#endif
+
+  // leak:
+  paramInput[0] = -0.001*paramOutput[0]*(input[0]-paramOutput[1]);
+  // voltage gated channel:
+  if ( paramOutput[4] < 0.1 )
+    paramOutput[4] = 0.1;
+#ifdef ENABLE_LOOKUPTABLES
+  // steady-state activation from lookuptable:
+  x = paramOutput[6]*(input[0]-paramOutput[5]);
+  k = 0;
+  if ( x >= xmax )
+    k = lookupn[0]-1;
+  else if ( x >= xmin )
+    k = (x-xmin)/dx;
+  vgate += loopInterval*1000.0/paramOutput[4]*(-vgate+lookupy[0][k]);
+#else
+  vgate += loopInterval*1000.0/paramOutput[4]*(-vgate+1.0/(1.0+exp(-paramOutput[6]*(input[0]-paramOutput[5]))));
+#endif
+  paramInput[1] = -0.001*paramOutput[2]*vgate*(input[0]-paramOutput[3]);
+  // total injected current:
+  output[0] = paramInput[0] + paramInput[1];
 }
 
 #endif
@@ -98,9 +132,24 @@ void computeModel( void )
 */
 int generateLookupTable( int k, float **x, float **y, int *n )
 {
+  if ( k == 0 ) {
+    /* Lookup-table for the Boltzmann function: */
+    const int nn = 100000;
+    const float xmin = -10.0;
+    const float xmax = 10.0;
+    const float dx = xmax - xmin;
+    *n = nn;
+    *x = new float[nn];
+    *y = new float[nn];
+    for ( int j=0; j<nn; j++ ) {
+      float xx = xmin + j*dx/nn;
+      (*x)[j] = xx;
+      (*y)[j] = 1.0/(1.0+exp(-xx));
+    }
+    return 0;
+  }
   return -1;
 }
 
 #endif
-
 #endif
