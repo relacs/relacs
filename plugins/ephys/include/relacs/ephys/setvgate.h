@@ -23,7 +23,7 @@
 #define _RELACS_EPHYS_SETVGATE_H_ 1
 
 #include <QPushButton>
-#include <relacs/plot.h>
+#include <relacs/multiplot.h>
 #include <relacs/optwidget.h>
 #include <relacs/repro.h>
 using namespace relacs;
@@ -35,7 +35,7 @@ namespace ephys {
 \class SetVGate
 \brief [RePro] Set parameter of voltage gated channel for dynamic clamp.
 \author Jan Benda
-\version 1.2 (Jan 1, 2021)
+\version 1.2 (Jan 4, 2021)
 \par Options
 - \c interactive=true: Set values interactively (\c boolean)
 - \c preset=previous: Set g and E to (\c string)
@@ -75,12 +75,13 @@ protected:
   virtual void keyPressEvent( QKeyEvent *e );
   virtual void customEvent( QEvent *qce );
 
-  Plot P;
+  MultiPlot P;
   OptWidget STW;
   bool Change;
   bool Zero;
   bool HaveMembrane;
   bool HaveVGate;
+  bool HaveTauV;
 
   QPushButton *OKButton;
   QPushButton *CancelButton;

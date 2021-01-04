@@ -28,10 +28,11 @@ namespace ephys {
 
 
 SetVGate::SetVGate( void )
-  : RePro( "SetVGate", "ephys", "Jan Benda", "1.1", "Jan 1, 2021" )
+  : RePro( "SetVGate", "ephys", "Jan Benda", "1.2", "Jan 4, 2021" )
 {
   HaveMembrane = true;
   HaveVGate = true;
+  HaveTauV = true;
 
   // add some options:
   addBoolean( "interactive", "Set values interactively", true ).setFlags( 1 );
@@ -41,6 +42,7 @@ SetVGate::SetVGate( void )
   addNumber( "vmid", "Position of activation curve", 0.0, -1000.0, 1000.0, 1.0, "mV" ).setActivation( "preset", "custom" ).setFlags( 1 );
   addNumber( "width", "Width of activation curve", 0.0, -1000.0, 1000.0, 1.0, "mV" ).setActivation( "preset", "custom" ).setFlags( 1 );
   addNumber( "tau", "Activation time constant", 10.0, 0.0, 100000.0, 1.0, "ms" ).setActivation( "preset", "custom" ).setFlags( 1 );
+  addNumber( "delta", "Asymmetry of energy barrier", 0.5, 0.0, 1.0, 0.05 ).setActivation( "preset", "custom" ).setFlags( 1 );
   addBoolean( "reversaltorest", "Set reversal-potential to resting potential", true ).setActivation( "preset", "zero", false ).setFlags( 1 );
   addSelection( "involtage", "Input voltage trace for measuring resting potential", "V-1" ).setFlags( 1 );
   addNumber( "duration", "Duration of resting potential measurement", 0.1, 0.001, 1000.0, 0.001, "sec", "ms" ).setFlags( 1 );
@@ -49,16 +51,17 @@ SetVGate::SetVGate( void )
 
   // dialog:
   newSection( "Passive membrane properties of the cell:" ).setFlags( 16 );
-  addNumber( "gm", "Conductance g_m", 0.0, 0.0, 1.0e8, 1.0, "nS", "nS", "%.1f" ).setFlags( 16+32 );
-  addNumber( "Taum", "Time constant tau_m", 0.0, 0.0, 1.0e6, 0.001, "s", "ms", "%.1f" ).setFlags( 16+32 );
+  addNumber( "gm", "Conductance g_m", 0.0, 0.0, 1.0e8, 1.0, "nS", "nS", "%.1f" ).setFlags( 16+128 );
+  addNumber( "Taum", "Time constant tau_m", 0.0, 0.0, 1.0e6, 0.001, "s", "ms", "%.1f" ).setFlags( 16+128 );
   newSection( "Injected current I=g m (E-V):" ).setFlags( 2 );
   addNumber( "gvgate", "Conductance g", 0.0, -1.0e8, 1.0e8, 1.0, "nS" ).setFlags( 4 );
   addNumber( "Evgate", "Reversal potential E", 0.0, -1000.0, 1000.0, 1.0, "mV", "mV", "%.1f" ).setFlags( 4 );
   addNumber( "vgatevmid", "Position of activation curve Vmid", 0.0, -200.0, 200.0, 1.0, "mV" ).setFlags( 4 );
   addNumber( "vgatewidth", "Width of activation curve 1/k", 10.0, -1000.0, 1000.0, 1.0, "mV" ).setFlags( 4 );
   addNumber( "vgatetau", "Time constant tau", 10.0, 0.0, 1000000.0, 1.0, "ms" ).setFlags( 4 );
-  addText( "notext1", "Sorry, the dynamic clamp model does", "" ).setFlags( 8+32 );
-  addText( "notext2", "not include a voltage gated current!", "" ).setFlags( 8+32 );
+  addNumber( "vgatedelta", "Asymmetry of time constant delta", 0.5, 0.0, 1.0, 0.05 ).setFlags( 32 );
+  addText( "notext1", "Sorry, the dynamic clamp model does", "" ).setFlags( 8+128 );
+  addText( "notext2", "not include a voltage gated current!", "" ).setFlags( 8+128 );
 
   // layout:
   QVBoxLayout *vb = new QVBoxLayout;
@@ -67,16 +70,22 @@ SetVGate::SetVGate( void )
   vb->addLayout( hb );
 
   // display values:
-  STW.assign( (Options*)this, 2, 32, true, 0, mutex() );
+  STW.assign( (Options*)this, 2, 128, true, 0, mutex() );
   STW.setVerticalSpacing( 2 );
   STW.setMargins( 4 );
   hb->addWidget( &STW );
 
   // plot activation curve:
-  P.setXLabel( "Membrane potential [mV]" );
-  P.setXRange( -100.0, 40.0 );
-  P.setYLabel( "Activation [%]" );
-  P.setYRange( 0.0, 100.0 );
+  P.lock();
+  P.resize( 2, 1, true );
+  P[0].setXRange( -100.0, 40.0 );
+  P[0].setYLabel( "Activation [%]" );
+  P[0].setYRange( 0.0, 100.0 );
+  P[1].setXRange( -100.0, 40.0 );
+  P[1].setXLabel( "Membrane potential [mV]" );
+  P[1].setYRange( 0.0, 10.0 );
+  P[1].setYLabel( "Time constant [ms]" );
+  P.unlock();
   hb->addWidget( &P );
 
   QHBoxLayout *bb = new QHBoxLayout;
@@ -139,9 +148,24 @@ void SetVGate::notify( void )
   SampleDataD activation( -100.0, 40.0, 0.1 );
   for ( int k=0; k<activation.size(); k++ )
     activation[k] = 100.0/(1.0+::exp(-slope*(activation.pos(k)-vmid)));
+  double taumax = number( "vgatetau" );
+  SampleDataD timeconstant( -100.0, 40.0, 0.1 );
+  if ( HaveTauV ) {
+    double delta = number( "vgatedelta" );
+    for ( int k=0; k<timeconstant.size(); k++ ) {
+      timeconstant[k] = taumax * ::pow(1.0-delta, delta-1.0) / (::exp(delta*slope*(timeconstant.pos(k)-vmid)) + ::exp(-(1.0-delta)*slope*(timeconstant.pos(k)-vmid))) / ::pow(delta, delta);
+    }
+  }
+  else {
+    for ( int k=0; k<timeconstant.size(); k++ )
+      timeconstant[k] = taumax;
+  }
   P.lock();
-  P.clear();
-  P.plot( activation, 1.0, Plot::Green, 4, Plot::Solid );
+  P[0].clear();
+  P[0].plot( activation, 1.0, Plot::Green, 3, Plot::Solid );
+  P[1].clear();
+  P[1].plot( timeconstant, 1.0, Plot::Green, 3, Plot::Solid );
+  P[1].setYRange( 0.0, 1.1*taumax );
   P.draw();
   P.unlock();
 }
@@ -202,9 +226,24 @@ int SetVGate::main( void )
     width = width < 0.0 ? -1e-6 : 1e-6;
   double slope = 1.0/width;
   double tau = number( "tau" );
+  double delta = number( "delta" );
   bool reversaltorest = boolean( "reversaltorest" );
 
   noMessage();
+
+  lockMetaData();
+  double rm = metaData().number( "Cell>rm", 0.0, "MOhm" );
+  double cm = metaData().number( "Cell>cm", 0.0, "pF" );
+  unlockMetaData();
+  HaveMembrane = ( rm > 0.0 );
+  lockStimulusData();
+  HaveVGate = stimulusData().exist( "vgatevmid" );
+  HaveTauV = stimulusData().exist( "vgatetaumax" );
+  unlockStimulusData();
+  if ( HaveTauV )
+    setRequest( "vgatetau", "Maximum time constant tau" );
+  else
+    setRequest( "vgatetau", "Time constant tau" );
 
   if ( preset == 0 ) {
     // previous values:
@@ -216,7 +255,11 @@ int SetVGate::main( void )
     if ( ::fabs( slope ) < 1e-2 )
       slope = slope < 0.0 ? -1e-2 : 1e-2;
     width = 1.0/slope;
-    tau = stimulusData().number( "vgatetau", 0.0, "ms" );
+    if ( HaveTauV )
+      tau = stimulusData().number( "vgatetaumax", 0.0, "ms" );
+    else
+      tau = stimulusData().number( "vgatetau", 0.0, "ms" );
+    delta = stimulusData().number( "vgatedelta", 0.5 );
     unlockStimulusData();
   }
   else if ( preset == 1 ) {
@@ -234,10 +277,6 @@ int SetVGate::main( void )
   }
 
   unsetNotify();
-  lockMetaData();
-  double rm = metaData().number( "Cell>rm", 0.0, "MOhm" );
-  double cm = metaData().number( "Cell>cm", 0.0, "pF" );
-  unlockMetaData();
   double gleak = stimulusData().number( "g", 0.0, "nS" );
   double cleak = stimulusData().number( "C", 0.0, "pF" );
   double rnew = 1.0/(0.001*gleak + 1.0/rm);
@@ -249,16 +288,13 @@ int SetVGate::main( void )
   setNumber( "vgatevmid", vmid );
   setNumber( "vgatewidth", width );
   setNumber( "vgatetau", tau );
+  setNumber( "vgatetaumax", tau );
+  setNumber( "vgatedelta", delta );
   delFlags( Parameter::changedFlag() );
   addFlags( "gvgate", Parameter::changedFlag() );
   notify();
   postCustomEvent( 13 ); // STW.updateValues();
   setNotify();
-
-  HaveMembrane = ( rm > 0.0 );
-  lockStimulusData();
-  HaveVGate = stimulusData().exist( "vgatevmid" );
-  unlockStimulusData();
 
   if ( interactive ) {
     postCustomEvent( 14 ); // STW.assign();
@@ -279,6 +315,7 @@ int SetVGate::main( void )
 	width = width < 0.0 ? -1e-6 : 1e-6;
       slope = 1.0/width;
       tau = number( "vgatetau" );
+      delta = number( "vgatedelta" );
     }
     else {
       setDefaults();   // calls STW.updateValues() via notify
@@ -287,9 +324,12 @@ int SetVGate::main( void )
   }
 
   // set the requested values:
-  message( "set <b>g=" + Str( g ) + "nS</b>, <b>E=" + Str( E ) + "mV</b>, <b>Vmid=" + Str( vmid ) + "mV</b>, <b>slope=" + Str( slope ) + "/mV</b>, <b> tau=" + Str( tau ) + "ms</b>" );
+  string msg = "set <b>g=" + Str( g ) + "nS</b>, <b>E=" + Str( E ) + "mV</b>, <b>Vmid=" + Str( vmid ) + "mV</b>, <b>slope=" + Str( slope ) + "/mV</b>, <b> tau=" + Str( tau ) + "ms</b>";
+  if ( HaveTauV )
+    msg += ", <b> delta=" + Str( delta ) + "</b>";
+  message( msg );
   OutList signal;
-  signal.resize( 5 );
+  signal.resize( HaveTauV?6:5 );
   signal[0].setTraceName( "gvgate" );
   signal[0].constWave( g );
   signal[0].setIdent( "gvgate=" + Str( g ) + "nS" );
@@ -302,9 +342,14 @@ int SetVGate::main( void )
   signal[3].setTraceName( "vgateslope" );
   signal[3].constWave( slope );
   signal[3].setIdent( "vgateslope=" + Str( slope ) + "/mV" );
-  signal[4].setTraceName( "vgatetau" );
+  signal[4].setTraceName( HaveTauV?"vgatetaumax":"vgatetau" );
   signal[4].constWave( tau );
   signal[4].setIdent( "vgatetau=" + Str( tau ) + "ms" );
+  if ( HaveTauV ) {
+    signal[5].setTraceName( "vgatedelta" );
+    signal[5].constWave( delta );
+    signal[5].setIdent( "vgatedelta=" + Str( delta ) );
+  }
   directWrite( signal );
   if ( signal.failed() ) {
     warning( "Failed to write new values: " + signal.errorText() );
@@ -316,6 +361,7 @@ int SetVGate::main( void )
   setNumber( "vgatevmid", vmid );
   setNumber( "vgatewidth", width );
   setNumber( "vgatetau", tau );
+  setNumber( "vgatedelta", delta );
   setToDefaults();
   notify();  // calls already STW.updateValues()
   setNotify();
@@ -377,7 +423,9 @@ void SetVGate::customEvent( QEvent *qce )
     int flags = 2;
     flags += HaveMembrane?16:0;
     flags += HaveVGate?4:8;
-    STW.assign( (Options*)this, flags, 32, true, 0, mutex() );
+    if ( HaveVGate && HaveTauV )
+      flags += 32;
+    STW.assign( (Options*)this, flags, 128, true, 0, mutex() );
     break;
   }
   default:

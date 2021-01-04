@@ -12,9 +12,9 @@ vgatetau \cdot \frac{dx}{dt} & = & -x + \frac{1}{1+\exp(-vgateslope \cdot (V-vga
 - E: reversal potential of passive ionic current in mV
 - gvgate: conductance of voltage-gated ionic current in nS
 - Evgate: reversal potential of voltage-gated ionic current in mV
-- vgatetau: time constant of the gating variable in ms
 - vgatevmid: midpoint potential of the steady-state activation function in mV
 - vgateslope: slope factor of the steady-state activation function in 1/mV
+- vgatetau: time constant of the gating variable in ms
 */
 
 #if defined (__KERNEL__) || defined (DYNCLAMPMODEL)
@@ -53,9 +53,9 @@ float paramInput[PARAMINPUT_N] = { 0.0, 0.0 };
 
   /*! Parameter that are read by the model and are written to the model. */
 #define PARAMOUTPUT_N 7
-const char *paramOutputNames[PARAMOUTPUT_N] = { "g", "E", "gvgate", "Evgate", "vgatetau", "vgatevmid", "vgateslope" };
-const char *paramOutputUnits[PARAMOUTPUT_N] = { "nS", "mV", "nS", "mV", "ms", "mV", "/mV" };
-float paramOutput[PARAMOUTPUT_N] = { 0.0, 0.0, 0.0, 0.0, 10.0, 0.0, 1.0 };
+const char *paramOutputNames[PARAMOUTPUT_N] = { "g", "E", "gvgate", "Evgate", "vgatevmid", "vgateslope", "vgatetau" };
+const char *paramOutputUnits[PARAMOUTPUT_N] = { "nS", "mV", "nS", "mV", "mV", "/mV", "ms" };
+float paramOutput[PARAMOUTPUT_N] = { 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 10.0 };
 
   /*! Variables used by the model. */
 float vgate = 0.0;
@@ -96,19 +96,19 @@ void computeModel( void )
   // leak:
   paramInput[0] = -0.001*paramOutput[0]*(input[0]-paramOutput[1]);
   // voltage gated channel:
-  if ( paramOutput[4] < 0.1 )
-    paramOutput[4] = 0.1;
+  if ( paramOutput[6] < 0.1 )
+    paramOutput[6] = 0.1;
 #ifdef ENABLE_LOOKUPTABLES
   // steady-state activation from lookuptable:
-  x = paramOutput[6]*(input[0]-paramOutput[5]);
+  x = paramOutput[5]*(input[0]-paramOutput[4]);
   k = 0;
   if ( x >= xmax )
     k = lookupn[0]-1;
   else if ( x >= xmin )
     k = (x-xmin)/dx;
-  vgate += loopInterval*1000.0/paramOutput[4]*(-vgate+lookupy[0][k]);
+  vgate += loopInterval*1000.0/paramOutput[6]*(-vgate+lookupy[0][k]);
 #else
-  vgate += loopInterval*1000.0/paramOutput[4]*(-vgate+1.0/(1.0+exp(-paramOutput[6]*(input[0]-paramOutput[5]))));
+  vgate += loopInterval*1000.0/paramOutput[6]*(-vgate+1.0/(1.0+exp(-paramOutput[5]*(input[0]-paramOutput[4]))));
 #endif
   paramInput[1] = -0.001*paramOutput[2]*vgate*(input[0]-paramOutput[3]);
   // total injected current:
