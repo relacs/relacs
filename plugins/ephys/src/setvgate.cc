@@ -43,7 +43,7 @@ SetVGate::SetVGate( void )
   addNumber( "width", "Width of activation curve", 0.0, -1000.0, 1000.0, 1.0, "mV" ).setActivation( "preset", "custom" ).setFlags( 1 );
   addNumber( "tau", "Activation time constant", 10.0, 0.0, 100000.0, 1.0, "ms" ).setActivation( "preset", "custom" ).setFlags( 1 );
   addNumber( "delta", "Asymmetry of energy barrier", 0.5, 0.0, 1.0, 0.05 ).setActivation( "preset", "custom" ).setFlags( 1 );
-  addBoolean( "reversaltorest", "Set reversal-potential to resting potential", true ).setActivation( "preset", "zero", false ).setFlags( 1 );
+  addBoolean( "reversaltorest", "Set reversal-potential to resting potential", false ).setActivation( "preset", "zero", false ).setFlags( 1 );
   addSelection( "involtage", "Input voltage trace for measuring resting potential", "V-1" ).setFlags( 1 );
   addNumber( "duration", "Duration of resting potential measurement", 0.1, 0.001, 1000.0, 0.001, "sec", "ms" ).setFlags( 1 );
   setConfigSelectMask( 1 );
@@ -78,10 +78,10 @@ SetVGate::SetVGate( void )
   // plot activation curve:
   P.lock();
   P.resize( 2, 1, true );
-  P[0].setXRange( -100.0, 40.0 );
+  P[0].setXRange( -120.0, 40.0 );
   P[0].setYLabel( "Activation [%]" );
   P[0].setYRange( 0.0, 100.0 );
-  P[1].setXRange( -100.0, 40.0 );
+  P[1].setXRange( -120.0, 40.0 );
   P[1].setXLabel( "Membrane potential [mV]" );
   P[1].setYRange( 0.0, 10.0 );
   P[1].setYLabel( "Time constant [ms]" );
@@ -145,11 +145,11 @@ void SetVGate::notify( void )
   if ( ::fabs( width ) < 1e-6 )
     width = width < 0.0 ? -1e-6 : 1e-6;
   double slope = 1.0/width;
-  SampleDataD activation( -100.0, 40.0, 0.1 );
+  SampleDataD activation( -120.0, 40.0, 0.1 );
   for ( int k=0; k<activation.size(); k++ )
     activation[k] = 100.0/(1.0+::exp(-slope*(activation.pos(k)-vmid)));
   double taumax = number( "vgatetau" );
-  SampleDataD timeconstant( -100.0, 40.0, 0.1 );
+  SampleDataD timeconstant( -120.0, 40.0, 0.1 );
   if ( HaveTauV ) {
     double delta = number( "vgatedelta" );
     for ( int k=0; k<timeconstant.size(); k++ ) {

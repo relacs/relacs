@@ -44,7 +44,7 @@ namespace ephys {
 - \c vmid=0mV: Position of activation curve (\c number)
 - \c width=0mV: Width of activation curve (\c number)
 - \c tau=10ms: Activation time constant (\c number)
-- \c reversaltorest=true: Set reversal-potential to resting potential (\c boolean)
+- \c reversaltorest=false: Set reversal-potential to resting potential (\c boolean)
 - \c involtage=V-1: Input voltage trace for measuring resting potential (\c string)
 - \c duration=100ms: Duration of resting potential measurement (\c number)
 */

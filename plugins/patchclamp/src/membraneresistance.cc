@@ -29,7 +29,7 @@ namespace patchclamp {
 
 
 MembraneResistance::MembraneResistance( void )
-  : RePro( "MembraneResistance", "patchclamp", "Jan Benda", "1.7", "Dec 31, 2020" ),
+  : RePro( "MembraneResistance", "patchclamp", "Jan Benda", "1.8", "Jan 5, 2021" ),
     VUnit( "mV" ),
     IUnit( "nA" ),
     VFac( 1.0 ),
@@ -48,7 +48,7 @@ MembraneResistance::MembraneResistance( void )
   addBoolean( "nossfit", "Fix steady-state potential for fit", true );
   addBoolean( "plotstdev", "Plot standard deviation of membrane potential", true );
   addSelection( "setdata", "Set results to the session variables", "defaults only|always|never" );
-  addText( "nocheckoutput", "Outputs that do not need to be at their default value", "Current-1" ).setActivation( "setdata", "defaults only" );
+  addText( "checkoutput", "Outputs that need to be at their default value", "g|C|gvgate" ).setActivation( "setdata", "defaults only" );
 
   // plot:
   P.lock();
@@ -80,7 +80,7 @@ void MembraneResistance::preConfig( void )
 
 int MembraneResistance::main( void )
 {
-  NoCheckOutParams.clear();
+  CheckOutParams.clear();
   // get options:
   Amplitude = number( "amplitude" );
   Duration = number( "duration" );
@@ -88,7 +88,7 @@ int MembraneResistance::main( void )
   int repeats = integer( "repeats" );
   bool skipspikes = boolean( "skipspikes" );
   double sswidth = number( "sswidth" );
-  texts( "nocheckoutput", NoCheckOutParams );
+  texts( "checkoutput", CheckOutParams );
 
   if ( pause < 2.0*Duration ) {
     warning( "Pause must be at least two times the stimulus duration!", 4.0 );
@@ -445,10 +445,10 @@ void MembraneResistance::save( void )
 
   bool setdata = ( settings().index( "setdata" ) <= 1 );
   if ( settings().index( "setdata" ) == 0 ) {
-    // all outputs except the ones in NoCheckOutParams must be at their default values:
+    // all outputs in CheckOutParams must be at their default values:
     lockStimulusData();
     for ( int k=0; k<outTracesSize(); k++ ) {
-      if ( ::find( NoCheckOutParams.begin(), NoCheckOutParams.end(), outTraceName( k ) ) == NoCheckOutParams.end() &&
+      if ( ::find( CheckOutParams.begin(), CheckOutParams.end(), outTraceName( k ) ) != CheckOutParams.end() &&
 	   fabs( stimulusData().number( outTraceName( k ) ) - stimulusData().defaultNumber( outTraceName( k ) ) ) > 1.0e-6 ) {
 	setdata = false;
 	break;

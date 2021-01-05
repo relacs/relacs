@@ -65,7 +65,7 @@ float paramInput[PARAMINPUT_N] = { 0.0, 0.0, 0.0 };
 #define PARAMOUTPUT_N 9
 const char *paramOutputNames[PARAMOUTPUT_N] = { "g", "E", "C", "gvgate", "Evgate", "vgatevmid", "vgateslope", "vgatetaumax", "vgatedelta" };
 const char *paramOutputUnits[PARAMOUTPUT_N] = { "nS", "mV", "pF", "nS", "mV", "mV", "/mV", "ms", "1" };
-float paramOutput[PARAMOUTPUT_N] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 10.0, 0.5 };
+float paramOutput[PARAMOUTPUT_N] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.1, 10.0, 0.5 };
 
   /*! Variables used by the model. */
 #define MAXPREVINPUTS 1

@@ -38,7 +38,7 @@ namespace patchclamp {
 \class MembraneResistance
 \brief [RePro] Measures membrane resistance, capacitance, and time constant with current pulses
 \author Jan Benda
-\version 1.7 (Dec 31, 2020)
+\version 1.8 (Jan 5, 2021)
 \par Screenshot
 \image html membraneresistance.png
 
@@ -54,7 +54,7 @@ namespace patchclamp {
     - \c nossfit=false: Fix steady-state potential for fit (\c boolean)
     - \c plotstdev=true: Plot standard deviation of membrane potential (\c boolean)
     - \c setdata=rest only: Set results to the session variables (\c string)
-    - \c nocheckoutput=Current-1: Outputs that do not need to be at their default value (\c string)
+    - \c checkoutput=g, C, gvgate: Outputs that need to be at their default value (\c string)
 */
 
 
@@ -111,7 +111,7 @@ protected:
   SampleDataF ExpOn;
   SampleDataF ExpOff;
   int Count;
-  vector< string > NoCheckOutParams;
+  vector< string > CheckOutParams;
 
 };
 
