@@ -1,7 +1,7 @@
 #!/bin/bash
 
 MAKE_COMEDI="${0##*/}"
-VERSION_STRING="${MAKE_COMEDI} version 1.0 by Jan Benda, June 2020"
+VERSION_STRING="${MAKE_COMEDI} version 1.1 by Jan Benda, February 2021"
 
 USE_DKMS=true
 
@@ -15,7 +15,7 @@ function help_usage {
     cat <<EOF
 $VERSION_STRING
 
-Download, build and install comedi kernel modules.
+Download, build and install comedi kernel modules and libraries.
 
 usage:
 sudo ${MAKE_COMEDI} ACTION
@@ -25,12 +25,19 @@ With ACTION one of
     downloadkernel : download kernel headers and source packages
     prepare        : prepare kernel sources
     download       : download comedi
-    add            : remove and add comedi sources to dkms tree
+    remove         : remove comedi sources from dkms tree
+    add            : add comedi sources to dkms tree
     build          : build comedi
     install        : install comedi
     clean          : clean comedi sources
     kill           : kill currently loaded comedi modules
     load           : load comedi modules
+    setup          : setup comedi group and user permission
+    comedilib      : download/update and build comedilib
+    comedicalibrate: download/update and build comedi_calibrate
+
+If no action is specified, then do everything necessary to build
+the comedi kernel modules.
 EOF
 }
 
@@ -128,12 +135,24 @@ function download_comedi {
 }
 
 
-function add_comedi {
+function remove_comedi {
     if $USE_DKMS; then
 	next_command
 	echo "remove comedi from dkms ..."
 	VERSION=$(grep PACKAGE_VERSION /usr/local/src/comedi/dkms.conf | cut -d = -f2)
 	dkms remove comedi/$VERSION --all
+    fi
+}
+
+
+function add_comedi {
+    if $USE_DKMS; then
+	next_command
+	echo "prepare comedi sources ..."
+        cd /usr/local/src/comedi
+	./autogen.sh
+	cd -
+	next_command
 	echo "add comedi to dkms ..."
 	dkms add /usr/local/src/comedi
     fi
@@ -144,9 +163,6 @@ function build_comedi {
     next_command
     if $USE_DKMS; then
 	echo "build comedi via dkms ..."
-        cd /usr/local/src/comedi
-	./autogen.sh
-	cd -
 	VERSION=$(grep PACKAGE_VERSION /usr/local/src/comedi/dkms.conf | cut -d = -f2)
 	dkms build -m comedi -v $VERSION
     else
@@ -211,10 +227,17 @@ function load_comedi {
 
 function download_comedilib {
     next_command
-    echo "download comedilib ..."
-    cd /usr/local/src
-    git clone https://github.com/Linux-Comedi/comedilib.git
-    cd -
+    if test -d /usr/local/src/comedilib; then
+	echo "update comedilib ..."
+	cd /usr/local/src/comedilib
+	git pull origin master
+	cd -
+    else
+	echo "download comedilib ..."
+	cd /usr/local/src
+	git clone https://github.com/Linux-Comedi/comedilib.git
+	cd -
+    fi
 }
 
 
@@ -232,10 +255,17 @@ function build_comedilib {
 
 function download_comedi_calibrate {
     next_command
-    echo "download comedi_calibrate ..."
-    cd /usr/local/src
-    git clone https://github.com/Linux-Comedi/comedi_calibrate.git
-    cd -
+    if test -d /usr/local/src/comedi_calibrate; then
+	echo "update comedi_calibrate ..."
+	cd /usr/local/src/comedi_calibrate
+	git pull origin master
+	cd -
+    else
+	echo "download comedi_calibrate ..."
+	cd /usr/local/src
+	git clone https://github.com/Linux-Comedi/comedi_calibrate.git
+	cd -
+    fi
 }
 
 
@@ -253,8 +283,8 @@ function build_comedi_calibrate {
 
 function setup_permissions {
     next_command
-    echo "setup udev permissions for comedi ..."
     groupadd --system iocard
+    echo "setup udev permissions for comedi ..."
     echo 'KERNEL=="comedi*", MODE="0660", GROUP="iocard"' > /etc/udev/rules.d/95-comedi.rules
     udevadm trigger
     usermod $USER -a -G iocard   # or: adduser $USER iocard
@@ -285,11 +315,15 @@ if test -z "$1"; then
     download_kernel
     prepare_kernel
     download_comedi
+    remove_comedi
     add_comedi
+    kill_comedi
     build_comedi
     install_comedi
+    load_comedi
+    next_command
+    echo "Successfully built the comedi modules for the running kernel!"
     echo
-    echo "Restart the computer to make the new comedi modules available."
     exit 0
 fi
 
@@ -325,6 +359,11 @@ case $1 in
         exit 0
         ;;
 
+    remove )
+	remove_comedi
+        exit 0
+        ;;
+
     add )
 	add_comedi
         exit 0
@@ -352,6 +391,23 @@ case $1 in
 
     load )
 	load_comedi
+        exit 0
+        ;;
+
+    setup )
+	setup_permissions
+        exit 0
+        ;;
+
+    comedilib )
+	download_comedilib
+	build_comedilib
+        exit 0
+        ;;
+
+    comedicalibrate )
+	download_comedi_calibrate
+	build_comedi_calibrate
         exit 0
         ;;
 
