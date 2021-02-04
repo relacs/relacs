@@ -405,7 +405,7 @@ void OptWidgetText::browse( void )
     fd->setWindowTitle( "Choose directory" );
     fd->setDirectory( file.preventSlash().dir().c_str() );
   }
-  fd->setFilter( "All (*)" );
+  fd->setNameFilter( tr("All (*)") );
   fd->setViewMode( QFileDialog::List );
   if ( fd->exec() == QDialog::Accepted ) {
     QStringList qsl = fd->selectedFiles();

@@ -24,6 +24,9 @@
 #include <QTableWidget>
 #include <QStringList>
 #include <QPushButton>
+#include <QComboBox>
+#include <QHeaderView>
+#include <QApplication>
 #include <iostream>
 
 #include <relacs/doublespinbox.h>
@@ -53,7 +56,7 @@ OutputConfig::OutputConfig(Options& ops, QWidget *parent)
     w += TableWidget->columnWidth( i );
   TableWidget->setMinimumWidth( w );
   TableWidget->setMinimumHeight( 8*TableWidget->rowHeight( 0 ) );
-  TableWidget->horizontalHeader()->setResizeMode( QHeaderView::Stretch );
+  TableWidget->horizontalHeader()->setSectionResizeMode( QHeaderView::Stretch );
 
   QHBoxLayout* layout = new QHBoxLayout();
   layout->addWidget(TableWidget);
