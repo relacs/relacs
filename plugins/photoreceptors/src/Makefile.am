@@ -22,11 +22,11 @@ libphotoreceptorssearch_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS)
+    $(QT_CPPFLAGS)
 
 libphotoreceptorssearch_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS)
+    $(QT_LDFLAGS)
 
 libphotoreceptorssearch_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -39,7 +39,7 @@ libphotoreceptorssearch_la_LIBADD = \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
-    $(QT4_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(GSL_LIBS)
 
 $(libphotoreceptorssearch_la_OBJECTS) : moc_search.cc
 
@@ -63,11 +63,11 @@ libphotoreceptorspulses_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS)
+    $(QT_CPPFLAGS)
 
 libphotoreceptorspulses_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS)
+    $(QT_LDFLAGS)
 
 libphotoreceptorspulses_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -80,7 +80,7 @@ libphotoreceptorspulses_la_LIBADD = \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
-    $(QT4_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(GSL_LIBS)
 
 $(libphotoreceptorspulses_la_OBJECTS) : moc_pulses.cc
 
@@ -104,11 +104,11 @@ libphotoreceptorstwochannelstimulus_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS)
+    $(QT_CPPFLAGS)
 
 libphotoreceptorstwochannelstimulus_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS)
+    $(QT_LDFLAGS)
 
 libphotoreceptorstwochannelstimulus_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -121,7 +121,7 @@ libphotoreceptorstwochannelstimulus_la_LIBADD = \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
-    $(QT4_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(GSL_LIBS)
 
 $(libphotoreceptorstwochannelstimulus_la_OBJECTS) : moc_twochannelstimulus.cc
 

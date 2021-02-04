@@ -10,28 +10,28 @@ librelacswidgets_la_CPPFLAGS = \
     -I$(srcdir)/../../shapes/include \
     -I$(srcdir)/../../options/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS)
+    $(QT_CPPFLAGS)
 else
 librelacswidgets_la_CPPFLAGS = \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS)
+    $(QT_CPPFLAGS)
 endif
 
 librelacswidgets_la_LDFLAGS = \
     -version-info 0:0:0 \
-    $(QT4_LDFLAGS)
+    $(QT_LDFLAGS)
 
 if RELACS_TOP_BUILD
 librelacswidgets_la_LIBADD = \
     ../../shapes/src/librelacsshapes.la \
     ../../options/src/librelacsoptions.la \
-    $(QT4_LIBS)
+    $(QT_LIBS)
 else
 librelacswidgets_la_LIBADD = \
     -lrelacsshapes \
     -lrelacsdaq \
     -lrelacsoptions \
-    $(QT4_LIBS)
+    $(QT_LIBS)
 endif
 
 $(librelacswidgets_la_OBJECTS) : \
