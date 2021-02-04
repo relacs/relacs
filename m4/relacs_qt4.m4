@@ -1,7 +1,7 @@
 # RELACS_LIB_QT4() 
-# - Provides --with-qt4(-(inc|lib))? options and performs header and link checks
-# - Fills QT4CORE_(LD|CPP)FLAGS and QT4CORE_LIBS with values for the QtCore library and marks them for substitution
-# - Fills QT4_(LD|CPP)FLAGS and QT4_LIBS with values for the QtCore, QtGui, and QtNetwork library and marks them for substitution
+# - Provides --with-QT(-(inc|lib))? options and performs header and link checks
+# - Fills QTCORE_(LD|CPP)FLAGS and QTCORE_LIBS with values for the QtCore library and marks them for substitution
+# - Fills QT_(LD|CPP)FLAGS and QT_LIBS with values for the QtCore, QtGui, and QtNetwork library and marks them for substitution
 # - Fills MOC and marks it for substitution
 # - Leaves ((LD|CPP)FLAGS|LIBS) untouched
 
@@ -12,149 +12,149 @@ SAVE_CPPFLAGS=${CPPFLAGS}
 SAVE_LDFLAGS=${LDFLAGS}
 SAVE_LIBS=${LIBS}
 
-# QT4 flags:
-QT4CORE_CPPFLAGS=
-QT4CORE_LDFLAGS=
-QT4CORE_LIBS=
-QT4_CPPFLAGS=
-QT4_LDFLAGS=
-QT4_LIBS=
+# QT flags:
+QTCORE_CPPFLAGS=
+QTCORE_LDFLAGS=
+QTCORE_LIBS=
+QT_CPPFLAGS=
+QT_LDFLAGS=
+QT_LIBS=
 
 # get flags:
 if test "x${PKG_CONFIG}" != "x" && ${PKG_CONFIG} --exists QtGui ; then
-    QT4CORE_CPPFLAGS="`${PKG_CONFIG} --cflags QtCore`"
-    QT4CORE_LDFLAGS="`${PKG_CONFIG} --libs-only-L QtCore`"
-    QT4CORE_LIBS="`${PKG_CONFIG} --libs-only-l QtCore`"
-    QT4_CPPFLAGS="`${PKG_CONFIG} --cflags QtCore` `${PKG_CONFIG} --cflags QtGui` `${PKG_CONFIG} --cflags QtNetwork`"
-    QT4_LDFLAGS="`${PKG_CONFIG} --libs-only-L QtCore` `${PKG_CONFIG} --libs-only-L QtGui` `${PKG_CONFIG} --libs-only-L QtNetwork`"
-    QT4_LIBS="`${PKG_CONFIG} --libs-only-l QtCore` `${PKG_CONFIG} --libs-only-l QtGui` `${PKG_CONFIG} --libs-only-l QtNetwork`"
+    QTCORE_CPPFLAGS="`${PKG_CONFIG} --cflags QtCore`"
+    QTCORE_LDFLAGS="`${PKG_CONFIG} --libs-only-L QtCore`"
+    QTCORE_LIBS="`${PKG_CONFIG} --libs-only-l QtCore`"
+    QT_CPPFLAGS="`${PKG_CONFIG} --cflags QtCore` `${PKG_CONFIG} --cflags QtGui` `${PKG_CONFIG} --cflags QtNetwork`"
+    QT_LDFLAGS="`${PKG_CONFIG} --libs-only-L QtCore` `${PKG_CONFIG} --libs-only-L QtGui` `${PKG_CONFIG} --libs-only-L QtNetwork`"
+    QT_LIBS="`${PKG_CONFIG} --libs-only-l QtCore` `${PKG_CONFIG} --libs-only-l QtGui` `${PKG_CONFIG} --libs-only-l QtNetwork`"
 fi
 
 # default flags:
-if test "x${QT4CORE_CPPFLAGS}" = x ; then
-    QT4CORE_CPPFLAGS="-DQT_SHARED -I/usr/include/qt4 -I/usr/include/qt4/QtCore"
+if test "x${QTCORE_CPPFLAGS}" = x ; then
+    QTCORE_CPPFLAGS="-DQT_SHARED -I/usr/include/QT -I/usr/include/QT/QtCore"
 fi
-if test "x${QT4_CPPFLAGS}" = x ; then
-    QT4_CPPFLAGS="-DQT_SHARED -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtGui -I/usr/include/qt4/QtNetwork"
+if test "x${QT_CPPFLAGS}" = x ; then
+    QT_CPPFLAGS="-DQT_SHARED -I/usr/include/QT -I/usr/include/QT/QtCore -I/usr/include/QT/QtGui -I/usr/include/QT/QtNetwork"
 fi
-if test "x${QT4CORE_LIBS}" = x ; then
-    QT4CORE_LIBS="-lQtCore"
+if test "x${QTCORE_LIBS}" = x ; then
+    QTCORE_LIBS="-lQtCore"
 fi
-if test "x${QT4_LIBS}" = x ; then
-    QT4_LIBS="-lQtGui -lQtNetwork -lQtCore"
+if test "x${QT_LIBS}" = x ; then
+    QT_LIBS="-lQtGui -lQtNetwork -lQtCore"
 fi
 
 # read arguments:
 WITH_QT="yes"
 EXTRA_MOC_LOCATION=
-AC_ARG_WITH([qt4],
-	[AS_HELP_STRING([--with-qt4=DIR],
-	           	[override Qt4 path ("/lib" and "/include" is appended)])],
-	[QT4_ERROR="no path given for option --with-qt4"
+AC_ARG_WITH([QT],
+	[AS_HELP_STRING([--with-QT=DIR],
+	           	[override QT path ("/lib" and "/include" is appended)])],
+	[QT_ERROR="no path given for option --with-QT"
 	if test ${withval} = no ; then
 	   WITH_QT="no"
 	elif test ${withval} != yes -a "x${withval}" != x ; then
-	   	QT4CORE_CPPFLAGS="-DQT_SHARED -I${withval}/include/qt4 -I${withval}/include/qt4/QtCore"
-    		QT4_CPPFLAGS="-DQT_SHARED -I${withval}/include/qt4 -I${withval}/include/qt4/QtCore -I${withval}/include/qt4/QtGui -I${withval}/include/qt4/QtNetwork"
-		QT4CORE_LDFLAGS="-L${withval}/lib"
-		QT4_LDFLAGS="-L${withval}/lib"
+	   	QTCORE_CPPFLAGS="-DQT_SHARED -I${withval}/include/QT -I${withval}/include/QT/QtCore"
+    		QT_CPPFLAGS="-DQT_SHARED -I${withval}/include/QT -I${withval}/include/QT/QtCore -I${withval}/include/QT/QtGui -I${withval}/include/QT/QtNetwork"
+		QTCORE_LDFLAGS="-L${withval}/lib"
+		QT_LDFLAGS="-L${withval}/lib"
 		EXTRA_MOC_LOCATION="${withval}/bin"
 	else
-		AC_MSG_ERROR(${QT4_ERROR})
+		AC_MSG_ERROR(${QT_ERROR})
 	fi],
 	[])
 
-AC_ARG_WITH([qt4-inc],
-	[AS_HELP_STRING([--with-qt4-inc=DIR],[override Qt4 include path])],
-	[QT4_INC_ERROR="no path given for option --with-qt4-inc"
+AC_ARG_WITH([QT-inc],
+	[AS_HELP_STRING([--with-QT-inc=DIR],[override QT include path])],
+	[QT_INC_ERROR="no path given for option --with-QT-inc"
 	if test ${withval} != yes -a "x${withval}" != x ; then
-	   	QT4CORE_CPPFLAGS="-DQT_SHARED -I${withval} -I${withval}/QtCore"
-    		QT4_CPPFLAGS="-DQT_SHARED -I${withval} -I${withval}/QtCore -I${withval}/QtGui -I${withval}/QtCore -I${withval}/QtNetwork"	
+	   	QTCORE_CPPFLAGS="-DQT_SHARED -I${withval} -I${withval}/QtCore"
+    		QT_CPPFLAGS="-DQT_SHARED -I${withval} -I${withval}/QtCore -I${withval}/QtGui -I${withval}/QtCore -I${withval}/QtNetwork"	
 	else
-		AC_MSG_ERROR(${QT4_INC_ERROR})
+		AC_MSG_ERROR(${QT_INC_ERROR})
 	fi],
 	[])
 
-AC_ARG_WITH([qt4-lib],
-	[AS_HELP_STRING([--with-qt4-lib=DIR],[override Qt4 library path])],
-	[QT4_LIB_ERROR="no path given for option --with-qt4-lib"
+AC_ARG_WITH([QT-lib],
+	[AS_HELP_STRING([--with-QT-lib=DIR],[override QT library path])],
+	[QT_LIB_ERROR="no path given for option --with-QT-lib"
 	if test ${withval} != yes -a "x${withval}" != x ; then
-		QT4CORE_LDFLAGS="-L${withval}
-		QT4_LDFLAGS="-L${withval}
+		QTCORE_LDFLAGS="-L${withval}
+		QT_LDFLAGS="-L${withval}
 	else
-		AC_MSG_ERROR(${QT4_LIB_ERROR})
+		AC_MSG_ERROR(${QT_LIB_ERROR})
 	fi],
 	[])
 
 if test $WITH_QT = "yes"; then
 
 # update flags:
-CPPFLAGS="${QT4_CPPFLAGS} ${CPPFLAGS}"
-LDFLAGS="${QT4_LDFLAGS} ${LDFLAGS}"
+CPPFLAGS="${QT_CPPFLAGS} ${CPPFLAGS}"
+LDFLAGS="${QT_LDFLAGS} ${LDFLAGS}"
 
-QT4_INC_MISSING="cannot find the header files for Qt4!
+QT_INC_MISSING="cannot find the header files for QT!
 You either need to
-- install a Qt4 development package (e.g. libqt4-dev,
-  on a Debian-based system enter 'sudo apt-get install libqt4-dev'),
-- or provide the path to the Qt4 include directory:
-  e.g. './configure --with-qt4-inc=/usr/lib/qt4/include'
-- or provide the base path to the Qt4 installation:
-  e.g. './configure --with-qt4=/usr/lib/qt4'."
-AC_CHECK_HEADERS(QWidget QThread,, AC_MSG_ERROR(${QT4_INC_MISSING}))
+- install a QT development package (e.g. libQT-dev,
+  on a Debian-based system enter 'sudo apt-get install libQT-dev'),
+- or provide the path to the QT include directory:
+  e.g. './configure --with-QT-inc=/usr/lib/QT/include'
+- or provide the base path to the QT installation:
+  e.g. './configure --with-QT=/usr/lib/QT'."
+AC_CHECK_HEADERS(QWidget QThread,, AC_MSG_ERROR(${QT_INC_MISSING}))
 
-QT4CORE_LIB_MISSING="cannot find the Qt4 core libraries!
+QTCORE_LIB_MISSING="cannot find the QT core libraries!
 You either need to
-- install a Qt4 development package (e.g. libqt4-dev,
-  on a Debian-based system enter 'sudo apt-get install libqt4-dev'),
-- or provide the path to the Qt4 libraries:
-  e.g. './configure --with-qt4-lib=/usr/lib/qt4/lib'
-- or provide the base path to the Qt4 installation:
-  e.g. './configure --with-qt4=/usr/lib/qt4'."
-AC_CHECK_LIB(QtCore, main,, AC_MSG_ERROR(${QT4CORE_LIB_MISSING}), ${QT4CORE_LDFLAGS})
+- install a QT development package (e.g. libQT-dev,
+  on a Debian-based system enter 'sudo apt-get install libQT-dev'),
+- or provide the path to the QT libraries:
+  e.g. './configure --with-QT-lib=/usr/lib/QT/lib'
+- or provide the base path to the QT installation:
+  e.g. './configure --with-QT=/usr/lib/QT'."
+AC_CHECK_LIB(QtCore, main,, AC_MSG_ERROR(${QTCORE_LIB_MISSING}), ${QTCORE_LDFLAGS})
 
-QT4_LIB_MISSING="cannot find the Qt4 gui libraries!
+QT_LIB_MISSING="cannot find the QT gui libraries!
 You either need to
-- install a Qt4 development package (e.g. libqt4-dev,
-  on a Debian-based system enter 'sudo apt-get install libqt4-dev'),
-- or provide the path to the Qt4 libraries:
-  e.g. './configure --with-qt4-lib=/usr/lib/qt4/lib'
-- or provide the base path to the Qt4 installation:
-  e.g. './configure --with-qt4=/usr/lib/qt4'."
-AC_CHECK_LIB(QtGui, main,, AC_MSG_ERROR(${QT4_LIB_MISSING}), ${QT4_LDFLAGS})
+- install a QT development package (e.g. libQT-dev,
+  on a Debian-based system enter 'sudo apt-get install libQT-dev'),
+- or provide the path to the QT libraries:
+  e.g. './configure --with-QT-lib=/usr/lib/QT/lib'
+- or provide the base path to the QT installation:
+  e.g. './configure --with-QT=/usr/lib/QT'."
+AC_CHECK_LIB(QtGui, main,, AC_MSG_ERROR(${QT_LIB_MISSING}), ${QT_LDFLAGS})
 
-QT4NETWORK_LIB_MISSING="cannot find the Qt4 network libraries!
+QTNETWORK_LIB_MISSING="cannot find the QT network libraries!
 You either need to
-- install a Qt4 development package (e.g. libqt4-dev,
-  on a Debian-based system enter 'sudo apt-get install libqt4-dev'),
-- or provide the path to the Qt4 libraries:
-  e.g. './configure --with-qt4-lib=/usr/lib/qt4/lib'
-- or provide the base path to the Qt4 installation:
-  e.g. './configure --with-qt4=/usr/lib/qt4'."
-AC_CHECK_LIB(QtNetwork, main,, AC_MSG_ERROR(${QT4NETWORK_LIB_MISSING}), ${QT4_LDFLAGS})
+- install a QT development package (e.g. libQT-dev,
+  on a Debian-based system enter 'sudo apt-get install libQT-dev'),
+- or provide the path to the QT libraries:
+  e.g. './configure --with-QT-lib=/usr/lib/QT/lib'
+- or provide the base path to the QT installation:
+  e.g. './configure --with-QT=/usr/lib/QT'."
+AC_CHECK_LIB(QtNetwork, main,, AC_MSG_ERROR(${QTNETWORK_LIB_MISSING}), ${QT_LDFLAGS})
 
-QT4_WRONG_VESION="Qt version 4.0 or higher is required, you have another version!
+QT_WRONG_VESION="Qt version 4.0 or higher is required, you have another version!
 You either need to
-- install a Qt4 development package (e.g. libqt4-dev,
-  on a Debian-based system enter 'sudo apt-get install libqt4-dev'),
-- or provide the base path to the right Qt4 installation:
-  e.g. './configure --with-qt4=/usr/lib/qt4'."
+- install a QT development package (e.g. libQT-dev,
+  on a Debian-based system enter 'sudo apt-get install libQT-dev'),
+- or provide the base path to the right QT installation:
+  e.g. './configure --with-QT=/usr/lib/QT'."
 AC_COMPILE_IFELSE([AC_LANG_SOURCE([
 #include <QWidget>
 #if !defined(QT_VERSION) || (QT_VERSION < 0x040000)
 # error Wrong Qt version
 #endif
-])],,AC_MSG_ERROR(${QT4_WRONG_VESION}))
+])],,AC_MSG_ERROR(${QT_WRONG_VESION}))
 
 fi
 # WITH_QT
 
 # publish:
-AC_SUBST(QT4CORE_CPPFLAGS)
-AC_SUBST(QT4CORE_LDFLAGS)
-AC_SUBST(QT4CORE_LIBS)
-AC_SUBST(QT4_CPPFLAGS)
-AC_SUBST(QT4_LDFLAGS)
-AC_SUBST(QT4_LIBS)
+AC_SUBST(QTCORE_CPPFLAGS)
+AC_SUBST(QTCORE_LDFLAGS)
+AC_SUBST(QTCORE_LIBS)
+AC_SUBST(QT_CPPFLAGS)
+AC_SUBST(QT_LDFLAGS)
+AC_SUBST(QT_LIBS)
 
 # restore:
 LDFLAGS=${SAVE_LDFLAGS}
@@ -170,48 +170,48 @@ if test $WITH_QT = "yes"; then
 FORCED_MOC=
 AC_ARG_WITH([moc],
 	[AS_HELP_STRING([--with-moc=CMD],[override moc command])],
-	[QT4_MOC_ERROR="No path given for option --with-moc"
+	[QT_MOC_ERROR="No path given for option --with-moc"
 	if test ${withval} != yes -a "x${withval}" != x ; then
 		FORCED_MOC=${withval}
 	else
-		AC_MSG_ERROR(${QT4_MOC_ERROR})
+		AC_MSG_ERROR(${QT_MOC_ERROR})
 	fi],
 	[])
 
-QT4_MOC_VERSION_ERROR="$MOC is not for Qt 4 (wrong version)!
+QT_MOC_VERSION_ERROR="$MOC is not for Qt 4 (wrong version)!
    Please specify the full path to Moc:
-   e.g. './configure --with-moc=/usr/lib/qt4/bin/moc'
-   or provide the base path to the Qt4 installation:
-   e.g. './configure --with-qt4=/usr/lib/qt4'."
+   e.g. './configure --with-moc=/usr/lib/QT/bin/moc'
+   or provide the base path to the QT installation:
+   e.g. './configure --with-QT=/usr/lib/QT'."
 if test "x${FORCED_MOC}" != x ; then
     # Moc command passed to configure
     MOC=${FORCED_MOC}
     if ! "${MOC}" -v 2>&1 | grep 'Qt 4' &>/dev/null ; then
-	    AC_MSG_ERROR(${QT4_MOC_VERSION_ERROR})
+	    AC_MSG_ERROR(${QT_MOC_VERSION_ERROR})
     fi
 else
     if test "x${EXTRA_MOC_LOCATION}" != x ; then
-        # Moc from Qt4 directory
+        # Moc from QT directory
         MOC="${EXTRA_MOC_LOCATION}/moc"
         if ! "${MOC}" -v 2>&1 | grep 'Qt 4' &>/dev/null ; then
-            # Moc-qt4 from path
-            MOC=moc-qt4
+            # Moc-QT from path
+            MOC=moc-QT
             if ! "${MOC}" -v 2>&1 | grep 'Qt 4' &>/dev/null ; then
                 # Moc from path
                 MOC=moc
                 if ! "${MOC}" -v 2>&1 | grep 'Qt 4' &>/dev/null ; then
-	                AC_MSG_ERROR(${QT4_MOC_VERSION_ERROR})
+	                AC_MSG_ERROR(${QT_MOC_VERSION_ERROR})
                 fi
             fi
         fi
     else
-        # Moc-qt4 from path
-        MOC=moc-qt4
+        # Moc-QT from path
+        MOC=moc-QT
         if ! "${MOC}" -v 2>&1 | grep 'Qt 4' &>/dev/null ; then
             # Moc from path
             MOC=moc
             if ! "${MOC}" -v 2>&1 | grep 'Qt 4' &>/dev/null ; then
-                AC_MSG_ERROR(${QT4_MOC_VERSION_ERROR})
+                AC_MSG_ERROR(${QT_MOC_VERSION_ERROR})
             fi
         fi
     fi
