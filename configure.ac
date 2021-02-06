@@ -101,7 +101,7 @@ RELACS_LIB_PORTAUDIO()
 #################################################
 ## Qt5, moc
 #################################################
-RELACS_LIB_QT5()
+RELACS_LIB_QT4()
 
 
 #################################################
@@ -388,6 +388,7 @@ AC_OUTPUT
 
 cat <<SUMMARY
     C++ language standard ........ ${CXXSTD}
+    Qt version ................... ${RELACS_QT_VERSION}
     Use GSL ...................... ${RELACS_GSL}
     Use sndfile .................. ${RELACS_SNDFILE}
     Use portaudio ................ ${RELACS_PORTAUDIO}
