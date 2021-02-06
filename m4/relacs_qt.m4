@@ -1,11 +1,11 @@
-# RELACS_LIB_QT4() 
-# - Provides --with-QT(-(inc|lib))? options and performs header and link checks
+# RELACS_LIB_QT() 
+# - Provides --with-qt(-(inc|lib))? options and performs header and link checks
 # - Fills QTCORE_(LD|CPP)FLAGS and QTCORE_LIBS with values for the QtCore library and marks them for substitution
 # - Fills QT_(LD|CPP)FLAGS and QT_LIBS with values for the QtCore, and QtGui library and marks them for substitution
 # - Fills MOC and marks it for substitution
 # - Leaves ((LD|CPP)FLAGS|LIBS) untouched
 
-AC_DEFUN([RELACS_LIB_QT4], [
+AC_DEFUN([RELACS_LIB_QT], [
 
 # save flags:
 SAVE_CPPFLAGS=${CPPFLAGS}
@@ -23,15 +23,31 @@ RELACS_QT_VERSION="none"
 
 # help message
 QT_INSTALL="You either need to
-- install a Qt development package (e.g. libqt*-dev,
-  on a Debian-based system enter 'sudo apt install libqt4-dev'),
+- install a Qt development package (e.g. qtbase5-dev,
+  on a Debian-based system enter 'sudo apt install qtbase5-dev'),
 - or provide the path to the Qt include directory:
-  e.g. './configure --with-QT-inc=/usr/lib/qt4/include'
+  e.g. './configure --with-qt-inc=/usr/lib/qt5/include'
 - or provide the base path to the Qt installation:
-  e.g. './configure --with-QT=/usr/lib/qt4'."
+  e.g. './configure --with-qt=/usr/lib/qt5'."
+
+USE_QT5="true"
+USE_QT4="true"
+AC_ARG_WITH([qt5],
+	[AS_HELP_STRING([--with-qt5],[use Qt5 libraries only])],
+	[USE_QT4="false"],[])
+AC_ARG_WITH([qt4],
+	[AS_HELP_STRING([--with-qt4],[use Qt4 libraries only])],
+	[USE_QT5="false"],[])
 
 # get flags:
-if test "x${PKG_CONFIG}" != "x" && ${PKG_CONFIG} --exists QtGui ; then
+if ${USE_QT5} && test "x${PKG_CONFIG}" != "x" && ${PKG_CONFIG} --exists Qt5Gui ; then
+    QTCORE_CPPFLAGS="`${PKG_CONFIG} --cflags Qt5Core`"
+    QTCORE_LDFLAGS="`${PKG_CONFIG} --libs-only-L Qt5Core`"
+    QTCORE_LIBS="`${PKG_CONFIG} --libs-only-l Qt5Core`"
+    QT_CPPFLAGS="`${PKG_CONFIG} --cflags Qt5Core` `${PKG_CONFIG} --cflags Qt5Gui` `${PKG_CONFIG} --cflags Qt5Widgets`"
+    QT_LDFLAGS="`${PKG_CONFIG} --libs-only-L Qt5Core` `${PKG_CONFIG} --libs-only-L Qt5Gui` `${PKG_CONFIG} --libs-only-L Qt5Widgets`"
+    QT_LIBS="`${PKG_CONFIG} --libs-only-l Qt5Core` `${PKG_CONFIG} --libs-only-l Qt5Gui` `${PKG_CONFIG} --libs-only-l Qt5Widgets`"
+elif ${USE_QT4} && test "x${PKG_CONFIG}" != "x" && ${PKG_CONFIG} --exists QtGui ; then
     QTCORE_CPPFLAGS="`${PKG_CONFIG} --cflags QtCore`"
     QTCORE_LDFLAGS="`${PKG_CONFIG} --libs-only-L QtCore`"
     QTCORE_LIBS="`${PKG_CONFIG} --libs-only-l QtCore`"
@@ -42,10 +58,10 @@ fi
 
 # default flags:
 if test "x${QTCORE_CPPFLAGS}" = x ; then
-    QTCORE_CPPFLAGS="-DQT_SHARED -I/usr/include/qt4 -I/usr/include/qt4/QtCore"
+    QTCORE_CPPFLAGS="-DQT_SHARED -I/usr/include/qt5 -I/usr/include/qt5/QtCore"
 fi
 if test "x${QT_CPPFLAGS}" = x ; then
-    QT_CPPFLAGS="-DQT_SHARED -I/usr/include/qt4 -I/usr/include/qt4/QtCore -I/usr/include/qt4/QtGui"
+    QT_CPPFLAGS="-DQT_SHARED -I/usr/include/qt5 -I/usr/include/qt5/QtCore -I/usr/include/qt5/QtGui"
 fi
 if test "x${QTCORE_LIBS}" = x ; then
     QTCORE_LIBS="-lQtCore"
@@ -57,15 +73,15 @@ fi
 # read arguments:
 WITH_QT="yes"
 EXTRA_MOC_LOCATION=
-AC_ARG_WITH([QT],
-	[AS_HELP_STRING([--with-QT=DIR],
+AC_ARG_WITH([qt],
+	[AS_HELP_STRING([--with-qt=DIR],
 	           	[override QT path ("/lib" and "/include" is appended)])],
-	[QT_ERROR="no path given for option --with-QT"
+	[QT_ERROR="no path given for option --with-qt"
 	if test ${withval} = no ; then
 	   WITH_QT="no"
 	elif test ${withval} != yes -a "x${withval}" != x ; then
-	   	QTCORE_CPPFLAGS="-DQT_SHARED -I${withval}/include/qt4 -I${withval}/include/qt4/QtCore"
-    		QT_CPPFLAGS="-DQT_SHARED -I${withval}/include/qt4 -I${withval}/include/qt4/QtCore -I${withval}/include/qt4/QtGui"
+	   	QTCORE_CPPFLAGS="-DQT_SHARED -I${withval}/include/qt5 -I${withval}/include/qt5/QtCore"
+    		QT_CPPFLAGS="-DQT_SHARED -I${withval}/include/qt5 -I${withval}/include/qt5/QtCore -I${withval}/include/qt5/QtGui"
 		QTCORE_LDFLAGS="-L${withval}/lib"
 		QT_LDFLAGS="-L${withval}/lib"
 		EXTRA_MOC_LOCATION="${withval}/bin"
@@ -74,9 +90,9 @@ AC_ARG_WITH([QT],
 	fi],
 	[])
 
-AC_ARG_WITH([QT-inc],
-	[AS_HELP_STRING([--with-QT-inc=DIR],[override QT include path])],
-	[QT_INC_ERROR="no path given for option --with-QT-inc"
+AC_ARG_WITH([qt-inc],
+	[AS_HELP_STRING([--with-qt-inc=DIR],[override QT include path])],
+	[QT_INC_ERROR="no path given for option --with-qt-inc"
 	if test ${withval} != yes -a "x${withval}" != x ; then
 	   	QTCORE_CPPFLAGS="-DQT_SHARED -I${withval} -I${withval}/QtCore"
     		QT_CPPFLAGS="-DQT_SHARED -I${withval} -I${withval}/QtCore -I${withval}/QtGui -I${withval}/QtCore"	
@@ -85,9 +101,9 @@ AC_ARG_WITH([QT-inc],
 	fi],
 	[])
 
-AC_ARG_WITH([QT-lib],
-	[AS_HELP_STRING([--with-QT-lib=DIR],[override QT library path])],
-	[QT_LIB_ERROR="no path given for option --with-QT-lib"
+AC_ARG_WITH([qt-lib],
+	[AS_HELP_STRING([--with-qt-lib=DIR],[override QT library path])],
+	[QT_LIB_ERROR="no path given for option --with-qt-lib"
 	if test ${withval} != yes -a "x${withval}" != x ; then
 		QTCORE_LDFLAGS="-L${withval}
 		QT_LDFLAGS="-L${withval}
@@ -160,28 +176,29 @@ AC_ARG_WITH([moc],
 	fi],
 	[])
 
-QT_MOC_VERSION_ERROR="$MOC is not for Qt 4 (wrong version)!
+QT_MOC_VERSION="${RELACS_QT_VERSION%%.*}"
+QT_MOC_VERSION_ERROR="$MOC is not for Qt ${QT_MOC_VERSION} (wrong version)!
    Please specify the full path to Moc:
-   e.g. './configure --with-moc=/usr/lib/qt4/bin/moc'
+   e.g. './configure --with-moc=/usr/lib/qt5/bin/moc'
    or provide the base path to the Qt installation:
-   e.g. './configure --with-QT=/usr/lib/qt'."
+   e.g. './configure --with-qt=/usr/lib/qt'."
 if test "x${FORCED_MOC}" != x ; then
     # Moc command passed to configure
     MOC=${FORCED_MOC}
-    if ! "${MOC}" -v 2>&1 | grep 'Qt 4' &>/dev/null ; then
+    if ! "${MOC}" -v 2>&1 | fgrep " ${QT_MOC_VERSION}" &>/dev/null ; then
 	    AC_MSG_ERROR(${QT_MOC_VERSION_ERROR})
     fi
 else
     if test "x${EXTRA_MOC_LOCATION}" != x ; then
-        # Moc from QT directory
+        # Moc from Qt directory
         MOC="${EXTRA_MOC_LOCATION}/moc"
-        if ! "${MOC}" -v 2>&1 | grep 'Qt 4' &>/dev/null ; then
-            # Moc-QT from path
+        if ! "${MOC}" -v 2>&1 | fgrep " ${QT_MOC_VERSION}" &>/dev/null ; then
+            # Moc-Qt from path
             MOC=moc-QT
-            if ! "${MOC}" -v 2>&1 | grep 'Qt 4' &>/dev/null ; then
+            if ! "${MOC}" -v 2>&1 | fgrep " ${QT_MOC_VERSION}" &>/dev/null ; then
                 # Moc from path
                 MOC=moc
-                if ! "${MOC}" -v 2>&1 | grep 'Qt 4' &>/dev/null ; then
+                if ! "${MOC}" -v 2>&1 | fgrep " ${QT_MOC_VERSION}" &>/dev/null ; then
 	                AC_MSG_ERROR(${QT_MOC_VERSION_ERROR})
                 fi
             fi
@@ -189,10 +206,10 @@ else
     else
         # Moc-QT from path
         MOC=moc-QT
-        if ! "${MOC}" -v 2>&1 | grep 'Qt 4' &>/dev/null ; then
+        if ! "${MOC}" -v 2>&1 | fgrep " ${QT_MOC_VERSION}" &>/dev/null ; then
             # Moc from path
             MOC=moc
-            if ! "${MOC}" -v 2>&1 | grep 'Qt 4' &>/dev/null ; then
+            if ! "${MOC}" -v 2>&1 | fgrep " ${QT_MOC_VERSION}" &>/dev/null ; then
                 AC_MSG_ERROR(${QT_MOC_VERSION_ERROR})
             fi
         fi
@@ -200,8 +217,8 @@ else
 fi
 
 fi
+# WITH_QT
 
 AC_SUBST(MOC)
 
 ])
-
