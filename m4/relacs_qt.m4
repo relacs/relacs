@@ -44,16 +44,18 @@ if ${USE_QT5} && test "x${PKG_CONFIG}" != "x" && ${PKG_CONFIG} --exists Qt5Gui ;
     QTCORE_CPPFLAGS="`${PKG_CONFIG} --cflags Qt5Core`"
     QTCORE_LDFLAGS="`${PKG_CONFIG} --libs-only-L Qt5Core`"
     QTCORE_LIBS="`${PKG_CONFIG} --libs-only-l Qt5Core`"
-    QT_CPPFLAGS="`${PKG_CONFIG} --cflags Qt5Core` `${PKG_CONFIG} --cflags Qt5Gui` `${PKG_CONFIG} --cflags Qt5Widgets`"
-    QT_LDFLAGS="`${PKG_CONFIG} --libs-only-L Qt5Core` `${PKG_CONFIG} --libs-only-L Qt5Gui` `${PKG_CONFIG} --libs-only-L Qt5Widgets`"
-    QT_LIBS="`${PKG_CONFIG} --libs-only-l Qt5Core` `${PKG_CONFIG} --libs-only-l Qt5Gui` `${PKG_CONFIG} --libs-only-l Qt5Widgets`"
+    QT_CPPFLAGS="`${PKG_CONFIG} --cflags Qt5Core` `${PKG_CONFIG} --cflags Qt5Gui` `${PKG_CONFIG} --cflags Qt5Widgets` `${PKG_CONFIG} --cflags Qt5Network`"
+    QT_LDFLAGS="`${PKG_CONFIG} --libs-only-L Qt5Core` `${PKG_CONFIG} --libs-only-L Qt5Gui` `${PKG_CONFIG} --libs-only-L Qt5Widgets` `${PKG_CONFIG} --libs-only-L Qt5Network`"
+    QT_LIBS="`${PKG_CONFIG} --libs-only-l Qt5Core` `${PKG_CONFIG} --libs-only-l Qt5Gui` `${PKG_CONFIG} --libs-only-l Qt5Widgets` `${PKG_CONFIG} --libs-only-l Qt5Network`"
+    USE_QT4=false
 elif ${USE_QT4} && test "x${PKG_CONFIG}" != "x" && ${PKG_CONFIG} --exists QtGui ; then
     QTCORE_CPPFLAGS="`${PKG_CONFIG} --cflags QtCore`"
     QTCORE_LDFLAGS="`${PKG_CONFIG} --libs-only-L QtCore`"
     QTCORE_LIBS="`${PKG_CONFIG} --libs-only-l QtCore`"
-    QT_CPPFLAGS="`${PKG_CONFIG} --cflags QtCore` `${PKG_CONFIG} --cflags QtGui`"
-    QT_LDFLAGS="`${PKG_CONFIG} --libs-only-L QtCore` `${PKG_CONFIG} --libs-only-L QtGui`"
-    QT_LIBS="`${PKG_CONFIG} --libs-only-l QtCore` `${PKG_CONFIG} --libs-only-l QtGui`"
+    QT_CPPFLAGS="`${PKG_CONFIG} --cflags QtCore` `${PKG_CONFIG} --cflags QtGui` `${PKG_CONFIG} --cflags QtNetwork`"
+    QT_LDFLAGS="`${PKG_CONFIG} --libs-only-L QtCore` `${PKG_CONFIG} --libs-only-L QtGui` `${PKG_CONFIG} --libs-only-L QtNetwork`"
+    QT_LIBS="`${PKG_CONFIG} --libs-only-l QtCore` `${PKG_CONFIG} --libs-only-l QtGui` `${PKG_CONFIG} --libs-only-l QtNetwork`"
+    USE_QT5=false
 fi
 
 # default flags:
@@ -64,10 +66,10 @@ if test "x${QT_CPPFLAGS}" = x ; then
     QT_CPPFLAGS="-DQT_SHARED -I/usr/include/qt5 -I/usr/include/qt5/QtCore -I/usr/include/qt5/QtGui"
 fi
 if test "x${QTCORE_LIBS}" = x ; then
-    QTCORE_LIBS="-lQtCore"
+    QTCORE_LIBS="-lQt5Core"
 fi
 if test "x${QT_LIBS}" = x ; then
-    QT_LIBS="-lQtGui -lQtCore"
+    QT_LIBS="-lQt5Widgets -lQt5Gui -lQt5Core"
 fi
 
 # read arguments:
@@ -75,7 +77,7 @@ WITH_QT="yes"
 EXTRA_MOC_LOCATION=
 AC_ARG_WITH([qt],
 	[AS_HELP_STRING([--with-qt=DIR],
-	           	[override QT path ("/lib" and "/include" is appended)])],
+	           	[override Qt path ("/lib" and "/include" is appended)])],
 	[QT_ERROR="no path given for option --with-qt"
 	if test ${withval} = no ; then
 	   WITH_QT="no"
@@ -91,7 +93,7 @@ AC_ARG_WITH([qt],
 	[])
 
 AC_ARG_WITH([qt-inc],
-	[AS_HELP_STRING([--with-qt-inc=DIR],[override QT include path])],
+	[AS_HELP_STRING([--with-qt-inc=DIR],[override Qt include path])],
 	[QT_INC_ERROR="no path given for option --with-qt-inc"
 	if test ${withval} != yes -a "x${withval}" != x ; then
 	   	QTCORE_CPPFLAGS="-DQT_SHARED -I${withval} -I${withval}/QtCore"
@@ -102,7 +104,7 @@ AC_ARG_WITH([qt-inc],
 	[])
 
 AC_ARG_WITH([qt-lib],
-	[AS_HELP_STRING([--with-qt-lib=DIR],[override QT library path])],
+	[AS_HELP_STRING([--with-qt-lib=DIR],[override Qt library path])],
 	[QT_LIB_ERROR="no path given for option --with-qt-lib"
 	if test ${withval} != yes -a "x${withval}" != x ; then
 		QTCORE_LDFLAGS="-L${withval}
@@ -118,17 +120,33 @@ if test $WITH_QT = "yes"; then
 CPPFLAGS="${QT_CPPFLAGS} ${CPPFLAGS}"
 LDFLAGS="${QT_LDFLAGS} ${LDFLAGS}"
 
-QT_INC_MISSING="cannot find the header files for QT!
+QT_INC_MISSING="cannot find header files for Qt!
 ${QT_INSTALL}"
+RELACS_QT_HEADER_FAILED=false
+AC_CHECK_HEADERS(QWidget,, RELACS_QT_HEADER_FAILED=true)
+AS_IF([$RELACS_QT_HEADER_FAILED],
+  [CPPFLAGS="${CPPFLAGS} -fPIC"
+   QTCORE_CPPFLAGS="${QTCORE_CPPFLAGS} -fPIC"
+   QT_CPPFLAGS="${QT_CPPFLAGS} -fPIC"
+   AS_UNSET([ac_cv_header_QWidget])])
 AC_CHECK_HEADERS(QWidget QThread,, AC_MSG_ERROR(${QT_INC_MISSING}))
 
-QTCORE_LIB_MISSING="cannot find the QT core libraries!
+QTCORE_LIB_MISSING="cannot find Qt core libraries!
 ${QT_INSTALL}"
-AC_CHECK_LIB(QtCore, main,, AC_MSG_ERROR(${QTCORE_LIB_MISSING}), ${QTCORE_LDFLAGS})
+AS_IF([${USE_QT5}],
+  [AC_CHECK_LIB(Qt5Core, main,, AC_MSG_ERROR(${QTCORE_LIB_MISSING}), ${QTCORE_LDFLAGS})],
+  [AC_CHECK_LIB(QtCore, main,, AC_MSG_ERROR(${QTCORE_LIB_MISSING}), ${QTCORE_LDFLAGS})])
 
-QT_LIB_MISSING="cannot find the QT gui libraries!
+QT_LIB_MISSING="cannot find Qt gui libraries!
 ${QT_INSTALL}"
-AC_CHECK_LIB(QtGui, main,, AC_MSG_ERROR(${QT_LIB_MISSING}), ${QT_LDFLAGS})
+AS_IF([${USE_QT5}],
+  [AC_CHECK_LIB(Qt5Gui, main,, AC_MSG_ERROR(${QT_LIB_MISSING}), ${QT_LDFLAGS})],
+  [AC_CHECK_LIB(QtGui, main,, AC_MSG_ERROR(${QT_LIB_MISSING}), ${QT_LDFLAGS})])
+
+QT_LIB_MISSING="cannot find Qt widgets libraries!
+${QT_INSTALL}"
+AS_IF([${USE_QT5}],
+  [AC_CHECK_LIB(Qt5Widgets, main,, AC_MSG_ERROR(${QT_LIB_MISSING}), ${QT_LDFLAGS})])
 
 QT_FAILED_VERSION="Failed to retrieve Qt version
 ${QT_INSTALL}"

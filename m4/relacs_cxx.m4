@@ -35,9 +35,6 @@ AS_IF([test "x$with_cxx_std" != xno], [
   CXXSTD="$with_cxx_std"
 ])
 
-# hack to allow qt5 compiling ...
-CXXFLAGS="${CXXFLAGS} -fPIC"
-
 #check for constexpr keyword support
 AC_TRY_COMPILE([
 constexpr int the_answer() { return 42; }
