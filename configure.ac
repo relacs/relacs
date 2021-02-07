@@ -388,7 +388,7 @@ AC_OUTPUT
 
 cat <<SUMMARY
     C++ language standard ........ ${CXXSTD}
-    Qt version ................... ${RELACS_QT_VERSION}
+    Qt version ................... ${RELACS_QT_VERSION} with ${MOC}
     Use GSL ...................... ${RELACS_GSL}
     Use sndfile .................. ${RELACS_SNDFILE}
     Use portaudio ................ ${RELACS_PORTAUDIO}

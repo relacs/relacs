@@ -28,7 +28,9 @@ QT_INSTALL="You either need to
 - or provide the path to the Qt include directory:
   e.g. './configure --with-qt-inc=/usr/lib/qt5/include'
 - or provide the base path to the Qt installation:
-  e.g. './configure --with-qt=/usr/lib/qt5'."
+  e.g. './configure --with-qt=/usr/lib/qt5'
+- or specify the Qt version to be used:
+  e.g. './configure --with-qt4' or './configure --with-qt5'."
 
 USE_QT5="true"
 USE_QT4="true"
@@ -183,6 +185,7 @@ MOC=moc
 
 if test $WITH_QT = "yes"; then
 
+QT_MOC_VERSION="${RELACS_QT_VERSION%%.*}"
 FORCED_MOC=
 AC_ARG_WITH([moc],
 	[AS_HELP_STRING([--with-moc=CMD],[override moc command])],
@@ -194,45 +197,42 @@ AC_ARG_WITH([moc],
 	fi],
 	[])
 
-QT_MOC_VERSION="${RELACS_QT_VERSION%%.*}"
-QT_MOC_VERSION_ERROR="$MOC is not for Qt ${QT_MOC_VERSION} (wrong version)!
-   Please specify the full path to Moc:
-   e.g. './configure --with-moc=/usr/lib/qt5/bin/moc'
-   or provide the base path to the Qt installation:
-   e.g. './configure --with-qt=/usr/lib/qt'."
 if test "x${FORCED_MOC}" != x ; then
     # Moc command passed to configure
     MOC=${FORCED_MOC}
-    if ! "${MOC}" -v 2>&1 | fgrep " ${QT_MOC_VERSION}" &>/dev/null ; then
-	    AC_MSG_ERROR(${QT_MOC_VERSION_ERROR})
-    fi
 else
+    MOC_NAMES="moc moc-qt${QT_MOC_VERSION} moc-QT moc-qt"
     if test "x${EXTRA_MOC_LOCATION}" != x ; then
         # Moc from Qt directory
-        MOC="${EXTRA_MOC_LOCATION}/moc"
-        if ! "${MOC}" -v 2>&1 | fgrep " ${QT_MOC_VERSION}" &>/dev/null ; then
-            # Moc-Qt from path
-            MOC=moc-QT
-            if ! "${MOC}" -v 2>&1 | fgrep " ${QT_MOC_VERSION}" &>/dev/null ; then
-                # Moc from path
-                MOC=moc
-                if ! "${MOC}" -v 2>&1 | fgrep " ${QT_MOC_VERSION}" &>/dev/null ; then
-	                AC_MSG_ERROR(${QT_MOC_VERSION_ERROR})
-                fi
-            fi
-        fi
+	for MOCN in ${MOC_NAMES}; do
+            MOC="${EXTRA_MOC_LOCATION}/${MOCN}"
+            command -v "${MOC}" > /dev/null && "${MOC}" -v 2>&1 | fgrep " ${QT_MOC_VERSION}" &>/dev/null && break
+ 	done
     else
-        # Moc-QT from path
-        MOC=moc-QT
-        if ! "${MOC}" -v 2>&1 | fgrep " ${QT_MOC_VERSION}" &>/dev/null ; then
-            # Moc from path
-            MOC=moc
-            if ! "${MOC}" -v 2>&1 | fgrep " ${QT_MOC_VERSION}" &>/dev/null ; then
-                AC_MSG_ERROR(${QT_MOC_VERSION_ERROR})
-            fi
-        fi
+        # Moc from path
+	for MOC in ${MOC_NAMES}; do
+            command -v "${MOC}" > /dev/null && "${MOC}" -v 2>&1 | fgrep " ${QT_MOC_VERSION}" &>/dev/null && break
+ 	done
     fi
 fi
+
+# check moc existance and version:
+MOC_INSTALL="You either need to
+  - specify the full path to moc:
+    e.g. './configure --with-moc=/usr/lib/qt5/bin/moc'
+  - or provide the base path to the Qt installation:
+    e.g. './configure --with-qt=/usr/lib/qt'
+  - or specify Qt version to be used:
+    e.g. './configure --with-qt4' or './configure --with-qt5'."
+QT_MOC_EXISTS_ERROR="moc command not found!
+${MOC_INSTALL}"
+AS_IF([! command -v "${MOC}" &> /dev/null], [AC_MSG_ERROR(${QT_MOC_EXISTS_ERROR})])
+
+QT_MOC_VERSION_ERROR="$MOC is not for Qt ${QT_MOC_VERSION} (wrong version)!
+${MOC_INSTALL}"
+AS_IF([! "${MOC}" -v 2>&1 | fgrep " ${QT_MOC_VERSION}" &>/dev/null], [AC_MSG_ERROR(${QT_MOC_VERSION_ERROR})])
+
+echo "MOC ${MOC}"
 
 fi
 # WITH_QT
