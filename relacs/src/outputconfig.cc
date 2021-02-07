@@ -56,7 +56,11 @@ OutputConfig::OutputConfig(Options& ops, QWidget *parent)
     w += TableWidget->columnWidth( i );
   TableWidget->setMinimumWidth( w );
   TableWidget->setMinimumHeight( 8*TableWidget->rowHeight( 0 ) );
+#if QT_VERSION >= 0x050000
   TableWidget->horizontalHeader()->setSectionResizeMode( QHeaderView::Stretch );
+#else
+  TableWidget->horizontalHeader()->setResizeMode( QHeaderView::Stretch );
+#endif
 
   QHBoxLayout* layout = new QHBoxLayout();
   layout->addWidget(TableWidget);

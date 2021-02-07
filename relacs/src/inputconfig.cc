@@ -54,7 +54,11 @@ InputConfig::InputConfig( Options &opts, QWidget *parent )
     w += Table->columnWidth( i ); 
   Table->setMinimumWidth( w );
   Table->setMinimumHeight( 16*Table->rowHeight( 0 ) );
+#if QT_VERSION >= 0x050000
   Table->horizontalHeader()->setSectionResizeMode( QHeaderView::Stretch ); 
+#else
+  Table->horizontalHeader()->setResizeMode( QHeaderView::Stretch ); 
+#endif
 
   // layout:
   QHBoxLayout *layout = new QHBoxLayout;
@@ -203,7 +207,11 @@ void InputConfig::insertRows( void )
   Processing = true;
 
   bool ok;
+#if QT_VERSION >= 0x050000
   int n = QInputDialog::getInt( this, "Input trace configuration", "Add # rows:", 1, 0, 1024, 1, &ok );
+#else
+  int n = QInputDialog::getInteger( this, "Input trace configuration", "Add # rows:", 1, 0, 1024, 1, &ok );
+#endif
   if ( ! ok ) {
     Processing = false;
     return;
