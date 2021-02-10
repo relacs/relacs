@@ -110,7 +110,7 @@ private:
   int lastRewardPosition = -1;
   int currentRewardPosition;
   int led_a_pin, led_b_pin, led_c_pin;
-  bool start, useLEDs;
+  bool start, useLEDs, stop, dumbasses, fixedStart;
   DigitalIO *dio;
   QLabel *conditionA, *conditionApast, *conditionB, *conditionBpast, *conditionC, *conditionCpast;
   QPushButton *nextBtn, *startBtn, *stopBtn, *resetBtn;
@@ -122,11 +122,13 @@ private:
   std::map<std::string, MazeArm> channelArmMap = {{"Arm-A", MazeArm::A},
 						  {"Arm-B", MazeArm::B},
 						  {"Arm-C", MazeArm::C}};
+  string start_arm;
   
   std::string toString(const MazeArm &arm) const;
   void setupTable( QGridLayout *grid );
   void updateTable( const TrialCondition &tc );
   void resetTable( void );
+  void stopOutputs( void );
   void updateUI( const TrialCondition &tc );
 
   void populateOptions();
