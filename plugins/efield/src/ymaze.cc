@@ -183,6 +183,11 @@ void YMaze::populateOptions() {
   addNumber( "eodfreqprec", "Precision of EOD frequency measurement", 1.0, 0.0, 100.0, 0.1, "Hz" ).setActivation( "usepsd", "true" );
   addNumber( "averagetime", "Time for computing EOD frequency", 2.0, 0.0, 100000.0, 1.0, "s" );  
 
+  newSection( "Output channel setup" );
+  addInteger( "arm_a", "Output channel for arm A", 0 );
+  addInteger( "arm_b", "Output channel for arm B.", 1 );
+  addInteger( "arm_c", "Output channel for arm C.", 2 );
+
   newSection( "LED indicators" );
   addBoolean( "ledindicators", "Use LEDs attached to DIO lines to indicate rewarded stimulus.", true );
   addText( "diodevice", "Name of the digital I/O device", "dio-1" ).setActivation( "ledindicators", "true" );
@@ -602,6 +607,12 @@ void YMaze::stopOutputs( void ) {
 
 bool YMaze::configureOutputTraces() {
   bool success = true;
+  if ( outTracesSize()  < 3 ) {
+    warning( "ERROR! Need three configured output traces! only 2 found" );
+    success = false;
+  }
+  /*
+
   for (int i = 0; i < outTracesSize(); ++i) {
     std::string name = outTraceName( i );
     std::map<std::string, MazeArm>::iterator it = channelArmMap.find( name );
@@ -612,11 +623,12 @@ bool YMaze::configureOutputTraces() {
       break;
     }
   }
-  if ( useLEDs ) {
+  */
+  if ( success && useLEDs ) {
     ledLines = {led_a_pin, led_b_pin, led_c_pin};
     dio = digitalIO( device );
-    if ( dio == 0 && dio->isOpen() ) {
-      cerr << ( "Digital I/O device <b>" + device + "</b> not found!" ) << endl;
+    if ( dio == 0 || !dio->isOpen() ) {
+      warning( "ERROR! Digital I/O device <b>" + device + "</b> not found!" );
       success = false;
     } else { 
       armLEDMap[MazeArm::A] = led_a_pin;
@@ -626,12 +638,13 @@ bool YMaze::configureOutputTraces() {
       for ( int l : ledLines ) {
         r = dio->configureLine( l, true );
         if (r != 0 ) {
-          cerr << ( "Failed to configure on DIO line <b>" + Str( l ) + "</b>!" ) << endl;
+          warning ( "Failed to configure on DIO line <b>" + Str( l ) + "</b>!" );
           success = false;
         }
       }
     }
   }
+
   base::LinearAttenuate *latt_a = dynamic_cast<base::LinearAttenuate*>( attenuator( "Arm-A" ) );
   base::LinearAttenuate *latt_b = dynamic_cast<base::LinearAttenuate*>( attenuator( "Arm-B" ) );
   base::LinearAttenuate *latt_c = dynamic_cast<base::LinearAttenuate*>( attenuator( "Arm-C" ) );
@@ -639,7 +652,7 @@ bool YMaze::configureOutputTraces() {
      success = false;
      warning( "Attenuators are not open!!" );
   }
-   
+
   if ( latt_a != 0 && fabs( latt_a->gain() - 1.0 ) < 1.0e-8 )
      warning( "Attenuator gain is probably not set!<br>(it is set to 1.0)", 2.0 );
 
@@ -692,6 +705,13 @@ int YMaze::main( void ) {
   led_c_pin = integer( "ledcpin" );
   device = text( "diodevice" );
   start_arm = text( "startbox" );
+  int arm_a_trace = integer( "arm_a" );
+  int arm_b_trace = integer( "arm_b" );
+  int arm_c_trace = integer( "arm_c" );
+  armTraceMap[MazeArm::A] = arm_a_trace;
+  armTraceMap[MazeArm::B] = arm_b_trace;
+  armTraceMap[MazeArm::C] = arm_c_trace;
+
   lastRewardPosition = static_cast<int>( channelArmMap[start_arm] );
   dumbasses = boolean( "dumbasses" );
   fixedStart = boolean( "fixedstart" );
