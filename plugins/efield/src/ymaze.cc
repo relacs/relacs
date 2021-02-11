@@ -611,6 +611,10 @@ bool YMaze::configureOutputTraces() {
     warning( "ERROR! Need three configured output traces! only 2 found" );
     success = false;
   }
+  std::vector<string> channel_names;
+  channel_names.push_back( outTraceName( armTraceMap[MazeArm::A] ) );
+  channel_names.push_back( outTraceName( armTraceMap[MazeArm::B] ) );
+  channel_names.push_back( outTraceName( armTraceMap[MazeArm::C] ) );
   /*
 
   for (int i = 0; i < outTracesSize(); ++i) {
@@ -645,9 +649,10 @@ bool YMaze::configureOutputTraces() {
     }
   }
 
-  base::LinearAttenuate *latt_a = dynamic_cast<base::LinearAttenuate*>( attenuator( "Arm-A" ) );
-  base::LinearAttenuate *latt_b = dynamic_cast<base::LinearAttenuate*>( attenuator( "Arm-B" ) );
-  base::LinearAttenuate *latt_c = dynamic_cast<base::LinearAttenuate*>( attenuator( "Arm-C" ) );
+  base::LinearAttenuate *latt_a = dynamic_cast<base::LinearAttenuate*>( attenuator( channel_names[0] ) );
+  base::LinearAttenuate *latt_b = dynamic_cast<base::LinearAttenuate*>( attenuator( channel_names[1] ) );
+  base::LinearAttenuate *latt_c = dynamic_cast<base::LinearAttenuate*>( attenuator( channel_names[2] ) );
+
   if ( latt_a == 0 || latt_b == 0 || latt_c == 0 ) { 
      success = false;
      warning( "Attenuators are not open!!" );
@@ -721,7 +726,7 @@ int YMaze::main( void ) {
   bool success = configureOutputTraces();
   if ( !success ) {
     warning( "configuration of output channels failed!" );
-    warning( "expecting 3 output traces names Arm-A, Arm-B, and Arm-C" );
+    warning( "check output channels: expecting 3 output traces, check ditial io device, check attenuators!" );
     return Failed;
   }
   stopOutputs();
