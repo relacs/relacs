@@ -17,12 +17,12 @@ libdynclampsim_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(srcdir)/../include \
     -I$(srcdir)/.. \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libdynclampsim_la_LDFLAGS = \
     -module -avoid-version \
     $(COMEDI_LDFLAGS) \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libdynclampsim_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -31,7 +31,7 @@ libdynclampsim_la_LIBADD = \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(COMEDI_LIBS) \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 libdynclampsim_la_SOURCES = \
     dynclampmodelsim.cc \
@@ -59,12 +59,12 @@ librtaicomedidynclamp_la_CPPFLAGS = \
     -I$(srcdir)/../include \
     -I$(srcdir)/.. \
     $(RTAI_CPPFLAGS) \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 librtaicomedidynclamp_la_LDFLAGS = \
     -module -avoid-version \
     $(COMEDI_LDFLAGS) \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 librtaicomedidynclamp_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -74,7 +74,7 @@ librtaicomedidynclamp_la_LIBADD = \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/plugins/linuxdevices/comedi/src/libcomedistreaming.la \
     $(COMEDI_LIBS) \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 librtaicomedidynclamp_la_SOURCES = \
     dynclampanaloginput.cc \

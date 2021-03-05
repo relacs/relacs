@@ -240,7 +240,8 @@ void AmplifierControl::initDevices( void )
 
   // add stimulus data:
   lockStimulusData();
-  stimulusData().addText( "AmplifierMode", "Amplifier mode", "Bridge" );
+  if ( ! stimulusData().exist( "AmplifierMode") )
+    stimulusData().addText( "AmplifierMode", "Amplifier mode", "Bridge" );
   unlockStimulusData();
   // add mode selection widgets:
   QVBoxLayout *vbox = 0;

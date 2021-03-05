@@ -99,7 +99,7 @@ void initModel( float stepsize )
 {
 #ifdef ENABLE_COMPUTATION
   loopInterval = stepsize;
-  loopRate = 1.0/loopRate;
+  loopRate = 1.0/loopInterval;
 
   initModel();
 #endif

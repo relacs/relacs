@@ -28,35 +28,40 @@ namespace ephys {
 
 
 SetVGate::SetVGate( void )
-  : RePro( "SetVGate", "ephys", "Jan Benda", "1.0", "Jul 12, 2015" )
+  : RePro( "SetVGate", "ephys", "Jan Benda", "1.2", "Jan 4, 2021" )
 {
+  HaveMembrane = true;
+  HaveVGate = true;
+  HaveTauV = true;
+
   // add some options:
   addBoolean( "interactive", "Set values interactively", true ).setFlags( 1 );
   addSelection( "preset", "Set g and E to", "previous|zero|custom" ).setUnit( "values" ).setFlags( 1 );
   addNumber( "g", "Maximum conductance", 0.0, -100000.0, 100000.0, 0.1, "nS" ).setActivation( "preset", "custom" ).setFlags( 1 );
   addNumber( "E", "Reversal-potential", 0.0, -10000.0, 10000.0, 1.0, "mV" ).setActivation( "preset", "custom" ).setFlags( 1 );
   addNumber( "vmid", "Position of activation curve", 0.0, -1000.0, 1000.0, 1.0, "mV" ).setActivation( "preset", "custom" ).setFlags( 1 );
-  addNumber( "width", "Width of activation curve", 0.0, -10000.0, 10000.0, 1.0, "mV" ).setActivation( "preset", "custom" ).setFlags( 1 );
+  addNumber( "width", "Width of activation curve", 0.0, -1000.0, 1000.0, 1.0, "mV" ).setActivation( "preset", "custom" ).setFlags( 1 );
   addNumber( "tau", "Activation time constant", 10.0, 0.0, 100000.0, 1.0, "ms" ).setActivation( "preset", "custom" ).setFlags( 1 );
-  addBoolean( "reversaltorest", "Set leak reversal-potential to resting potential", true ).setActivation( "preset", "zero", false ).setFlags( 1 );
+  addNumber( "delta", "Asymmetry of energy barrier", 0.5, 0.0, 1.0, 0.05 ).setActivation( "preset", "custom" ).setFlags( 1 );
+  addBoolean( "reversaltorest", "Set reversal-potential to resting potential", false ).setActivation( "preset", "zero", false ).setFlags( 1 );
   addSelection( "involtage", "Input voltage trace for measuring resting potential", "V-1" ).setFlags( 1 );
   addNumber( "duration", "Duration of resting potential measurement", 0.1, 0.001, 1000.0, 0.001, "sec", "ms" ).setFlags( 1 );
   setConfigSelectMask( 1 );
   setDialogSelectMask( 1 );
 
   // dialog:
-  newSection( "Passive membrane properties of the cell:" ).setFlags( 2 );
-  addNumber( "Rm", "Resistance R_m", 0.0, 0.0, 1.0e8, 1.0, "MOhm", "MOhm", "%.1f" ).setFlags( 2+4 );
-  addNumber( "Taum", "Time constant tau_m", 0.0, 0.0, 1.0e6, 0.001, "s", "ms", "%.1f" ).setFlags( 2+4 );
+  newSection( "Passive membrane properties of the cell:" ).setFlags( 16 );
+  addNumber( "gm", "Conductance g_m", 0.0, 0.0, 1.0e8, 1.0, "nS", "nS", "%.1f" ).setFlags( 16+128 );
+  addNumber( "Taum", "Time constant tau_m", 0.0, 0.0, 1.0e6, 0.001, "s", "ms", "%.1f" ).setFlags( 16+128 );
   newSection( "Injected current I=g m (E-V):" ).setFlags( 2 );
-  addNumber( "gvgate", "Conductance g", 0.0, -1.0e8, 1.0e8, 1.0, "nS" ).setFlags( 2 );
-  addNumber( "Evgate", "Reversal potential E", 0.0, -1000.0, 1000.0, 1.0, "mV" ).setFlags( 2 );
-  addNumber( "vgatevmid", "Position of activation curve Vmid", 0.0, -200.0, 200.0, 1.0, "mV" ).setFlags( 2 );
-  addNumber( "vgatewidth", "Width of activation curve 1/k", 10.0, -1000.0, 1000.0, 1.0, "mV" ).setFlags( 2 );
-  addNumber( "vgatetau", "Time constant tau", 10.0, 0.0, 1000000.0, 1.0, "ms" ).setFlags( 2 );
-  newSection( "Resulting membrane properties:" ).setFlags( 2 );
-  addNumber( "Rdc", "New membrane resistance", 0.0, 0.0, 1.0e8, 1.0, "MOhm" ).setFlags( 2 );
-  addNumber( "taudc", "New membrane time constant", 0.0, 0.0, 1.0e6, 0.001, "s", "ms" ).setFlags( 2 );
+  addNumber( "gvgate", "Conductance g", 0.0, -1.0e8, 1.0e8, 1.0, "nS" ).setFlags( 4 );
+  addNumber( "Evgate", "Reversal potential E", 0.0, -1000.0, 1000.0, 1.0, "mV", "mV", "%.1f" ).setFlags( 4 );
+  addNumber( "vgatevmid", "Position of activation curve Vmid", 0.0, -200.0, 200.0, 1.0, "mV" ).setFlags( 4 );
+  addNumber( "vgatewidth", "Width of activation curve 1/k", 10.0, -1000.0, 1000.0, 1.0, "mV" ).setFlags( 4 );
+  addNumber( "vgatetau", "Time constant tau", 10.0, 0.0, 1000000.0, 1.0, "ms" ).setFlags( 4 );
+  addNumber( "vgatedelta", "Asymmetry of time constant delta", 0.5, 0.0, 1.0, 0.05 ).setFlags( 32 );
+  addText( "notext1", "Sorry, the dynamic clamp model does", "" ).setFlags( 8+128 );
+  addText( "notext2", "not include a voltage gated current!", "" ).setFlags( 8+128 );
 
   // layout:
   QVBoxLayout *vb = new QVBoxLayout;
@@ -65,16 +70,22 @@ SetVGate::SetVGate( void )
   vb->addLayout( hb );
 
   // display values:
-  STW.assign( (Options*)this, 2, 4, true, 0, mutex() );
+  STW.assign( (Options*)this, 2, 128, true, 0, mutex() );
   STW.setVerticalSpacing( 2 );
   STW.setMargins( 4 );
   hb->addWidget( &STW );
 
   // plot activation curve:
-  P.setXLabel( "Membrane potential [mV]" );
-  P.setXRange( -100.0, 40.0 );
-  P.setYLabel( "Activation [%]" );
-  P.setYRange( 0.0, 100.0 );
+  P.lock();
+  P.resize( 2, 1, true );
+  P[0].setXRange( -120.0, 40.0 );
+  P[0].setYLabel( "Activation [%]" );
+  P[0].setYRange( 0.0, 100.0 );
+  P[1].setXRange( -120.0, 40.0 );
+  P[1].setXLabel( "Membrane potential [mV]" );
+  P[1].setYRange( 0.0, 10.0 );
+  P[1].setYLabel( "Time constant [ms]" );
+  P.unlock();
   hb->addWidget( &P );
 
   QHBoxLayout *bb = new QHBoxLayout;
@@ -98,12 +109,12 @@ SetVGate::SetVGate( void )
   grabKey( Qt::ALT+Qt::Key_C );
   grabKey( Qt::Key_Escape );
 
-  // Reset button:
-  ResetButton = new QPushButton( "&Reset" );
-  bb->addWidget( ResetButton );
-  connect( ResetButton, SIGNAL( clicked() ),
-	   this, SLOT( resetValues() ) );
-  grabKey( Qt::ALT+Qt::Key_R );
+  // Zero button:
+  ZeroButton = new QPushButton( "&Zero" );
+  bb->addWidget( ZeroButton );
+  connect( ZeroButton, SIGNAL( clicked() ),
+	   this, SLOT( zeroValues() ) );
+  grabKey( Qt::ALT+Qt::Key_Z );
 
   // E to VRest button:
   VRestButton = new QPushButton( "&E to VRest" );
@@ -114,7 +125,7 @@ SetVGate::SetVGate( void )
 
   OKButton->setFixedHeight( OKButton->sizeHint().height() );
   CancelButton->setFixedHeight( OKButton->sizeHint().height() );
-  ResetButton->setFixedHeight( OKButton->sizeHint().height() );
+  ZeroButton->setFixedHeight( OKButton->sizeHint().height() );
   VRestButton->setFixedHeight( OKButton->sizeHint().height() );
   bb->setSpacing( 4 );
 }
@@ -129,52 +140,32 @@ void SetVGate::preConfig( void )
 
 void SetVGate::notify( void )
 {
-  double rm = number( "Rm", 0.0, "MOhm" );
-  if ( rm > 1.0e-6 ) {
-    bool update = true;
-    lockMetaData();
-    double cm = metaData().number( "Cell>cm", 0.0, "pF" );
-    unlockMetaData();
-    bool sn = unsetNotify();
-    if ( changed( "gvgate" ) ) {
-      double rdc = 1.0/(0.001*number( "gvgate" )+1.0/rm);
-      setNumber( "Rdc", rdc );
-      setNumber( "taudc", 1.0e-6*rdc*cm );
-    }
-    else if ( changed( "Rdc" ) ) {
-      double rdc = number( "Rdc" );
-      if ( rdc > 1.0e-6 ) {
-	setNumber( "gvgate", 1000.0/rdc-1000.0/rm );
-	setNumber( "taudc", 1.0e-6*rdc*cm );
-      }
-    }
-    else if ( changed( "taudc" ) ) {
-      double taudc = number( "taudc" );
-      if ( cm > 1.0e-6 ) {
-	double rdc = 1.0e6*taudc/cm;
-	setNumber( "Rdc", rdc );
-	setNumber( "gvgate", 1000.0/rdc-1000.0/rm );
-      }
-    }
-    else if ( ! changed( "Evgate" ) )
-      update = false;
-    setNotify( sn );
-    if ( update ) {
-      delFlags( Parameter::changedFlag() );
-      STW.updateValues();
-    }
-  }
   double vmid = number( "vgatevmid" );
   double width = number( "vgatewidth" );
   if ( ::fabs( width ) < 1e-6 )
     width = width < 0.0 ? -1e-6 : 1e-6;
   double slope = 1.0/width;
-  SampleDataD activation( -100.0, 40.0, 0.1 );
+  SampleDataD activation( -120.0, 40.0, 0.1 );
   for ( int k=0; k<activation.size(); k++ )
     activation[k] = 100.0/(1.0+::exp(-slope*(activation.pos(k)-vmid)));
+  double taumax = number( "vgatetau" );
+  SampleDataD timeconstant( -120.0, 40.0, 0.1 );
+  if ( HaveTauV ) {
+    double delta = number( "vgatedelta" );
+    for ( int k=0; k<timeconstant.size(); k++ ) {
+      timeconstant[k] = taumax * ::pow(1.0-delta, delta-1.0) / (::exp(delta*slope*(timeconstant.pos(k)-vmid)) + ::exp(-(1.0-delta)*slope*(timeconstant.pos(k)-vmid))) / ::pow(delta, delta);
+    }
+  }
+  else {
+    for ( int k=0; k<timeconstant.size(); k++ )
+      timeconstant[k] = taumax;
+  }
   P.lock();
-  P.clear();
-  P.plot( activation, 1.0, Plot::Green, 4, Plot::Solid );
+  P[0].clear();
+  P[0].plot( activation, 1.0, Plot::Green, 3, Plot::Solid );
+  P[1].clear();
+  P[1].plot( timeconstant, 1.0, Plot::Green, 3, Plot::Solid );
+  P[1].setYRange( 0.0, 1.1*taumax );
   P.draw();
   P.unlock();
 }
@@ -183,7 +174,7 @@ void SetVGate::notify( void )
 void SetVGate::setValues( void )
 {
   Change = true;
-  Reset = false;
+  Zero = false;
   STW.accept();
   wake();
 }
@@ -192,15 +183,15 @@ void SetVGate::setValues( void )
 void SetVGate::keepValues( void )
 {
   Change = false;
-  Reset = false;
+  Zero = false;
   wake();
 }
 
 
-void SetVGate::resetValues( void )
+void SetVGate::zeroValues( void )
 {
   Change = true;
-  Reset = true;
+  Zero = true;
   wake();
 }
 
@@ -235,9 +226,24 @@ int SetVGate::main( void )
     width = width < 0.0 ? -1e-6 : 1e-6;
   double slope = 1.0/width;
   double tau = number( "tau" );
+  double delta = number( "delta" );
   bool reversaltorest = boolean( "reversaltorest" );
 
   noMessage();
+
+  lockMetaData();
+  double rm = metaData().number( "Cell>rm", 0.0, "MOhm" );
+  double cm = metaData().number( "Cell>cm", 0.0, "pF" );
+  unlockMetaData();
+  HaveMembrane = ( rm > 0.0 );
+  lockStimulusData();
+  HaveVGate = stimulusData().exist( "vgatevmid" );
+  HaveTauV = stimulusData().exist( "vgatetaumax" );
+  unlockStimulusData();
+  if ( HaveTauV )
+    setRequest( "vgatetau", "Maximum time constant tau" );
+  else
+    setRequest( "vgatetau", "Time constant tau" );
 
   if ( preset == 0 ) {
     // previous values:
@@ -246,10 +252,14 @@ int SetVGate::main( void )
     g = stimulusData().number( "gvgate", 0.0, "nS" );
     vmid = stimulusData().number( "vgatevmid", 0.0, "mV" );
     slope = stimulusData().number( "vgateslope", 0.0, "1/mV" );
-    if ( ::fabs( slope ) < 1e-6 )
-      slope = slope < 0.0 ? -1e-6 : 1e-6;
+    if ( ::fabs( slope ) < 1e-2 )
+      slope = slope < 0.0 ? -1e-2 : 1e-2;
     width = 1.0/slope;
-    tau = stimulusData().number( "vgatetau", 0.0, "ms" );
+    if ( HaveTauV )
+      tau = stimulusData().number( "vgatetaumax", 0.0, "ms" );
+    else
+      tau = stimulusData().number( "vgatetau", 0.0, "ms" );
+    delta = stimulusData().number( "vgatedelta", 0.5 );
     unlockStimulusData();
   }
   else if ( preset == 1 ) {
@@ -257,42 +267,55 @@ int SetVGate::main( void )
     E = 0.0;
     g = 0.0;
   }
-  lockMetaData();
-  if ( reversaltorest && preset != 1 )
-    E = metaData().number( "Cell>vrest", 0.0, "mV" );
+  if ( reversaltorest && preset != 1 ) {
+    int involtage = traceIndex( text( "involtage", 0 ) );
+    if ( involtage >= 0 ) {
+      double duration = number( "duration" );
+      const InData &data = trace( involtage );
+      E = data.mean( currentTime()-duration, currentTime() );
+    }  
+  }
 
   unsetNotify();
-  setNumber( "Rm", metaData().number( "Cell>rm", 0.0, "MOhm" ) );
-  setNumber( "Taum", metaData().number( "Cell>taum", 0.0, "s" ) );
+  double gleak = stimulusData().number( "g", 0.0, "nS" );
+  double cleak = stimulusData().number( "C", 0.0, "pF" );
+  double rnew = 1.0/(0.001*gleak + 1.0/rm);
+  double taunew = 1.0e-6*rnew*(cm+cleak);
+  setNumber( "gm", 1000.0/rnew );
+  setNumber( "Taum", taunew );
   setNumber( "Evgate", E );
   setNumber( "gvgate", g );
   setNumber( "vgatevmid", vmid );
   setNumber( "vgatewidth", width );
   setNumber( "vgatetau", tau );
+  setNumber( "vgatetaumax", tau );
+  setNumber( "vgatedelta", delta );
   delFlags( Parameter::changedFlag() );
   addFlags( "gvgate", Parameter::changedFlag() );
-  unlockMetaData();
-  notify();   // calls already STW.updateValues()
+  notify();
+  postCustomEvent( 13 ); // STW.updateValues();
   setNotify();
 
   if ( interactive ) {
+    postCustomEvent( 14 ); // STW.assign();
     keepFocus();
     postCustomEvent( 11 ); // STW.setFocus();
     // wait for input:
     Change = false;
-    Reset = false;
+    Zero = false;
     sleepWait();
     postCustomEvent( 12 ); // clearFocus();
     // set new values:
     if ( Change ) {
-      g = Reset ? 0.0 : number( "gvgate" );
-      E = Reset ? 0.0 : number( "Evgate" );
+      g = Zero ? 0.0 : number( "gvgate" );
+      E = Zero ? 0.0 : number( "Evgate" );
       vmid = number( "vgatevmid" );
       width = number( "vgatewidth" );
       if ( ::fabs( width ) < 1e-6 )
 	width = width < 0.0 ? -1e-6 : 1e-6;
       slope = 1.0/width;
       tau = number( "vgatetau" );
+      delta = number( "vgatedelta" );
     }
     else {
       setDefaults();   // calls STW.updateValues() via notify
@@ -301,9 +324,12 @@ int SetVGate::main( void )
   }
 
   // set the requested values:
-  message( "set <b>g=" + Str( g ) + "nS</b>, <b>E=" + Str( E ) + "mV</b>, <b>Vmid=" + Str( vmid ) + "mV</b>, <b>slope=" + Str( slope ) + "/mV</b>, <b> tau=" + Str( tau ) + "ms</b>" );
+  string msg = "set <b>g=" + Str( g ) + "nS</b>, <b>E=" + Str( E ) + "mV</b>, <b>Vmid=" + Str( vmid ) + "mV</b>, <b>slope=" + Str( slope ) + "/mV</b>, <b> tau=" + Str( tau ) + "ms</b>";
+  if ( HaveTauV )
+    msg += ", <b> delta=" + Str( delta ) + "</b>";
+  message( msg );
   OutList signal;
-  signal.resize( 5 );
+  signal.resize( HaveTauV?6:5 );
   signal[0].setTraceName( "gvgate" );
   signal[0].constWave( g );
   signal[0].setIdent( "gvgate=" + Str( g ) + "nS" );
@@ -316,9 +342,14 @@ int SetVGate::main( void )
   signal[3].setTraceName( "vgateslope" );
   signal[3].constWave( slope );
   signal[3].setIdent( "vgateslope=" + Str( slope ) + "/mV" );
-  signal[4].setTraceName( "vgatetau" );
+  signal[4].setTraceName( HaveTauV?"vgatetaumax":"vgatetau" );
   signal[4].constWave( tau );
   signal[4].setIdent( "vgatetau=" + Str( tau ) + "ms" );
+  if ( HaveTauV ) {
+    signal[5].setTraceName( "vgatedelta" );
+    signal[5].constWave( delta );
+    signal[5].setIdent( "vgatedelta=" + Str( delta ) );
+  }
   directWrite( signal );
   if ( signal.failed() ) {
     warning( "Failed to write new values: " + signal.errorText() );
@@ -330,6 +361,7 @@ int SetVGate::main( void )
   setNumber( "vgatevmid", vmid );
   setNumber( "vgatewidth", width );
   setNumber( "vgatetau", tau );
+  setNumber( "vgatedelta", delta );
   setToDefaults();
   notify();  // calls already STW.updateValues()
   setNotify();
@@ -350,8 +382,8 @@ void SetVGate::keyPressEvent( QKeyEvent *e )
     CancelButton->animateClick();
     e->accept();
   }
-  else if ( e->key() == Qt::Key_R && ( e->modifiers() & Qt::AltModifier ) ) {
-    ResetButton->animateClick();
+  else if ( e->key() == Qt::Key_Z && ( e->modifiers() & Qt::AltModifier ) ) {
+    ZeroButton->animateClick();
     e->accept();
   }
   else if ( e->key() == Qt::Key_E && ( e->modifiers() & Qt::AltModifier ) ) {
@@ -381,6 +413,19 @@ void SetVGate::customEvent( QEvent *qce )
   }
   case 12: {
     removeFocus();
+    break;
+  }
+  case 13: {
+    STW.updateValues();
+    break;
+  }
+  case 14: {
+    int flags = 2;
+    flags += HaveMembrane?16:0;
+    flags += HaveVGate?4:8;
+    if ( HaveVGate && HaveTauV )
+      flags += 32;
+    STW.assign( (Options*)this, flags, 128, true, 0, mutex() );
     break;
   }
   default:

@@ -4,7 +4,7 @@ lib_LTLIBRARIES = \
 
 if RELACS_TOP_BUILD
 librelacsdaq_la_CPPFLAGS = \
-    $(QT4CORE_CPPFLAGS) \
+    $(QTCORE_CPPFLAGS) \
     $(GSL_CPPFLAGS) \
     -I$(srcdir)/../../shapes/include \
     -I$(srcdir)/../../numerics/include \
@@ -12,14 +12,14 @@ librelacsdaq_la_CPPFLAGS = \
     -I$(srcdir)/../include
 else
 librelacsdaq_la_CPPFLAGS = \
-    $(QT4CORE_CPPFLAGS) \
+    $(QTCORE_CPPFLAGS) \
     $(GSL_CPPFLAGS) \
     -I$(srcdir)/../include
 endif
 
 librelacsdaq_la_LDFLAGS = \
     -version-info 0:0:0 \
-    $(QT4CORE_LDFLAGS) \
+    $(QTCORE_LDFLAGS) \
     $(GSL_LDFLAGS)
 
 if RELACS_TOP_BUILD
@@ -27,14 +27,14 @@ librelacsdaq_la_LIBADD = \
     ../../shapes/src/librelacsshapes.la \
     ../../numerics/src/librelacsnumerics.la \
     ../../options/src/librelacsoptions.la \
-    $(QT4CORE_LIBS) \
+    $(QTCORE_LIBS) \
     $(GSL_LIBS)
 else
 librelacsdaq_la_LIBADD = \
     -lrelacsshapes \
     -lrelacsnumerics \
     -lrelacsoptions \
-    $(QT4CORE_LIBS) \
+    $(QTCORE_LIBS) \
     $(GSL_LIBS)
 endif
 

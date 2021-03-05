@@ -53,11 +53,11 @@ libephystraces_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libephystraces_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libephystraces_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -66,7 +66,7 @@ libephystraces_la_LIBADD = \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 libephystraces_la_SOURCES = traces.cc
 
@@ -85,11 +85,11 @@ libephysneuronmodels_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/widgets/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libephysneuronmodels_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libephysneuronmodels_la_LIBADD = \
     libephystraces.la \
@@ -100,7 +100,7 @@ libephysneuronmodels_la_LIBADD = \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 libephysneuronmodels_la_SOURCES = neuronmodels.cc
 
@@ -120,11 +120,11 @@ libephysintraspikedetector_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libephysintraspikedetector_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libephysintraspikedetector_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -135,7 +135,7 @@ libephysintraspikedetector_la_LIBADD = \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libephysintraspikedetector_la_OBJECTS) : moc_intraspikedetector.cc
 
@@ -157,11 +157,11 @@ libephysdynamicsuspikedetector_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libephysdynamicsuspikedetector_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libephysdynamicsuspikedetector_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -172,7 +172,7 @@ libephysdynamicsuspikedetector_la_LIBADD = \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libephysdynamicsuspikedetector_la_OBJECTS) : moc_dynamicsuspikedetector.cc
 
@@ -194,11 +194,11 @@ libephysthresholdsuspikedetector_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libephysthresholdsuspikedetector_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libephysthresholdsuspikedetector_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -209,7 +209,7 @@ libephysthresholdsuspikedetector_la_LIBADD = \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libephysthresholdsuspikedetector_la_OBJECTS) : moc_thresholdsuspikedetector.cc
 
@@ -229,11 +229,11 @@ libephysmotorcontrol_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libephysmotorcontrol_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libephysmotorcontrol_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -244,7 +244,7 @@ libephysmotorcontrol_la_LIBADD = \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libephysmotorcontrol_la_OBJECTS) : moc_motorcontrol.cc
 
@@ -267,11 +267,11 @@ libephysamplifiercontrol_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/plugins/linuxdevices/misc/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libephysamplifiercontrol_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libephysamplifiercontrol_la_LIBADD = \
     $(builddir)/libephystraces.la \
@@ -284,7 +284,7 @@ libephysamplifiercontrol_la_LIBADD = \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libephysamplifiercontrol_la_OBJECTS) : moc_amplifiercontrol.cc
 
@@ -308,11 +308,11 @@ libephyscapacitycompensation_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libephyscapacitycompensation_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libephyscapacitycompensation_la_LIBADD = \
     $(builddir)/libephystraces.la \
@@ -325,7 +325,7 @@ libephyscapacitycompensation_la_LIBADD = \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libephyscapacitycompensation_la_OBJECTS) : moc_capacitycompensation.cc
 
@@ -347,11 +347,11 @@ libephysbridgetest_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libephysbridgetest_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libephysbridgetest_la_LIBADD = \
     $(builddir)/libephystraces.la \
@@ -363,7 +363,7 @@ libephysbridgetest_la_LIBADD = \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/plot/src/librelacsplot.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libephysbridgetest_la_OBJECTS) : moc_bridgetest.cc
 
@@ -385,11 +385,11 @@ libephysiontophoresis_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libephysiontophoresis_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libephysiontophoresis_la_LIBADD = \
     $(builddir)/libephystraces.la \
@@ -401,7 +401,7 @@ libephysiontophoresis_la_LIBADD = \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/plot/src/librelacsplot.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libephysiontophoresis_la_OBJECTS) : moc_iontophoresis.cc
 
@@ -423,11 +423,11 @@ libephyssetleak_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libephyssetleak_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libephyssetleak_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -438,7 +438,7 @@ libephyssetleak_la_LIBADD = \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/plot/src/librelacsplot.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libephyssetleak_la_OBJECTS) : moc_setleak.cc
 
@@ -460,11 +460,11 @@ libephyssetvgate_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libephyssetvgate_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libephyssetvgate_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -475,7 +475,7 @@ libephyssetvgate_la_LIBADD = \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/plot/src/librelacsplot.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libephyssetvgate_la_OBJECTS) : moc_setvgate.cc
 
@@ -498,11 +498,11 @@ libephyscalibratesyncpulse_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/plugins/linuxdevices/misc/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libephyscalibratesyncpulse_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libephyscalibratesyncpulse_la_LIBADD = \
     $(builddir)/libephystraces.la \
@@ -515,7 +515,7 @@ libephyscalibratesyncpulse_la_LIBADD = \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/plot/src/librelacsplot.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libephyscalibratesyncpulse_la_OBJECTS) : moc_calibratesyncpulse.cc
 

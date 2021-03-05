@@ -73,11 +73,11 @@ libvoltageclampactivation_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS) $(GSL_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)$(GSL_CPPFLAGS)
 
 libvoltageclampactivation_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS) $(GSL_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS) $(GSL_LDFLAGS)
 
 libvoltageclampactivation_la_LIBADD = \
     libvoltageclamppnsubtraction.la \
@@ -91,7 +91,7 @@ libvoltageclampactivation_la_LIBADD = \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libvoltageclampactivation_la_OBJECTS) : moc_activation.cc
 

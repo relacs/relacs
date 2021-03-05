@@ -24,11 +24,11 @@ libauditoryreceptormodel_la_CPPFLAGS = \
     -I$(top_srcdir)/plugins/ephys/include \
     -I$(top_srcdir)/plugins/acoustic/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libauditoryreceptormodel_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libauditoryreceptormodel_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -42,7 +42,7 @@ libauditoryreceptormodel_la_LIBADD = \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 libauditoryreceptormodel_la_SOURCES = receptormodel.cc
 
@@ -62,11 +62,11 @@ libauditorysearch_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/plugins/acoustic/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libauditorysearch_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libauditorysearch_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -78,7 +78,7 @@ libauditorysearch_la_LIBADD = \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libauditorysearch_la_OBJECTS) : moc_search.cc
 
@@ -101,11 +101,11 @@ libauditorysession_la_CPPFLAGS = \
     -I$(top_srcdir)/plugins/ephys/include \
     -I$(top_srcdir)/plugins/acoustic/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libauditorysession_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libauditorysession_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -118,7 +118,7 @@ libauditorysession_la_LIBADD = \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libauditorysession_la_OBJECTS) : moc_session.cc
 
@@ -143,11 +143,11 @@ libauditoryficurve_la_CPPFLAGS = \
     -I$(top_srcdir)/plugins/acoustic/include \
     -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libauditoryficurve_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libauditoryficurve_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -161,7 +161,7 @@ libauditoryficurve_la_LIBADD = \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libauditoryficurve_la_OBJECTS) : moc_ficurve.cc
 
@@ -185,11 +185,11 @@ libauditoryfifield_la_CPPFLAGS = \
     -I$(top_srcdir)/plugins/acoustic/include \
     -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libauditoryfifield_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libauditoryfifield_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -204,7 +204,7 @@ libauditoryfifield_la_LIBADD = \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libauditoryfifield_la_OBJECTS) : moc_fifield.cc
 
@@ -228,11 +228,11 @@ libauditorysinglestimulus_la_CPPFLAGS = \
     -I$(top_srcdir)/plugins/acoustic/include \
     -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libauditorysinglestimulus_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libauditorysinglestimulus_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -246,7 +246,7 @@ libauditorysinglestimulus_la_LIBADD = \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libauditorysinglestimulus_la_OBJECTS) : moc_singlestimulus.cc
 
@@ -271,11 +271,11 @@ libauditorysyslatency_la_CPPFLAGS = \
     -I$(top_srcdir)/plugins/acoustic/include \
     -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libauditorysyslatency_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libauditorysyslatency_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -289,7 +289,7 @@ libauditorysyslatency_la_LIBADD = \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libauditorysyslatency_la_OBJECTS) : moc_syslatency.cc
 
@@ -313,11 +313,11 @@ libauditoryadaptedficurves_la_CPPFLAGS = \
     -I$(top_srcdir)/plugins/acoustic/include \
     -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libauditoryadaptedficurves_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libauditoryadaptedficurves_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -330,7 +330,7 @@ libauditoryadaptedficurves_la_LIBADD = \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libauditoryadaptedficurves_la_OBJECTS) : moc_adaptedficurves.cc
 

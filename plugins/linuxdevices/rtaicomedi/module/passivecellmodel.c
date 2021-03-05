@@ -1,7 +1,7 @@
 /*!
 Dynamic clamp model for a passive ionic current,
 a capacitive current and a current offset:
-\f[ I_{inj} = -g \cdot (V-E) - C \cdot \frac{dV}{dt} + I \f]
+\f[ I_{inj} = -g \cdot (V-E) - C \cdot \frac{dV}{dt} \f]
 
 \par Input/Output:
 - V: Measured membrane potential in mV
@@ -11,13 +11,12 @@ a capacitive current and a current offset:
 - g: conductance of passive ionic current in nS
 - E: reversal potential of passive ionic current in mV
 - C: Additional capacity of the neuron in pF
-- I: Additional injected offset current in nA
 */
 
 
 #if defined (__KERNEL__) || defined (DYNCLAMPMODEL)
 
-  /*! Name, by which this module is known inside Linux: */
+  /*! Name, by which this model is known inside Linux: */
 const char *modelName;
 
   /*! The period length of the realtime periodic task in seconds. */
@@ -44,16 +43,16 @@ int outputChannels[OUTPUT_N];
 float output[OUTPUT_N] = { 0.0 };
 
   /*! Parameter that are provided by the model and can be read out. */
-#define PARAMINPUT_N 3
-const char *paramInputNames[PARAMINPUT_N] = { "Leak-current", "Capacitive-current", "Offset-current" };
-const char *paramInputUnits[PARAMINPUT_N] = { "nA", "nA", "nA" };
-float paramInput[PARAMINPUT_N] = { 0.0, 0.0, 0.0 };
+#define PARAMINPUT_N 2
+const char *paramInputNames[PARAMINPUT_N] = { "Leak-current", "Capacitive-current" };
+const char *paramInputUnits[PARAMINPUT_N] = { "nA", "nA" };
+float paramInput[PARAMINPUT_N] = { 0.0, 0.0 };
 
   /*! Parameter that are read by the model and are written to the model. */
-#define PARAMOUTPUT_N 4
-const char *paramOutputNames[PARAMOUTPUT_N] = { "g", "E", "C", "I" };
-const char *paramOutputUnits[PARAMOUTPUT_N] = { "nS", "mV", "pF", "nA" };
-float paramOutput[PARAMOUTPUT_N] = { 0.0, 0.0, 0.0, 0.0 };
+#define PARAMOUTPUT_N 3
+const char *paramOutputNames[PARAMOUTPUT_N] = { "g", "E", "C" };
+const char *paramOutputUnits[PARAMOUTPUT_N] = { "nS", "mV", "pF" };
+float paramOutput[PARAMOUTPUT_N] = { 0.0, 0.0, 0.0 };
 
   /*! Variables used by the model. */
 #define MAXPREVINPUTS 1
@@ -62,7 +61,7 @@ float previnputs[MAXPREVINPUTS];
 void initModel( void )
 {
    int k;
-   modelName = "passivecell";
+   modelName = "passive cell";
    for ( k=0; k<MAXPREVINPUTS; k++ )
      previnputs[k] = 0.0;
 }
@@ -77,10 +76,8 @@ void computeModel( void )
    for ( k=0; k<MAXPREVINPUTS-1; k++ )
      previnputs[k] = previnputs[k+1];
    previnputs[MAXPREVINPUTS-1] = input[0];
-   // offset current:
-   paramInput[2] = paramOutput[3];
    // total injected current:
-   output[0] = paramInput[0] + paramInput[1] + paramInput[2];
+   output[0] = paramInput[0] + paramInput[1];
 }
 
 #endif

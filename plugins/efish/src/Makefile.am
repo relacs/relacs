@@ -33,11 +33,11 @@ libefishbaselineactivity_la_CPPFLAGS = \
     -I$(srcdir)/../../ephys/include \
     -I$(srcdir)/../../efield/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libefishbaselineactivity_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libefishbaselineactivity_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -51,7 +51,7 @@ libefishbaselineactivity_la_LIBADD = \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libefishbaselineactivity_la_OBJECTS) : moc_baselineactivity.cc
 
@@ -76,11 +76,11 @@ libefishsession_la_CPPFLAGS = \
     -I$(srcdir)/../../ephys/include \
     -I$(srcdir)/../../efield/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libefishsession_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libefishsession_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -95,7 +95,7 @@ libefishsession_la_LIBADD = \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libefishsession_la_OBJECTS) : moc_session.cc
 
@@ -119,11 +119,11 @@ libefishpunitmodel_la_CPPFLAGS = \
     -I$(srcdir)/../../ephys/include \
     -I$(srcdir)/../../efield/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libefishpunitmodel_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libefishpunitmodel_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -138,7 +138,7 @@ libefishpunitmodel_la_LIBADD = \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 libefishpunitmodel_la_SOURCES = punitmodel.cc
 
@@ -160,11 +160,11 @@ libefishsam_la_CPPFLAGS = \
     -I$(srcdir)/../../ephys/include \
     -I$(srcdir)/../../efield/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libefishsam_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libefishsam_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -178,7 +178,7 @@ libefishsam_la_LIBADD = \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libefishsam_la_OBJECTS) : moc_sam.cc
 
@@ -202,11 +202,11 @@ libefishficurve_la_CPPFLAGS = \
     -I$(srcdir)/../../ephys/include \
     -I$(srcdir)/../../efield/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libefishficurve_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libefishficurve_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -220,7 +220,7 @@ libefishficurve_la_LIBADD = \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libefishficurve_la_OBJECTS) : moc_ficurve.cc
 
@@ -244,11 +244,11 @@ libefishfilestimulus_la_CPPFLAGS = \
     -I$(srcdir)/../../ephys/include \
     -I$(srcdir)/../../efield/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libefishfilestimulus_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libefishfilestimulus_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -262,7 +262,7 @@ libefishfilestimulus_la_LIBADD = \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libefishfilestimulus_la_OBJECTS) : moc_filestimulus.cc
 
@@ -286,11 +286,11 @@ libefishchirps_la_CPPFLAGS = \
     -I$(srcdir)/../../ephys/include \
     -I$(srcdir)/../../efield/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libefishchirps_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libefishchirps_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -304,7 +304,7 @@ libefishchirps_la_LIBADD = \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libefishchirps_la_OBJECTS) : moc_chirps.cc
 
@@ -327,11 +327,11 @@ libefishreceptivefield_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/plugins/linuxdevices/misc/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)$(GSL_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)$(GSL_CPPFLAGS)
 
 libefishreceptivefield_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS) $(GSL_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS) $(GSL_LDFLAGS)
 
 libefishreceptivefield_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -342,7 +342,7 @@ libefishreceptivefield_la_LIBADD = \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
     $(top_builddir)/plugins/linuxdevices/misc/src/libmiscxyzrobot.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libefishreceptivefield_la_OBJECTS) : moc_receptivefield.cc
 
@@ -365,11 +365,11 @@ libefishrobottofishposition_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/plugins/linuxdevices/misc/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)$(GSL_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)$(GSL_CPPFLAGS)
 
 libefishrobottofishposition_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS) $(GSL_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS) $(GSL_LDFLAGS)
 
 libefishrobottofishposition_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -380,7 +380,7 @@ libefishrobottofishposition_la_LIBADD = \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
     $(top_builddir)/plugins/linuxdevices/misc/src/libmiscxyzrobot.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libefishrobottofishposition_la_OBJECTS) : moc_robottofishposition.cc
 
@@ -403,11 +403,11 @@ libefishmovingobjects_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/plugins/linuxdevices/misc/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)$(GSL_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)$(GSL_CPPFLAGS)
 
 libefishmovingobjects_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS) $(GSL_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS) $(GSL_LDFLAGS)
 
 libefishmovingobjects_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -419,7 +419,7 @@ libefishmovingobjects_la_LIBADD = \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/plugins/linuxdevices/misc/src/libmiscxyzrobot.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libefishmovingobjects_la_OBJECTS) : moc_movingobjects.cc
 
@@ -442,11 +442,11 @@ libefisheigenmanniachirps_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(srcdir)/../../efield/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)$(GSL_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)$(GSL_CPPFLAGS)
 
 libefisheigenmanniachirps_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS) $(GSL_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS) $(GSL_LDFLAGS)
 
 libefisheigenmanniachirps_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -458,7 +458,7 @@ libefisheigenmanniachirps_la_LIBADD = \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libefisheigenmanniachirps_la_OBJECTS) : moc_eigenmanniachirps.cc
 

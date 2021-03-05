@@ -31,7 +31,7 @@ namespace patchclamp {
 
 
 MembraneResistance::MembraneResistance( void )
-  : RePro( "MembraneResistance", "patchclamp", "Jan Benda", "1.6", "Oct 15, 2015" ),
+  : RePro( "MembraneResistance", "patchclamp", "Jan Benda", "1.8", "Jan 5, 2021" ),
     VUnit( "mV" ),
     IUnit( "nA" ),
     VFac( 1.0 ),
@@ -49,8 +49,8 @@ MembraneResistance::MembraneResistance( void )
   addNumber( "sswidth", "Window length for steady-state analysis", 0.05, 0.001, 1.0, 0.001, "sec", "ms" );
   addBoolean( "nossfit", "Fix steady-state potential for fit", true );
   addBoolean( "plotstdev", "Plot standard deviation of membrane potential", true );
-  addSelection( "setdata", "Set results to the session variables", "rest only|always|never" );
-  addText( "checkoutput", "Outputs that need to be at their default value", "Current-1" ).setActivation( "setdata", "rest only" );
+  addSelection( "setdata", "Set results to the session variables", "defaults only|always|never" );
+  addText( "checkoutput", "Outputs that need to be at their default value", "g|C|gvgate" ).setActivation( "setdata", "defaults only" );
 
   // plot:
   P.lock();
@@ -82,7 +82,7 @@ void MembraneResistance::preConfig( void )
 
 int MembraneResistance::main( void )
 {
-  OutParams.clear();
+  CheckOutParams.clear();
   // get options:
   Amplitude = number( "amplitude" );
   Duration = number( "duration" );
@@ -90,11 +90,12 @@ int MembraneResistance::main( void )
   int repeats = integer( "repeats" );
   bool skipspikes = boolean( "skipspikes" );
   double sswidth = number( "sswidth" );
-  texts( "checkoutput", OutParams );
+  texts( "checkoutput", CheckOutParams );
 
   if ( pause < 2.0*Duration ) {
-    warning( "Pause must be at least two times the stimulus duration!" );
-    return Failed;
+    warning( "Pause must be at least two times the stimulus duration!", 4.0 );
+    pause = 2.0*Duration;
+    settings().setNumber( "pause", pause );
   }
   bool nossfit = boolean( "nossfit" );
   if ( SpikeTrace[0] < 0 ) {
@@ -446,23 +447,13 @@ void MembraneResistance::save( void )
 
   bool setdata = ( settings().index( "setdata" ) <= 1 );
   if ( settings().index( "setdata" ) == 0 ) {
-    // all outputs must be at 0:
+    // all outputs in CheckOutParams must be at their default values:
     lockStimulusData();
-    if ( OutParams.empty() ) {
-      for ( int k=0; k<outTracesSize(); k++ ) {
-	if ( fabs( stimulusData().number( outTraceName( k ) ) - stimulusData().defaultNumber( outTraceName( k ) ) ) > 1.0e-6 ) {
-	  setdata = false;
-	  break;
-	}
-      }
-    }
-    else {
-      for ( unsigned int k=0; k<OutParams.size(); k++ ) {
-	if ( stimulusData().exist( OutParams[k] ) &&
-	     fabs( stimulusData().number( OutParams[k] ) - stimulusData().defaultNumber( OutParams[k] ) ) > 1.0e-6 ) {
-	  setdata = false;
-	  break;
-	}
+    for ( int k=0; k<outTracesSize(); k++ ) {
+      if ( ::find( CheckOutParams.begin(), CheckOutParams.end(), outTraceName( k ) ) != CheckOutParams.end() &&
+	   fabs( stimulusData().number( outTraceName( k ) ) - stimulusData().defaultNumber( outTraceName( k ) ) ) > 1.0e-6 ) {
+	setdata = false;
+	break;
       }
     }
     unlockStimulusData();

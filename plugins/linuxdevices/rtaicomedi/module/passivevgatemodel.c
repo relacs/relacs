@@ -1,6 +1,6 @@
 /*!
-Dynamic clamp model for a voltage gated ionic current:
-\f[ \begin{array}{rcl} I_{inj} & = & -gvgate \cdot x \cdot (V-Evgate) \\
+Dynamic clamp model for a voltage gated and a passive ionic current:
+\f[ \begin{array}{rcl} I_{inj} & = & -g \cdot (V-E) - C \cdot \frac{dV}{dt} - gvgate \cdot x \cdot (V-Evgate) \\
 vgatetau \cdot \frac{dx}{dt} & = & -x + \frac{1}{1+\exp(-vgateslope \cdot (V-vgatevmid))} \end{array} \f]
 
 \par Input/Output:
@@ -8,6 +8,9 @@ vgatetau \cdot \frac{dx}{dt} & = & -x + \frac{1}{1+\exp(-vgateslope \cdot (V-vga
 - \f$ I_{inj} \f$ : Injected current in nA
 
 \par Parameter:
+- g: conductance of passive ionic current in nS
+- E: reversal potential of passive ionic current in mV
+- C: Additional capacity of the neuron in pF
 - gvgate: conductance of voltage-gated ionic current in nS
 - Evgate: reversal potential of voltage-gated ionic current in mV
 - vgatevmid: midpoint potential of the steady-state activation function in mV
@@ -44,19 +47,20 @@ int outputChannels[OUTPUT_N];
 float output[OUTPUT_N] = { 0.0 };
 
   /*! Parameter that are provided by the model and can be read out. */
-#define PARAMINPUT_N 1
-const char *paramInputNames[PARAMINPUT_N] = { "Voltage-gated current" };
-const char *paramInputUnits[PARAMINPUT_N] = { "nA" };
-float paramInput[PARAMINPUT_N] = { 0.0 };
+#define PARAMINPUT_N 3
+const char *paramInputNames[PARAMINPUT_N] = { "Leak-current", "Capacitive-current", "Voltage-gated current" };
+const char *paramInputUnits[PARAMINPUT_N] = { "nA", "nA", "nA" };
+float paramInput[PARAMINPUT_N] = { 0.0, 0.0, 0.0 };
 
   /*! Parameter that are read by the model and are written to the model. */
-#define PARAMOUTPUT_N 5
-const char *paramOutputNames[PARAMOUTPUT_N] = { "gvgate", "Evgate", "vgatevmid", "vgateslope", "vgatetau" };
-const char *paramOutputUnits[PARAMOUTPUT_N] = { "nS", "mV", "mV", "1/mV", "ms" };
-float paramOutput[PARAMOUTPUT_N] = { 10.0, 0.0, 0.0, 0.1, 10.0 };
+#define PARAMOUTPUT_N 8
+const char *paramOutputNames[PARAMOUTPUT_N] = { "g", "E", "C", "gvgate", "Evgate", "vgatevmid", "vgateslope", "vgatetau" };
+const char *paramOutputUnits[PARAMOUTPUT_N] = { "nS", "mV", "pF", "nS", "mV", "mV", "/mV", "ms" };
+float paramOutput[PARAMOUTPUT_N] = { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.1, 10.0 };
 
   /*! Variables used by the model. */
-float meaninput = 0.0;
+#define MAXPREVINPUTS 1
+float previnputs[MAXPREVINPUTS];
 float vgate = 0.0;
 #ifdef ENABLE_LOOKUPTABLES
 float xmin = 0.0;
@@ -66,8 +70,12 @@ float dx = 1.0;
 
 void initModel( void )
 {
-  modelName = "vgate";
-  vgate = 0.0;
+   int k;
+
+   modelName = "passive vgate";
+   for ( k=0; k<MAXPREVINPUTS; k++ )
+     previnputs[k] = 0.0;
+   vgate = 0.0;
 
 #ifdef ENABLE_LOOKUPTABLES
   // steady-state activation from lookuptable:
@@ -87,29 +95,37 @@ void initModel( void )
 
 void computeModel( void )
 {
+  int k;
 #ifdef ENABLE_LOOKUPTABLES
   float x;
-  int k;
+  int j;
 #endif
 
+  // leak:
+  paramInput[0] = -0.001*paramOutput[0]*(input[0]-paramOutput[1]);
+   // capacitive current:
+   paramInput[1] = -1e-6*paramOutput[2]*(input[0]-previnputs[0])*loopRate;
+   for ( k=0; k<MAXPREVINPUTS-1; k++ )
+     previnputs[k] = previnputs[k+1];
+   previnputs[MAXPREVINPUTS-1] = input[0];
   // voltage gated channel:
-  if ( paramOutput[4] < 0.1 )
-    paramOutput[4] = 0.1;
+  if ( paramOutput[7] < 0.1 )
+    paramOutput[7] = 0.1;
 #ifdef ENABLE_LOOKUPTABLES
   // steady-state activation from lookuptable:
-  x = paramOutput[3]*(input[0]-paramOutput[2]);
-  k = 0;
+  x = paramOutput[6]*(input[0]-paramOutput[5]);
+  j = 0;
   if ( x >= xmax )
-    k = lookupn[0]-1;
+    j = lookupn[0]-1;
   else if ( x >= xmin )
-    k = (x-xmin)/dx;
-  vgate += loopInterval*1000.0/paramOutput[4]*(-vgate+lookupy[0][k]);
+    j = (x-xmin)/dx;
+  vgate += loopInterval*1000.0/paramOutput[7]*(-vgate+lookupy[0][j]);
 #else
-  vgate += loopInterval*1000.0/paramOutput[4]*(-vgate+1.0/(1.0+exp(-paramOutput[3]*(input[0]-paramOutput[2]))));
+  vgate += loopInterval*1000.0/paramOutput[7]*(-vgate+1.0/(1.0+exp(-paramOutput[6]*(input[0]-paramOutput[5]))));
 #endif
-  paramInput[0] = -0.001*paramOutput[0]*vgate*(input[0]-paramOutput[1]);
+  paramInput[2] = -0.001*paramOutput[3]*vgate*(input[0]-paramOutput[4]);
   // total injected current:
-  output[0] = paramInput[0];
+  output[0] = paramInput[0] + paramInput[1] + paramInput[2];
 }
 
 #endif

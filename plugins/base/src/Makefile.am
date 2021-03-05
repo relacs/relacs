@@ -42,11 +42,11 @@ libbasetraces_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libbasetraces_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libbasetraces_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -55,7 +55,7 @@ libbasetraces_la_LIBADD = \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 libbasetraces_la_SOURCES = traces.cc
 
@@ -74,11 +74,11 @@ libbaselinearattenuate_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/widgets/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libbaselinearattenuate_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libbaselinearattenuate_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -86,7 +86,7 @@ libbaselinearattenuate_la_LIBADD = \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 libbaselinearattenuate_la_SOURCES = linearattenuate.cc
 
@@ -105,11 +105,11 @@ libbasedecibelattenuate_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/widgets/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libbasedecibelattenuate_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libbasedecibelattenuate_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -117,7 +117,7 @@ libbasedecibelattenuate_la_LIBADD = \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 libbasedecibelattenuate_la_SOURCES = decibelattenuate.cc
 
@@ -135,11 +135,11 @@ libbasehighpass_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/widgets/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libbasehighpass_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libbasehighpass_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -148,7 +148,7 @@ libbasehighpass_la_LIBADD = \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libbasehighpass_la_OBJECTS) : moc_highpass.cc
 
@@ -168,11 +168,11 @@ libbaselowpass_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/widgets/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libbaselowpass_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libbaselowpass_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -181,7 +181,7 @@ libbaselowpass_la_LIBADD = \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libbaselowpass_la_OBJECTS) : moc_lowpass.cc
 
@@ -202,11 +202,11 @@ libbasespectrumanalyzer_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libbasespectrumanalyzer_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libbasespectrumanalyzer_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -216,7 +216,7 @@ libbasespectrumanalyzer_la_LIBADD = \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libbasespectrumanalyzer_la_OBJECTS) : moc_spectrumanalyzer.cc
 
@@ -236,18 +236,18 @@ libbasepause_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libbasepause_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libbasepause_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libbasepause_la_OBJECTS) : moc_pause.cc
 
@@ -267,18 +267,18 @@ libbaserecord_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libbaserecord_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libbaserecord_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libbaserecord_la_OBJECTS) : moc_record.cc
 
@@ -298,11 +298,11 @@ libbasesetoutput_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libbasesetoutput_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libbasesetoutput_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -311,7 +311,7 @@ libbasesetoutput_la_LIBADD = \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libbasesetoutput_la_OBJECTS) : moc_setoutput.cc
 
@@ -331,18 +331,18 @@ libbasesimplemodel_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/widgets/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libbasesimplemodel_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libbasesimplemodel_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 libbasesimplemodel_la_SOURCES = simplemodel.cc
 
@@ -362,11 +362,11 @@ libbasetransferfunction_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libbasetransferfunction_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libbasetransferfunction_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -377,7 +377,7 @@ libbasetransferfunction_la_LIBADD = \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libbasetransferfunction_la_OBJECTS) : moc_transferfunction.cc
 
@@ -400,11 +400,11 @@ libbaserobot_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/plugins/linuxdevices/misc/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libbaserobot_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libbaserobot_la_LIBADD = \
     $(top_builddir)/plugins/linuxdevices/misc/src/libmiscmirob.la \
@@ -415,7 +415,7 @@ libbaserobot_la_LIBADD = \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libbaserobot_la_OBJECTS) : moc_robot.cc
 
@@ -437,18 +437,18 @@ libbasewait_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libbasewait_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libbasewait_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libbasewait_la_OBJECTS) : moc_wait.cc
 
@@ -470,11 +470,11 @@ libbaseenvelope_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libbaseenvelope_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libbaseenvelope_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -483,7 +483,7 @@ libbaseenvelope_la_LIBADD = \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libbaseenvelope_la_OBJECTS) : moc_envelope.cc
 
@@ -505,11 +505,11 @@ libbasesavetraces_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libbasesavetraces_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libbasesavetraces_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -520,7 +520,7 @@ libbasesavetraces_la_LIBADD = \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libbasesavetraces_la_OBJECTS) : moc_savetraces.cc
 
@@ -542,11 +542,11 @@ libbasespectrogram_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libbasespectrogram_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libbasespectrogram_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -557,7 +557,7 @@ libbasespectrogram_la_LIBADD = \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libbasespectrogram_la_OBJECTS) : moc_spectrogram.cc
 
@@ -579,11 +579,11 @@ libbasesetinputgain_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libbasesetinputgain_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libbasesetinputgain_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -594,7 +594,7 @@ libbasesetinputgain_la_LIBADD = \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libbasesetinputgain_la_OBJECTS) : moc_setinputgain.cc
 
@@ -616,11 +616,11 @@ libbasesetattenuatorgain_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libbasesetattenuatorgain_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libbasesetattenuatorgain_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -631,7 +631,7 @@ libbasesetattenuatorgain_la_LIBADD = \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libbasesetattenuatorgain_la_OBJECTS) : moc_setattenuatorgain.cc
 
@@ -653,11 +653,11 @@ libbasehistogram_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libbasehistogram_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libbasehistogram_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -668,7 +668,7 @@ libbasehistogram_la_LIBADD = \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libbasehistogram_la_OBJECTS) : moc_histogram.cc
 
@@ -690,11 +690,11 @@ libbaseperiodhistogram_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libbaseperiodhistogram_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libbaseperiodhistogram_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -705,7 +705,7 @@ libbaseperiodhistogram_la_LIBADD = \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libbaseperiodhistogram_la_OBJECTS) : moc_periodhistogram.cc
 
@@ -727,11 +727,11 @@ libbaseinstantaneousrate_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libbaseinstantaneousrate_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libbaseinstantaneousrate_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -742,7 +742,7 @@ libbaseinstantaneousrate_la_LIBADD = \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libbaseinstantaneousrate_la_OBJECTS) : moc_instantaneousrate.cc
 
@@ -764,11 +764,11 @@ libbasesetdigitaloutput_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)$(GSL_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)$(GSL_CPPFLAGS)
 
 libbasesetdigitaloutput_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS) $(GSL_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS) $(GSL_LDFLAGS)
 
 libbasesetdigitaloutput_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -779,7 +779,7 @@ libbasesetdigitaloutput_la_LIBADD = \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libbasesetdigitaloutput_la_OBJECTS) : moc_setdigitaloutput.cc
 

@@ -29,10 +29,10 @@ relacsgui_CPPFLAGS = \
     -I$(srcdir)/../options/include \
     -I$(srcdir)/../widgets/include \
     -I$(srcdir)/../relacs/include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 relacsgui_LDFLAGS = \
-    $(QT4_LDFLAGS) \
+    $(QT_LDFLAGS) \
     $(GSL_LDFLAGS) \
     $(SNDFILE_LDFLAGS) \
     $(PORTAUDIO_LDFLAGS) \
@@ -43,7 +43,7 @@ relacsgui_LDFLAGS = \
 relacsgui_LDADD = \
     ../relacs/src/librelacs.la \
     ../numerics/src/librelacsnumerics.la \
-    $(QT4_LIBS) \
+    $(QT_LIBS) \
     $(GSL_LIBS) \
     $(SNDFILE_LIBS) \
     $(PORTAUDIO_LIBS) \

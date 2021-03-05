@@ -800,10 +800,9 @@ void Macros::selectMacros( void )
   fd->setFileMode( QFileDialog::ExistingFile );
   fd->setWindowTitle( "Open Macro File" );
   //  fd->setDirectory( Str( (*OP).text( 0 ) ).dir().c_str() );
-  QString types( "Macro files (m*.cfg);;"
-		 "Config files (*.cfg);;"
-		 "Any files (*)" );
-  fd->setFilter( types );
+  QStringList filters;
+  filters << "Macro files (m*.cfg)" << "Config files (*.cfg)" << "Any files (*)";
+  fd->setNameFilters( filters );
   fd->setViewMode( QFileDialog::List );
   if ( fd->exec() == QDialog::Accepted ) {
     Str filename = "";

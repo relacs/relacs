@@ -28,11 +28,11 @@ libmiscamplmode_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(srcdir)/../../nieseries/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libmiscamplmode_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libmiscamplmode_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -40,7 +40,7 @@ libmiscamplmode_la_LIBADD = \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 
 libmiscamplmode_la_SOURCES = amplmode.cc amplmodedevice.cc
@@ -60,12 +60,12 @@ libmiscmirob_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(srcdir)/../include \
     $(TML_CPPFLAGS) \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libmiscmirob_la_LDFLAGS = \
     -module -avoid-version \
     $(TML_LDFLAGS) \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libmiscmirob_la_LIBADD = \
     $(top_builddir)/daq/src/librelacsdaq.la \
@@ -73,7 +73,7 @@ libmiscmirob_la_LIBADD = \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/relacs/src/librelacs.la \
     $(TML_LIBS) \
-    $(QT4_LIBS) $(NIX_LIBS)
+    $(QT_LIBS) $(NIX_LIBS)
 
 libmiscmirob_la_SOURCES = mirob.cc mirobdevice.cc
 
@@ -92,12 +92,12 @@ libmiscxyzrobot_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(srcdir)/../include \
     $(TML_CPPFLAGS) \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libmiscxyzrobot_la_LDFLAGS = \
     -module -avoid-version \
     $(TML_LDFLAGS) \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libmiscxyzrobot_la_LIBADD = \
     $(top_builddir)/daq/src/librelacsdaq.la \
@@ -106,7 +106,7 @@ libmiscxyzrobot_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
     libmiscmirob.la \
     $(TML_LIBS) \
-    $(QT4_LIBS) $(NIX_LIBS)
+    $(QT_LIBS) $(NIX_LIBS)
 
 libmiscxyzrobot_la_SOURCES = xyzrobot.cc xyzrobotdevice.cc
 
@@ -124,12 +124,12 @@ libmiscopencvcamera_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/widgets/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS) \
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS) \
     $(OPENCV_CPPFLAGS)
 
 libmiscopencvcamera_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS) \
+    $(QT_LDFLAGS) $(NIX_LDFLAGS) \
     $(OPENCV_LDFLAGS)
 
 libmiscopencvcamera_la_LIBADD = \
@@ -138,7 +138,7 @@ libmiscopencvcamera_la_LIBADD = \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT4_LIBS) $(NIX_LIBS) \
+    $(QT_LIBS) $(NIX_LIBS) \
     $(OPENCV_LIBS) \
     $(GSL_LIBS) \
     -lpthread
@@ -158,12 +158,12 @@ libmiscopencvstereocamera_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/widgets/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS) \
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS) \
     $(OPENCV_CPPFLAGS)
 
 libmiscopencvstereocamera_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS) \
+    $(QT_LDFLAGS) $(NIX_LDFLAGS) \
     $(OPENCV_LDFLAGS)
 
 libmiscopencvstereocamera_la_LIBADD = \
@@ -172,7 +172,7 @@ libmiscopencvstereocamera_la_LIBADD = \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/shapes/src/librelacsdshapes.la \
-    $(QT4_LIBS) $(NIX_LIBS) \
+    $(QT_LIBS) $(NIX_LIBS) \
     $(OPENCV_LIBS) \
     $(GSL_LIBS)
 
@@ -192,11 +192,11 @@ libmisckleindiek_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/widgets/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libmisckleindiek_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libmisckleindiek_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -204,7 +204,7 @@ libmisckleindiek_la_LIBADD = \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 libmisckleindiek_la_SOURCES = kleindiek.cc kleindiekdevice.cc
 
@@ -222,11 +222,11 @@ libmisctempdtm5080_la_CPPFLAGS = \
     -I$(top_srcdir)/relacs/include \
     -I$(top_srcdir)/widgets/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libmisctempdtm5080_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libmisctempdtm5080_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -234,7 +234,7 @@ libmisctempdtm5080_la_LIBADD = \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 libmisctempdtm5080_la_SOURCES = tempdtm5080.cc tempdtm5080device.cc
 
