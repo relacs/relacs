@@ -124,8 +124,8 @@ int CombinedStimulus::main( void )
     P[0].clearData();
     P[1].clearData();
     P[1].setXRange(noiseminamplitude * 1.05, noisemaxamplitude * 1.05);
-  }
-  else {
+   }
+   else {
     P.resize(1, 1, true);
     P[0].setXLabel("Time [ms]");
     P[0].setYLabel(trace(CurrentTrace[0]).ident() + " [" + IUnit + "]");
@@ -178,7 +178,7 @@ int CombinedStimulus::main( void )
       ArrayD min_idcs = analyzeSamplingPulses( );//currenttrace );
       double dt = currenttrace.stepsize();
       int halfidx = min_idcs.size()/2;
-      P[0].plot( -currenttrace, 1000.0, Plot::Yellow, 2, Plot::Solid );
+      //P[0].plot( -currenttrace, 1000.0, Plot::Yellow, 2, Plot::Solid );
       double absmin = 1000;
       for ( int i=0; i<halfidx; i++ ) {
         double ti = min_idcs[i+halfidx]*dt;
@@ -195,7 +195,7 @@ int CombinedStimulus::main( void )
       P[0].plot( currenttrace, 1000.0, Plot::Yellow, 2, Plot::Solid );
     }
 
-    P.draw();
+    // P.draw();
     P.unlock();
 
     sleep( pause );
@@ -275,7 +275,9 @@ OutData CombinedStimulus::ColoredNoise() {
 
 OutData CombinedStimulus::ActInact() {
   double holdingpotential = number( "holdingpotential" );
-  double actmintest = number( "actmintest" );
+  double actmintest = number(
+
+ "actmintest" );
   double actmaxtest = number( "actmaxtest" );
   double inactstep = number( "inactstep" );
   double stepsize = number( "stepsize" );
