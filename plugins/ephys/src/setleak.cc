@@ -56,6 +56,7 @@ SetLeak::SetLeak( void )
   addNumber( "Cleak", "Added membrane capacitance C", 0.0, -1.0e9, 1.0e9, 10.0, "pF", "pF", "%.0f" ).setFlags( 4 );
   newSection( "Resulting membrane properties:" ).setFlags( 8 );
   addNumber( "Rnew", "New membrane resistance 1/R=1/R_m+g", 0.0, 0.0, 1.0e8, 1.0, "MOhm" ).setFlags( 8 );
+  addNumber( "Enew", "New Leak reversal potential E", 0.0, -1000.0, 1000.0, 1.0, "mV", "mV", "%.1f" ).setFlags( 8 );
   addNumber( "Cnew", "New membrane capacitance Cm + C", 0.0, -1.0e9, 1.0e9, 10.0, "pF", "pF", "%.0f" ).setFlags( 16 );
   addNumber( "taunew", "New membrane time constant", 0.0, 0.0, 1.0e6, 0.001, "s", "ms", "%.1f" ).setFlags( 8 );
 
@@ -136,6 +137,11 @@ void SetLeak::notify( void )
 	cnew += number( "Cleak" );
       setNumber( "Rnew", rnew );
       setNumber( "taunew", 1.0e-6*rnew*cnew );
+
+      double Em = 0.0; // change to real reversal potential of membrane !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      double Enew = number( "Enew" );
+      double gleak = number( "gleak" );
+      setNumber( "Eleak", (Enew * (1000.0/rm + gleak) - 1000.0/rm * Em) / gleak);
     }
     else if ( changed( "Rnew" ) ) {
       double rnew = number( "Rnew" );
@@ -144,6 +150,11 @@ void SetLeak::notify( void )
 	cnew += number( "Cleak" );
       setNumber( "gleak", 1000.0/rnew-1000.0/rm );
       setNumber( "taunew", 1.0e-6*rnew*cnew );
+
+      double Em = 0.0; // change to real reversal potential of membrane !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      double Enew = number( "Enew" );
+      double gleak = number( "gleak" );
+      setNumber( "Eleak", (Enew * (1000.0/rm + gleak) - 1000.0/rm * Em) / gleak);
     }
     else if ( HaveC && changed( "Cleak" ) ) {
       double cnew = cm + number( "Cleak" );
@@ -161,15 +172,26 @@ void SetLeak::notify( void )
       double taunew = number( "taunew" );
       if ( HaveC && SetC ) {
 	double rnew = number( "Rnew" );
-	double cnew = taunew/1.0e-6/rnew;
+    double cnew = taunew/1.0e-6/rnew;
 	setNumber( "Cleak", cnew - cm );
 	setNumber( "Cnew", cnew );
       }
       else {
-	double rnew = 1.0e6*taunew/cm;
+    double rnew = 1.0e6*taunew/cm;
 	setNumber( "Rnew", rnew );
-	setNumber( "gleak", 1000.0/rnew-1000.0/rm );
+    setNumber( "gleak", 1000.0/rnew-1000.0/rm );
+
+    double Em = 0.0; // change to real reversal potential of membrane !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    double Enew = number( "Enew" );
+    double gleak = number( "gleak" );
+    setNumber( "Eleak", (Enew * (1000.0/rm + gleak) - 1000.0/rm * Em) / gleak);
       }
+    }
+    else if ( changed( "Enew" )) {
+      double Em = 0.0; // change to real reversal potential of membrane !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      double Enew = number( "Enew" );
+      double gleak = number( "gleak" );
+      setNumber( "Eleak", (Enew * (1000.0/rm + gleak) - 1000.0/rm * Em) / gleak);
     }
     else if ( ! changed( "Eleak" ) )
       update = false;
