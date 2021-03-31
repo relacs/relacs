@@ -60,7 +60,7 @@ UpdateDCParameters::UpdateDCParameters( void )
 }
 
 
-    void MembraneResistance::preConfig( void )
+    void UpdateDCParameters::preConfig( void )
     {
       if ( SpikeTrace[0] >= 0 ) {
         VUnit = trace( SpikeTrace[0] ).unit();
@@ -80,7 +80,7 @@ UpdateDCParameters::UpdateDCParameters( void )
     }
 
 
-    int MembraneResistance::main( void )
+    int UpdateDCParameters::main( void )
     {
       CheckOutParams.clear();
       // get options:
@@ -129,7 +129,7 @@ UpdateDCParameters::UpdateDCParameters( void )
         }
       }
       lockStimulusData();
-      DCCurrent = stimulusData().number( outTraceName( CurrentOutput[0] ) );
+      DCCurrent = stimulusData().number( "Stimulus-Current-1" );//outTracName(CurrentOutput[0] ) );
       unlockStimulusData();
       VRest = 0.0;
       VRestsd = 0.0;
@@ -146,6 +146,7 @@ UpdateDCParameters::UpdateDCParameters( void )
       RMOff = 0.0;
       CMOff = 0.0;
       TauMOff = 0.0;
+      EM = 0.0;
       ExpOn = SampleDataF( 0.0, Duration, 1/samplerate, 0.0 );
       ExpOff = SampleDataF( Duration, 2.0*Duration, 1/samplerate, 0.0 );
 
@@ -175,61 +176,40 @@ UpdateDCParameters::UpdateDCParameters( void )
         return Aborted;
 
       // plot trace:
-      tracePlotSignal( 2.0*Duration, 0.5*Duration );
+//      tracePlotSignal( 2.0*Duration, 0.5*Duration );
 
       // write stimulus:
-      for ( Count=0;
-            ( repeats <= 0 || Count < repeats ) && softStop() == 0;
-            Count++ ) {
+      timeStamp();
 
-        timeStamp();
+      Str s = "Amplitude <b>" + Str( Amplitude ) + " " + IUnit +"</b>";
+      s += ",  Loop <b>" + Str( Count+1 ) + "</b>";
+      message( s );
 
-        Str s = "Amplitude <b>" + Str( Amplitude ) + " " + IUnit +"</b>";
-        s += ",  Loop <b>" + Str( Count+1 ) + "</b>";
-        message( s );
+      write( signal );
+      if ( signal.failed() ) {
+        warning( signal.errorText() );
+        directWrite( dcsignal );
+        return Failed;
+      }
+      if ( interrupt() ) {
+        if ( Count < 1 )
+          state = Aborted;
+        directWrite( dcsignal );
+      }
 
-        write( signal );
-        if ( signal.failed() ) {
-          warning( signal.errorText() );
-          directWrite( dcsignal );
-          return Failed;
-        }
-        if ( interrupt() ) {
-          if ( Count < 1 )
-            state = Aborted;
-          directWrite( dcsignal );
-          break;
-        }
+      sleep( Duration );
+      if ( interrupt() ) {
+        if ( Count < 1 )
+          state = Aborted;
+        directWrite( dcsignal );
+      }
 
-        sleep( Duration );
-        if ( interrupt() ) {
-          if ( Count < 1 )
-            state = Aborted;
-          directWrite( dcsignal );
-          break;
-        }
+      analyzeOn( Duration, sswidth, nossfit );
+      analyzeOff( Duration, sswidth, nossfit );
 
-        bool spikes = false;
-        if ( skipspikes && SpikeEvents[0] >= 0 ) {
-          spikes = events( SpikeEvents[0] ).count( signalTime()+MeanVoltage.rangeFront(),
-                                                   signalTime()+MeanVoltage.rangeBack() );
-        }
-        if ( skipspikes && spikes )
-          Count--;
-        else {
-          analyzeOn( Duration, sswidth, nossfit );
-          analyzeOff( Duration, sswidth, nossfit );
-          plot();
-        }
-
-        sleepOn( Duration+pause );
-        if ( interrupt() ) {
-          if ( Count < 1 )
-            state = Aborted;
-          directWrite( dcsignal );
-          break;
-        }
-
+      sleepOn( Duration+pause );
+      if ( interrupt() ) {
+        directWrite( dcsignal );
       }
 
       if ( state == Completed )
@@ -239,7 +219,7 @@ UpdateDCParameters::UpdateDCParameters( void )
     }
 
 
-    void MembraneResistance::analyzeOn( double duration,
+    void UpdateDCParameters::analyzeOn( double duration,
                                         double sswidth, bool nossfit )
     {
       // update averages:
@@ -275,6 +255,9 @@ UpdateDCParameters::UpdateDCParameters( void )
       RMss = ::fabs( (VSS - VRest)/Amplitude )*VFac/IFac;
       if ( RMss <= 0.0 && RMss > 1.0e10 )
         RMss = 0.0;
+
+      // reversal potential:
+      EM = (VSS - VRest) - RMss*Amplitude;
 
       // peak potential:
       VPeak = VRest;
@@ -335,7 +318,7 @@ UpdateDCParameters::UpdateDCParameters( void )
     }
 
 
-    void MembraneResistance::analyzeOff( double duration,
+    void UpdateDCParameters::analyzeOff( double duration,
                                          double sswidth, bool nossfit )
     {
       // fit exponential to offset:
@@ -383,40 +366,40 @@ UpdateDCParameters::UpdateDCParameters( void )
     }
 
 
-    void MembraneResistance::plot( void )
-    {
-      P.lock();
-      P.clear();
-      P.setTitle( "R=" + Str( RMOn, 0, 0, 'f' ) +
-                  " MOhm,  C=" + Str( CMOn, 0, 0, 'f' ) +
-                  " pF,  tau=" + Str( TauMOn, 0, 0, 'f' ) + " ms" );
-      P.plotVLine( 0, Plot::White, 2 );
-      P.plotVLine( 1000.0*Duration, Plot::White, 2 );
-      if ( boolean( "plotstdev" ) ) {
-        P.plot( MeanVoltage+StdevVoltage, 1000.0, Plot::Orange, 1, Plot::Solid );
-        P.plot( MeanVoltage-StdevVoltage, 1000.0, Plot::Orange, 1, Plot::Solid );
-      }
-      P.plot( MeanVoltage, 1000.0, Plot::Red, 3, Plot::Solid );
-      double minv = 0.0;
-      double maxv = 0.0;
-      minMax( minv, maxv, MeanVoltage );
-      double deltav = 5.0*(maxv - minv);
-      float minexpon = 0.0;
-      float maxexpon = 0.0;
-      minMax( minexpon, maxexpon, ExpOn );
-      if ( minexpon > minv - deltav && maxexpon < maxv + deltav )
-        P.plot( ExpOn, 1000.0, Plot::Yellow, 2, Plot::Solid );
-      float minexpoff = 0.0;
-      float maxexpoff = 0.0;
-      minMax( minexpoff, maxexpoff, ExpOff );
-      if ( minexpoff > minv - deltav && maxexpoff < maxv + deltav )
-        P.plot( ExpOff, 1000.0, Plot::Yellow, 2, Plot::Solid );
-      P.draw();
-      P.unlock();
-    }
+//    void UpdateDCParameters::plot( void )
+//    {
+//      P.lock();
+//      P.clear();
+//      P.setTitle( "R=" + Str( RMOn, 0, 0, 'f' ) +
+//                  " MOhm,  C=" + Str( CMOn, 0, 0, 'f' ) +
+//                  " pF,  tau=" + Str( TauMOn, 0, 0, 'f' ) + " ms" );
+//      P.plotVLine( 0, Plot::White, 2 );
+//      P.plotVLine( 1000.0*Duration, Plot::White, 2 );
+//      if ( boolean( "plotstdev" ) ) {
+//        P.plot( MeanVoltage+StdevVoltage, 1000.0, Plot::Orange, 1, Plot::Solid );
+//        P.plot( MeanVoltage-StdevVoltage, 1000.0, Plot::Orange, 1, Plot::Solid );
+//      }
+//      P.plot( MeanVoltage, 1000.0, Plot::Red, 3, Plot::Solid );
+//      double minv = 0.0;
+//      double maxv = 0.0;
+//      minMax( minv, maxv, MeanVoltage );
+//      double deltav = 5.0*(maxv - minv);
+//      float minexpon = 0.0;
+//      float maxexpon = 0.0;
+//      minMax( minexpon, maxexpon, ExpOn );
+//      if ( minexpon > minv - deltav && maxexpon < maxv + deltav )
+//        P.plot( ExpOn, 1000.0, Plot::Yellow, 2, Plot::Solid );
+//      float minexpoff = 0.0;
+//      float maxexpoff = 0.0;
+//      minMax( minexpoff, maxexpoff, ExpOff );
+//      if ( minexpoff > minv - deltav && maxexpoff < maxv + deltav )
+//        P.plot( ExpOff, 1000.0, Plot::Yellow, 2, Plot::Solid );
+//      P.draw();
+//      P.unlock();
+//    }
 
 
-    void MembraneResistance::save( void )
+    void UpdateDCParameters::save( void )
     {
       Options header;
       header.addInteger( "index", completeRuns() );
@@ -431,6 +414,7 @@ UpdateDCParameters::UpdateDCParameters( void )
       header.addNumber( "Rm", RMOn, "MOhm", "%0.1f" );
       header.addNumber( "Cm", CMOn, "pF", "%0.1f" );
       header.addNumber( "Taum", TauMOn, "ms", "%0.1f" );
+      header.addNumber( "Em", EM, VUnit, "%0.1f" );
       header.addNumber( "Roff", RMOff, "MOhm", "%0.1f" );
       header.addNumber( "Coff", CMOff, "pF", "%0.1f" );
       header.addNumber( "Tauoff", TauMOff, "ms", "%0.1f" );
@@ -466,12 +450,13 @@ UpdateDCParameters::UpdateDCParameters( void )
         metaData().setNumber( "Cell>rmss", RMss  );
         metaData().setNumber( "Cell>cm", CMOn );
         metaData().setNumber( "Cell>taum", 0.001*TauMOn );
+        metaData().setNumber( "Cell>em", EM );
         unlockMetaData();
       }
     }
 
 
-    void MembraneResistance::saveData( void )
+    void UpdateDCParameters::saveData( void )
     {
       TableKey datakey;
       datakey.newSection( "Stimulus" );
@@ -498,6 +483,8 @@ UpdateDCParameters::UpdateDCParameters( void )
       datakey.addNumber( "R", "MOhm", "%6.1f", RMOff );
       datakey.addNumber( "C", "pF", "%6.1f", CMOff );
       datakey.addNumber( "tau", "ms", "%6.1f", TauMOff );
+      datakey.newSection( "Reversal Potential" );
+      datakey.addNumber( "EL", VUnit, "%6.1f", EM );
       datakey.newSection( "Sag" );
       datakey.addNumber( "Vsag", VUnit, "%6.1f", fabs( VPeak-VSS ) );
       datakey.addNumber( "s.d.", VUnit, "%6.1f", sqrt( VPeaksd*VPeaksd + VSSsd*VSSsd ) );
@@ -510,20 +497,20 @@ UpdateDCParameters::UpdateDCParameters( void )
 
       ofstream df;
       if ( completeRuns() <= 0 ) {
-        df.open( addPath( "membraneresistance-data.dat" ).c_str() );
+        df.open( addPath( "updatedcparameters-data.dat" ).c_str() );
         datakey.saveKey( df );
       }
       else
-        df.open( addPath( "membraneresistance-data.dat" ).c_str(),
+        df.open( addPath( "updatedcparameters-data.dat" ).c_str(),
                  ofstream::out | ofstream::app );
 
       datakey.saveData( df );
     }
 
 
-    void MembraneResistance::saveTrace( const Options &header )
+    void UpdateDCParameters::saveTrace( const Options &header )
     {
-      ofstream df( addPath( "membraneresistance-trace.dat" ).c_str(),
+      ofstream df( addPath( "updatedcparameters-trace.dat" ).c_str(),
                    ofstream::out | ofstream::app );
 
       header.save( df, "# ", 0, FirstOnly );
@@ -561,9 +548,9 @@ UpdateDCParameters::UpdateDCParameters( void )
     }
 
 
-    void MembraneResistance::saveExpFit( const Options &header )
+    void UpdateDCParameters::saveExpFit( const Options &header )
     {
-      ofstream df( addPath( "membraneresistance-expfit.dat" ).c_str(),
+      ofstream df( addPath( "updatedcparameters-expfit.dat" ).c_str(),
                    ofstream::out | ofstream::app );
 
       header.save( df, "# ", 0, FirstOnly );
@@ -590,7 +577,7 @@ UpdateDCParameters::UpdateDCParameters( void )
     }
 
 
-    addRePro( MembraneResistance, patchclamp );
+    addRePro( UpdateDCParameters, ephys );
 
 }; /* namespace ephys */
 

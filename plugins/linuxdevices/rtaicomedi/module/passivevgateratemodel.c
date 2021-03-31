@@ -115,7 +115,6 @@ void computeModel( void )
     vgate = valpha/(valpha + vbeta);
   else
     vgate += loopInterval*(valpha*(1.0-vgate) - vbeta*vgate);
-
   if ( vgate > 1.0 | vgate < 0.0)
     vgate = valpha/(valpha + vbeta);
 

@@ -22,28 +22,76 @@
 #ifndef _RELACS_EPHYS_UPDATEDCPARAMETERS_H_
 #define _RELACS_EPHYS_UPDATEDCPARAMETERS_H_ 1
 
+#include <deque>
+#include <vector>
+#include <relacs/sampledata.h>
+#include <relacs/plot.h>
 #include <relacs/repro.h>
+#include <relacs/ephys/traces.h>
+using namespace std;
+using namespace relacs;
 using namespace relacs;
 
 namespace ephys {
 
-
-/*!
-\class UpdateDCParameters
-\brief [RePro] short pulse to estimate membrane parameters, updates dynclamp parameters accordingly
-\author Lukas Sonnenberg
-\version 1.0 (Mar 25, 2021)
-*/
-
-
-class UpdateDCParameters : public RePro
+class UpdateDCParameters : public RePro, public ephys::Traces
 {
+
   Q_OBJECT
+
+//  friend Ramp;
 
 public:
 
   UpdateDCParameters( void );
+  virtual void preConfig( void );
   virtual int main( void );
+  void analyzeOn( double duration, double sswidth, bool nossfit );
+  void analyzeOff( double duration, double sswidth, bool nossfit );
+//    void plot( void );
+  void save( void );
+  void saveData( void );
+  void saveTrace( const Options &header );
+  void saveExpFit( const Options &header );
+
+
+protected:
+
+//    Plot P;
+  string VUnit;
+  string IUnit;
+  double VFac;
+  double IFac;
+  double IInFac;
+  SampleDataD MeanVoltage;
+  SampleDataD SquareVoltage;
+  SampleDataD StdevVoltage;
+  deque< int > TraceIndices;
+  deque< SampleDataD > MeanTraces;
+  deque< SampleDataD > SquareTraces;
+  double DCCurrent;
+  double Amplitude;
+  double Duration;
+  double VRest;
+  double VRestsd;
+  double VSS;
+  double VSSsd;
+  double VPeak;
+  double VPeaksd;
+  int VPeakInx;
+  double VPeakTime;
+  double RMss;
+  double RMOn;
+  double CMOn;
+  double TauMOn;
+  double RMOff;
+  double CMOff;
+  double TauMOff;
+  double EM;
+  SampleDataF ExpOn;
+  SampleDataF ExpOff;
+  int Count;
+  vector< string > CheckOutParams;
 
 };
 
