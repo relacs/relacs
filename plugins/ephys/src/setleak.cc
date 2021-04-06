@@ -129,6 +129,7 @@ void SetLeak::notify( void )
   double rm = number( "Rm", 0.0, "MOhm" );
   double cm = number( "Cm", 0.0, "pF" );
   double em = number( "Em", 0.0, "mV" );
+
   if ( rm > 1.0e-6 && cm > 1.0e-6 ) {
     bool update = true;
     bool sn = unsetNotify();
@@ -136,7 +137,7 @@ void SetLeak::notify( void )
       double rnew = 1.0/(0.001*number( "gleak" )+1.0/rm);
       double cnew = cm;
       if ( HaveC )
-	cnew += number( "Cleak" );
+        cnew += number( "Cleak" );
       setNumber( "Rnew", rnew );
       setNumber( "taunew", 1.0e-6*rnew*cnew );
 
@@ -148,7 +149,7 @@ void SetLeak::notify( void )
       double rnew = number( "Rnew" );
       double cnew = cm;
       if ( HaveC )
-	cnew += number( "Cleak" );
+        cnew += number( "Cleak" );
       setNumber( "gleak", 1000.0/rnew-1000.0/rm );
       setNumber( "taunew", 1.0e-6*rnew*cnew );
 
@@ -171,19 +172,19 @@ void SetLeak::notify( void )
     else if ( changed( "taunew" ) ) {
       double taunew = number( "taunew" );
       if ( HaveC && SetC ) {
-	double rnew = number( "Rnew" );
-    double cnew = taunew/1.0e-6/rnew;
-	setNumber( "Cleak", cnew - cm );
-	setNumber( "Cnew", cnew );
+        double rnew = number( "Rnew" );
+        double cnew = taunew/1.0e-6/rnew;
+        setNumber( "Cleak", cnew - cm );
+        setNumber( "Cnew", cnew );
       }
       else {
-    double rnew = 1.0e6*taunew/cm;
-	setNumber( "Rnew", rnew );
-    setNumber( "gleak", 1000.0/rnew-1000.0/rm );
+        double rnew = 1.0e6*taunew/cm;
+        setNumber( "Rnew", rnew );
+        setNumber( "gleak", 1000.0/rnew-1000.0/rm );
 
-    double Enew = number( "Enew" );
-    double gleak = number( "gleak" );
-    setNumber( "Eleak", (Enew * (1000.0/rm + gleak) - 1000.0/rm * em) / gleak);
+        double Enew = number( "Enew" );
+        double gleak = number( "gleak" );
+        setNumber( "Eleak", (Enew * (1000.0/rm + gleak) - 1000.0/rm * em) / gleak);
       }
     }
     else if ( changed( "Enew" )) {
@@ -191,6 +192,16 @@ void SetLeak::notify( void )
       double gleak = number( "gleak" );
       setNumber( "Eleak", (Enew * (1000.0/rm + gleak) - 1000.0/rm * em) / gleak);
     }
+    else if ( changed("Rm") or changed("Em") or changed("Cm") ) {
+      double rnew = number( "Rnew" );
+      double cnew = number( "Cnew" );
+      double Enew = number( "Enew" );
+
+      setNumber( "gleak", 1000.0/rnew-1000.0/rm );
+      setNumber( "Eleak", (Enew * (1000.0/rm + number("gleak")) - 1000.0/rm * em) / number("gleak"));
+      setNumber( "Cleak", cnew - cm );
+    }
+
     else if ( ! changed( "Eleak" ) )
       update = false;
     setNotify( sn );
@@ -199,6 +210,77 @@ void SetLeak::notify( void )
       STW.updateValues();
     }
   }
+
+//  if ( rm > 1.0e-6 && cm > 1.0e-6 ) {
+//    bool update = true;
+//    bool sn = unsetNotify();
+//    if ( changed( "gleak" ) ) {
+//      double rnew = 1.0/(0.001*number( "gleak" )+1.0/rm);
+//      double cnew = cm;
+//      if ( HaveC )
+//	cnew += number( "Cleak" );
+//      setNumber( "Rnew", rnew );
+//      setNumber( "taunew", 1.0e-6*rnew*cnew );
+//
+//      double Enew = number( "Enew" );
+//      double gleak = number( "gleak" );
+//      setNumber( "Eleak", (Enew * (1000.0/rm + gleak) - 1000.0/rm * em) / gleak);
+//    }
+//    else if ( changed( "Rnew" ) ) {
+//      double rnew = number( "Rnew" );
+//      double cnew = cm;
+//      if ( HaveC )
+//	cnew += number( "Cleak" );
+//      setNumber( "gleak", 1000.0/rnew-1000.0/rm );
+//      setNumber( "taunew", 1.0e-6*rnew*cnew );
+//
+//      double Enew = number( "Enew" );
+//      double gleak = number( "gleak" );
+//      setNumber( "Eleak", (Enew * (1000.0/rm + gleak) - 1000.0/rm * em) / gleak);
+//    }
+//    else if ( HaveC && changed( "Cleak" ) ) {
+//      double cnew = cm + number( "Cleak" );
+//      double rnew = number( "Rnew" );
+//      setNumber( "Cnew", cnew );
+//      setNumber( "taunew", 1.0e-6*rnew*cnew );
+//    }
+//    else if ( HaveC && changed( "Cnew" ) ) {
+//      double cnew = number( "Cnew" );
+//      double rnew = number( "Rnew" );
+//      setNumber( "Cleak", cnew - cm );
+//      setNumber( "taunew", 1.0e-6*rnew*cnew );
+//    }
+//    else if ( changed( "taunew" ) ) {
+//      double taunew = number( "taunew" );
+//      if ( HaveC && SetC ) {
+//	double rnew = number( "Rnew" );
+//    double cnew = taunew/1.0e-6/rnew;
+//	setNumber( "Cleak", cnew - cm );
+//	setNumber( "Cnew", cnew );
+//      }
+//      else {
+//    double rnew = 1.0e6*taunew/cm;
+//	setNumber( "Rnew", rnew );
+//    setNumber( "gleak", 1000.0/rnew-1000.0/rm );
+//
+//    double Enew = number( "Enew" );
+//    double gleak = number( "gleak" );
+//    setNumber( "Eleak", (Enew * (1000.0/rm + gleak) - 1000.0/rm * em) / gleak);
+//      }
+//    }
+//    else if ( changed( "Enew" )) {
+//      double Enew = number( "Enew" );
+//      double gleak = number( "gleak" );
+//      setNumber( "Eleak", (Enew * (1000.0/rm + gleak) - 1000.0/rm * em) / gleak);
+//    }
+//    else if ( ! changed( "Eleak" ) )
+//      update = false;
+//    setNotify( sn );
+//    if ( update ) {
+//      delFlags( Parameter::changedFlag() );
+//      STW.updateValues();
+//    }
+//  }
 }
 
 

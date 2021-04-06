@@ -28,8 +28,13 @@
 #include <relacs/plot.h>
 #include <relacs/repro.h>
 #include <relacs/ephys/traces.h>
+#include <fstream>
+#include <relacs/fitalgorithm.h>
+#include <relacs/tablekey.h>
+#include <relacs/relacsplugin.h>
+#include <relacs/ephys/setleak.h>
+#include <relacs/repros.h>
 using namespace std;
-using namespace relacs;
 using namespace relacs;
 
 namespace ephys {
