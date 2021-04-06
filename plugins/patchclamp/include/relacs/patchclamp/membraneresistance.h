@@ -110,6 +110,7 @@ protected:
   double RMOff;
   double CMOff;
   double TauMOff;
+  double EM;
   SampleDataF ExpOn;
   SampleDataF ExpOff;
   int Count;

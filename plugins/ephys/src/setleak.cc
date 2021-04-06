@@ -50,7 +50,7 @@ SetLeak::SetLeak( void )
   addNumber( "Rm", "Resistance R_m", 0.0, 0.0, 1.0e8, 1.0, "MOhm", "MOhm", "%.1f" ).setFlags( 8+32 );
   addNumber( "Cm", "Capacitance C_m", 0.0, 0.0, 1.0e9, 1.0, "pF", "pF", "%.0f" ).setFlags( 8+16+32 );
   addNumber( "Taum", "Time constant tau_m", 0.0, 0.0, 1.0e6, 0.001, "s", "ms", "%.1f" ).setFlags( 8+32 );
-  addNumber( "Em", "Leak reversal potential", 0.0, -500.0, 500.0, 0.01, "mV", "mV", ".1f%" ).setFlags( 8+32 );
+  addNumber( "Em", "Leak reversal potential", 0.0, -500.0, 500.0, 0.01, "mV", "mV", "%.1f" ).setFlags( 8+32 );
   newSection( "Injected current I = g (E-V) - C dV/dt:" ).setFlags( 2 );
   addNumber( "gleak", "Additional leak conductance g", 0.0, -1.0e8, 1.0e8, 1.0, "nS" ).setFlags( 2 );
   addNumber( "Eleak", "Added leak reversal potential E", 0.0, -1000.0, 1000.0, 1.0, "mV", "mV", "%.1f" ).setFlags( 2 );
@@ -367,6 +367,7 @@ int SetLeak::main( void )
   setNumber( "Rm", metaData().number( "Cell>rm", 0.0, "MOhm" ) );
   setNumber( "Cm", metaData().number( "Cell>cm", 0.0, "pF" ) );
   setNumber( "Taum", metaData().number( "Cell>taum", 0.0, "s" ) );
+  setNumber( "Em", metaData().number( "Cell>em", 0.0, "mV" ) );
   unlockMetaData();
   setNumber( "Eleak", E );
   setNumber( "gleak", g );

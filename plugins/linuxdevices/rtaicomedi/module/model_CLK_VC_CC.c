@@ -38,15 +38,15 @@ float loopInterval;
 float loopRate;
 
   /*! Analog input that is read from the DAQ board. */
-#define INPUT_N 1
+#define INPUT_N 2
   /*! The \a inputNames are used to match the \a input variables with
       analog input traces in Relacs. */
-const char *inputNames[INPUT_N] = { "V-1" };
-const char *inputUnits[INPUT_N] = { "mV" };
+const char *inputNames[INPUT_N] = { "V-1", "Current-1" };
+const char *inputUnits[INPUT_N] = { "mV", "nA" };
   /*! The \a inputChannels are set automatically. */
 int inputChannels[INPUT_N];
   /*! \a input holds the current value that was read in from the DAQ board. */
-float input[INPUT_N] = { 0.0 };
+float input[INPUT_N] = { 0.0, 0.0 };
 
   /*! Analog output that is written to the DAQ board. */
 #define OUTPUT_N 1

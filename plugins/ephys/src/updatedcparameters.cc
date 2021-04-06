@@ -318,27 +318,27 @@ UpdateDCParameters::UpdateDCParameters( void )
       for ( int k=0; k<ExpOn.size(); k++ )
         ExpOn[k] = expFunc( ExpOn.pos( k ), p );
 
-      // subtract dynamic clamp influence
-      cerr << "subtract dynamic clamp influence\n";
-      cerr << "param1\n";
-
-      RePro* sl = repro( "SetLeak" );
-      cerr << repro( "b" );
-
-      double gleak = repro( "SetLeak" )->number( "gleak" );
-      cerr << "param2\n";
-      double rleak = 1/(0.001*gleak);
-      cerr << "param3\n";
-      double Eleak = repro( "SetLeak" )->number( "Eleak" );
-      cerr << "param4\n";
-      double Cleak = repro( "SetLeak" )->number( "Cleak" );
-      cerr << "computations\n";
-
-
-      RMOn = rleak*RMOn / (rleak - RMOn);
-      EM = EM + (EM - Eleak) * RMOn / rleak;
-      CMOn = CMOn - Cleak;
-      cerr << "end\n";
+//      // subtract dynamic clamp influence
+//      cerr << "subtract dynamic clamp influence\n";
+//      cerr << "param1\n";
+//
+//      RePro* sl = repro( "SetLeak" );
+//      cerr << repro( "b" );
+//
+//      double gleak = repro( "SetLeak" )->number( "gleak" );
+//      cerr << "param2\n";
+//      double rleak = 1/(0.001*gleak);
+//      cerr << "param3\n";
+//      double Eleak = repro( "SetLeak" )->number( "Eleak" );
+//      cerr << "param4\n";
+//      double Cleak = repro( "SetLeak" )->number( "Cleak" );
+//      cerr << "computations\n";
+//
+//
+//      RMOn = rleak*RMOn / (rleak - RMOn);
+//      EM = EM + (EM - Eleak) * RMOn / rleak;
+//      CMOn = CMOn - Cleak;
+//      cerr << "end\n";
 
     }
 

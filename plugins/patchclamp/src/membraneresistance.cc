@@ -276,6 +276,10 @@ void MembraneResistance::analyzeOn( double duration,
   if ( RMss <= 0.0 && RMss > 1.0e10 )
     RMss = 0.0;
 
+//  EM = (VSS - VRest) - RMss*Amplitude;
+  EM = Amplitude * VRest / (VSS - VRest);
+
+
   // peak potential:
   VPeak = VRest;
   VPeakInx = 0;
@@ -389,7 +393,8 @@ void MembraneResistance::plot( void )
   P.clear();
   P.setTitle( "R=" + Str( RMOn, 0, 0, 'f' ) +
 	      " MOhm,  C=" + Str( CMOn, 0, 0, 'f' ) +
-	      " pF,  tau=" + Str( TauMOn, 0, 0, 'f' ) + " ms" );
+	      " pF,  tau=" + Str( TauMOn, 0, 0, 'f' ) + " ms" +
+	      ", EL=" + Str( 1000*EM, 0, 0.1, 'f') + " mV");
   P.plotVLine( 0, Plot::White, 2 );
   P.plotVLine( 1000.0*Duration, Plot::White, 2 );
   if ( boolean( "plotstdev" ) ) {
@@ -430,6 +435,7 @@ void MembraneResistance::save( void )
   header.addNumber( "Tpeak", 1000.0*VPeakTime, "ms", "%0.1f" );
   header.addNumber( "Rm", RMOn, "MOhm", "%0.1f" );
   header.addNumber( "Cm", CMOn, "pF", "%0.1f" );
+  header.addNumber( "Em", EM, VUnit, "%0.1f" );
   header.addNumber( "Taum", TauMOn, "ms", "%0.1f" );
   header.addNumber( "Roff", RMOff, "MOhm", "%0.1f" );
   header.addNumber( "Coff", CMOff, "pF", "%0.1f" );
@@ -466,6 +472,7 @@ void MembraneResistance::save( void )
     metaData().setNumber( "Cell>rmss", RMss  );
     metaData().setNumber( "Cell>cm", CMOn );
     metaData().setNumber( "Cell>taum", 0.001*TauMOn );
+    metaData().setNumber( "Cell>em", EM);
     unlockMetaData();
   }
 }
@@ -494,10 +501,12 @@ void MembraneResistance::saveData( void )
   datakey.addNumber( "R", "MOhm", "%6.1f", RMOn );
   datakey.addNumber( "C", "pF", "%6.1f", CMOn );
   datakey.addNumber( "tau", "ms", "%6.1f", TauMOn );
+  datakey.addNumber( "EL", VUnit, "%6.1f", EM );
   datakey.newSection( "Offset" );
   datakey.addNumber( "R", "MOhm", "%6.1f", RMOff );
   datakey.addNumber( "C", "pF", "%6.1f", CMOff );
   datakey.addNumber( "tau", "ms", "%6.1f", TauMOff );
+  datakey.addNumber( "EL", VUnit, "%6.1f", EM );
   datakey.newSection( "Sag" );
   datakey.addNumber( "Vsag", VUnit, "%6.1f", fabs( VPeak-VSS ) );
   datakey.addNumber( "s.d.", VUnit, "%6.1f", sqrt( VPeaksd*VPeaksd + VSSsd*VSSsd ) );
