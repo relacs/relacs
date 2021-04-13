@@ -94,7 +94,7 @@ void computeModel( void )
   int k;
 
   // leak:
-  paramInput[0] = -0.001*paramOutput[0]*(input[0]-paramOutput[1]);
+  paramInput[0] = -0.001*paramOutput[0]*(input[0]) + paramOutput[1];
    // capacitive current:
    paramInput[1] = -1e-6*paramOutput[2]*(input[0]-previnputs[0])*loopRate;
    for ( k=0; k<MAXPREVINPUTS-1; k++ )

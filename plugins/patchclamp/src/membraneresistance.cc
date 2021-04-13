@@ -277,8 +277,8 @@ void MembraneResistance::analyzeOn( double duration,
     RMss = 0.0;
 
 //  EM = (VSS - VRest) - RMss*Amplitude;
-  EM = Amplitude * VRest / (VSS - VRest);
-
+  EM = VRest; //Amplitude * VRest / (VSS - VRest);
+  cerr << "VRest=" << VRest << "mV\n";
 
   // peak potential:
   VPeak = VRest;
@@ -328,6 +328,14 @@ void MembraneResistance::analyzeOn( double duration,
   if ( TauMOn <= 0.0 && TauMOn > 1.0e5 )
     TauMOn = 0.0;
   RMOn = ::fabs( (p[2] - VRest)/Amplitude )*VFac/IFac;
+
+  cerr << " RMOn=" << RMOn << "\n";
+  cerr << " p2=" << p[2] << "VSS=" << VSS << "\n";
+  cerr << " VRest=" << VRest << ", EM=" << EM << "\n";
+  cerr << " Amplitude=" << Amplitude << "\n";
+  cerr << " Vfac=" << VFac << "\n";
+  cerr << " IFac=" << IFac << "\n";
+
   if ( RMOn <= 0.0 && RMOn > 1.0e10 ) {
     RMOn = 0.0;
     CMOn = 0.0;
@@ -394,7 +402,7 @@ void MembraneResistance::plot( void )
   P.setTitle( "R=" + Str( RMOn, 0, 0, 'f' ) +
 	      " MOhm,  C=" + Str( CMOn, 0, 0, 'f' ) +
 	      " pF,  tau=" + Str( TauMOn, 0, 0, 'f' ) + " ms" +
-	      ", EL=" + Str( 1000*EM, 0, 0.1, 'f') + " mV");
+	      ", EL=" + Str( EM, 0, 0.1, 'f') + " mV");
   P.plotVLine( 0, Plot::White, 2 );
   P.plotVLine( 1000.0*Duration, Plot::White, 2 );
   if ( boolean( "plotstdev" ) ) {
@@ -472,7 +480,7 @@ void MembraneResistance::save( void )
     metaData().setNumber( "Cell>rmss", RMss  );
     metaData().setNumber( "Cell>cm", CMOn );
     metaData().setNumber( "Cell>taum", 0.001*TauMOn );
-    metaData().setNumber( "Cell>em", EM);
+    metaData().setNumber( "Cell>em", EM, 0.0, VUnit);
     unlockMetaData();
   }
 }

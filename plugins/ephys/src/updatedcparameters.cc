@@ -206,9 +206,7 @@ UpdateDCParameters::UpdateDCParameters( void )
           state = Aborted;
         directWrite( dcsignal );
       }
-      cerr << "analyzeOn\n";
       analyzeOn( Duration, sswidth, nossfit );
-      cerr << "analyzeOff\n";
       analyzeOff( Duration, sswidth, nossfit );
 
       sleepOn( Duration+pause );
@@ -230,7 +228,7 @@ UpdateDCParameters::UpdateDCParameters( void )
       int inx = intrace.signalIndex() - MeanVoltage.index( 0.0 );
       for ( int k=0; k<MeanVoltage.size() && inx+k<intrace.size(); k++ ) {
         double v = intrace[inx+k];
-        MeanVoltage[k] += (v - MeanVoltage[k])/(Count+1);
+        MeanVoltage[k] += v;
         SquareVoltage[k] += (v*v - SquareVoltage[k])/(Count+1);
         StdevVoltage[k] = sqrt( SquareVoltage[k] - MeanVoltage[k]*MeanVoltage[k] );
       }
@@ -241,7 +239,7 @@ UpdateDCParameters::UpdateDCParameters( void )
           double v = intrace2[inx+k];
           if ( TraceIndices[j] == CurrentTrace[0] )
             v *= IInFac;
-          MeanTraces[j][k] += (v - MeanTraces[j][k])/(Count+1);
+          MeanTraces[j][k] += v;
           SquareTraces[j][k] += (v*v - SquareTraces[j][k])/(Count+1);
         }
       }
@@ -260,7 +258,12 @@ UpdateDCParameters::UpdateDCParameters( void )
         RMss = 0.0;
 
       // reversal potential:
-      EM = (VSS - VRest) - RMss*Amplitude;
+      EM = VRest; //(VSS - VRest) - RMss*Amplitude;
+
+      cerr << "\nVSS=" << VSS << "\n";
+      cerr << "VRest=" << VRest << "\n";
+      cerr << "RMss=" << RMss << "\n";
+      cerr << "Amplitude=" << Amplitude << "\n\n";
 
       // peak potential:
       VPeak = VRest;
@@ -309,6 +312,14 @@ UpdateDCParameters::UpdateDCParameters( void )
       if ( TauMOn <= 0.0 && TauMOn > 1.0e5 )
         TauMOn = 0.0;
       RMOn = ::fabs( (p[2] - VRest)/Amplitude )*VFac/IFac;
+
+//      cerr << " RMOn=" << RMOn << "\n";
+//      cerr << " p2=" << p[2] << "VSS=" << VSS << "\n";
+//      cerr << " VRest=" << VRest << "\n";
+//      cerr << " Amplitude=" << Amplitude << "\n";
+//      cerr << " Vfac=" << VFac << "\n";
+//      cerr << " IFac=" << IFac << "\n";
+
       if ( RMOn <= 0.0 && RMOn > 1.0e10 ) {
         RMOn = 0.0;
         CMOn = 0.0;
@@ -318,28 +329,37 @@ UpdateDCParameters::UpdateDCParameters( void )
       for ( int k=0; k<ExpOn.size(); k++ )
         ExpOn[k] = expFunc( ExpOn.pos( k ), p );
 
-//      // subtract dynamic clamp influence
-//      cerr << "subtract dynamic clamp influence\n";
-//      cerr << "param1\n";
-//
-//      RePro* sl = repro( "SetLeak" );
-//      cerr << repro( "b" );
-//
-//      double gleak = repro( "SetLeak" )->number( "gleak" );
-//      cerr << "param2\n";
-//      double rleak = 1/(0.001*gleak);
-//      cerr << "param3\n";
-//      double Eleak = repro( "SetLeak" )->number( "Eleak" );
-//      cerr << "param4\n";
-//      double Cleak = repro( "SetLeak" )->number( "Cleak" );
-//      cerr << "computations\n";
-//
-//
-//      RMOn = rleak*RMOn / (rleak - RMOn);
-//      EM = EM + (EM - Eleak) * RMOn / rleak;
-//      CMOn = CMOn - Cleak;
-//      cerr << "end\n";
+      // subtract dynamic clamp influence
+      RePro* sl = repro( "SetLeak[Ephys]" );
+      double gleak = sl->number( "gleak", 0.0, "nS" );
+      double Eleak = sl->number( "Eleak", 0.0, "pA" );
+      double Cleak = sl->number( "Cleak", 0.0, "pF" );
 
+      cerr << "\ninput parameters\n";
+      cerr << "gleak=" << gleak << "\n";
+//      cerr << "rleak=" << rleak << "\n";
+      cerr << "Eleak=" << Eleak << "\n";
+      cerr << "Cleak=" << Cleak << "\n";
+
+      cerr << "\nold parameters\n";
+      cerr << "RMOn=" << RMOn << "\n";
+      cerr << "gLOn=" << 1000.0/RMOn << "\n";
+      cerr << "EM=" << EM << "\n";
+      cerr << "CMOn=" << CMOn << "\n";
+
+      double gLOn = 1000.0/RMOn;
+      gLOn = gLOn - gleak;
+//      RMOn = rleak*RMOn / (rleak - RMOn);
+      RMOn = 1000.0/gLOn;
+//      EM = EM + (EM - Eleak) * RMOn / rleak;
+      EM = ((gLOn + gleak) * EM - Eleak) / gLOn;
+      CMOn = CMOn - Cleak;
+
+      cerr << "\nnew parameters\n";
+      cerr << "RMOn=" << RMOn << "\n";
+      cerr << "gLOn=" << gLOn << "\n";
+      cerr << "EM=" << EM << "\n";
+      cerr << "CMOn=" << CMOn << "\n";
     }
 
 
