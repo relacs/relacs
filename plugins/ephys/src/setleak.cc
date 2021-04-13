@@ -131,6 +131,19 @@ void SetLeak::notify( void )
   double cm = number( "Cm", 0.0, "pF" );
   double em = number( "Em", 0.0, "mV" );
 
+//  cerr << "\nbefore adjustments in setleak:\n";
+//  cerr << "Rm=" << number( "Rm" ) << "\n";
+//  cerr << "Cm=" << number( "Cm" ) << "\n";
+//  cerr << "Taum=" << number( "Taum" ) << "\n";
+//  cerr << "Em=" << number( "Em" ) << "\n";
+//  cerr << "gleak=" << number( "gleak" ) << "\n";
+//  cerr << "Eleak=" << number( "Eleak" ) << "\n";
+//  cerr << "Cleak=" << number( "Cleak" ) << "\n";
+//  cerr << "Rnew=" << number( "Rnew" ) << "\n";
+//  cerr << "Enew=" << number( "Enew" ) << "\n";
+//  cerr << "Cnew=" << number( "Cnew" ) << "\n";
+//  cerr << "taunew=" << number( "taunew" ) << "\n\n";
+
   if ( rm > 1.0e-6 && cm > 1.0e-6 ) {
     bool update = true;
     bool sn = unsetNotify();
@@ -191,181 +204,19 @@ void SetLeak::notify( void )
     }
   }
 
+//  cerr << "\nafter adjustments:\n";
+//  cerr << "Rm=" << number( "Rm" ) << "\n";
+//  cerr << "Cm=" << number( "Cm" ) << "\n";
+//  cerr << "Taum=" << number( "Taum" ) << "\n";
+//  cerr << "Em=" << number( "Em" ) << "\n";
+//  cerr << "gleak=" << number( "gleak" ) << "\n";
+//  cerr << "Eleak=" << number( "Eleak" ) << "\n";
+//  cerr << "Cleak=" << number( "Cleak" ) << "\n";
+//  cerr << "Rnew=" << number( "Rnew" ) << "\n";
+//  cerr << "Enew=" << number( "Enew" ) << "\n";
+//  cerr << "Cnew=" << number( "Cnew" ) << "\n";
+//  cerr << "taunew=" << number( "taunew" ) << "\n\n";
 
-//  // old stuff
-//  if ( rm > 1.0e-6 && cm > 1.0e-6 ) {
-//    bool update = true;
-//    bool sn = unsetNotify();
-//    if ( changed( "gleak" ) ) {
-//      double rnew = 1.0/(0.001*number( "gleak" )+1.0/rm);
-//      double cnew = cm;
-//      if ( HaveC )
-//        cnew += number( "Cleak" );
-//      setNumber( "Rnew", rnew );
-//      setNumber( "taunew", 1.0e-6*rnew*cnew );
-//
-//      double Enew = number( "Enew" );
-//      double gleak = number( "gleak" );
-////      setNumber( "Eleak", (Enew * (1000.0/rm + gleak) - 1000.0/rm * em) / gleak);
-//      setNumber( "Eleak", (Enew * (1000.0/rm + gleak) - 1000.0/rm * em)/1000.0);
-//    }
-//    else if ( changed( "Rnew" ) ) {
-//      double rnew = number( "Rnew" );
-//      double cnew = cm;
-//      if ( HaveC )
-//        cnew += number( "Cleak" );
-//      setNumber( "gleak", 1000.0/rnew-1000.0/rm );
-//      setNumber( "taunew", 1.0e-6*rnew*cnew );
-//
-//      double Enew = number( "Enew" );
-//      double gleak = number( "gleak" );
-////      setNumber( "Eleak", (Enew * (1000.0/rm + gleak) - 1000.0/rm * em) / gleak);
-//      setNumber( "Eleak", (Enew * (1000.0/rm + gleak) - 1000.0/rm * em)/1000.0);
-//    }
-//    else if ( HaveC && changed( "Cleak" ) ) {
-//      double cnew = cm + number( "Cleak" );
-//      double rnew = number( "Rnew" );
-//      setNumber( "Cnew", cnew );
-//      setNumber( "taunew", 1.0e-6*rnew*cnew );
-//    }
-//    else if ( HaveC && changed( "Cnew" ) ) {
-//      double cnew = number( "Cnew" );
-//      double rnew = number( "Rnew" );
-//      setNumber( "Cleak", cnew - cm );
-//      setNumber( "taunew", 1.0e-6*rnew*cnew );
-//    }
-//    else if ( changed( "taunew" ) ) {
-//      double taunew = number( "taunew" );
-//      if ( HaveC && SetC ) {
-//        double rnew = number( "Rnew" );
-//        double cnew = taunew/1.0e-6/rnew;
-//        setNumber( "Cleak", cnew - cm );
-//        setNumber( "Cnew", cnew );
-//      }
-//      else {
-//        double rnew = 1.0e6*taunew/cm;
-//        setNumber( "Rnew", rnew );
-//        setNumber( "gleak", 1000.0/rnew-1000.0/rm );
-//
-//        double Enew = number( "Enew" );
-//        double gleak = number( "gleak" );
-////        setNumber( "Eleak", (Enew * (1000.0/rm + gleak) - 1000.0/rm * em) / gleak);
-//        setNumber( "Eleak", (Enew * (1000.0/rm + gleak) - 1000.0/rm * em)/1000.0);
-//      }
-//    }
-//    else if ( changed( "Enew" )) {
-//      double Enew = number( "Enew" );
-//      double gleak = number( "gleak" );
-////      setNumber( "Eleak", (Enew * (1000.0/rm + gleak) - 1000.0/rm * em) / gleak);
-//      setNumber( "Eleak", (Enew * (1000.0/rm + gleak) - 1000.0/rm * em)/1000.0);
-//      cerr << "Enew=" << Enew << "mV, 1000.0/rm=" << 1000.0/rm << ", gleak=" << gleak << ", em=" << em << "mV\n";
-//      cerr << "Eleak=" << number("Eleak") << "mV\n";
-//    }
-//    else if ( changed("Rm") or changed("Em") or changed("Cm") ) {
-//      double rnew = number( "Rnew" );
-//      double cnew = number( "Cnew" );
-//      double Enew = number( "Enew" );
-//
-//      setNumber( "gleak", 1000.0/rnew-1000.0/rm );
-////      setNumber( "Eleak", (Enew * (1000.0/rm + number("gleak")) - 1000.0/rm * em) / number("gleak"));
-//      setNumber( "Eleak", (Enew * (1000.0/rm + number( "gleak" )) - 1000.0/rm * em)/1000.0);
-//      setNumber( "Cleak", cnew - cm );
-//    }
-//    else if ( changed( "Eleak" ) ) {
-//      double gleak = number( "gleak", 0.0, "nS" );
-//      double Eleak = number( "Eleak" , 0.0, "pA" );
-//      double Enew = number( "Enew", 0.0, "mV" );
-////      setNumber( "Enew", ((1000.0/rm + gleak) * Enew - Eleak)/(1000.0/rm));
-//      setNumber( "Enew", - (1000.0/rm * em - Eleak) / (1000.0/rm + gleak));
-//      cerr << "in set leak\n";
-//      cerr << "EM=" << em << "\n";
-//      cerr << "RM=" << rm << "\n";
-//      cerr << "gL=" << 1000.0/rm << "\n";
-//      cerr << "gleak=" << gleak << "\n";
-//      cerr << "Eleak=" << Eleak << "\n";
-//      cerr << "set leak end";
-//    }
-//    else if ( ! changed( "Eleak" ) )
-//      update = false;
-//    setNotify( sn );
-//    if ( update ) {
-//      delFlags( Parameter::changedFlag() );
-//      STW.updateValues();
-//    }
-//  }
-
-//// even older stuff
-
-//  if ( rm > 1.0e-6 && cm > 1.0e-6 ) {
-//    bool update = true;
-//    bool sn = unsetNotify();
-//    if ( changed( "gleak" ) ) {
-//      double rnew = 1.0/(0.001*number( "gleak" )+1.0/rm);
-//      double cnew = cm;
-//      if ( HaveC )
-//	cnew += number( "Cleak" );
-//      setNumber( "Rnew", rnew );
-//      setNumber( "taunew", 1.0e-6*rnew*cnew );
-//
-//      double Enew = number( "Enew" );
-//      double gleak = number( "gleak" );
-//      setNumber( "Eleak", (Enew * (1000.0/rm + gleak) - 1000.0/rm * em) / gleak);
-//    }
-//    else if ( changed( "Rnew" ) ) {
-//      double rnew = number( "Rnew" );
-//      double cnew = cm;
-//      if ( HaveC )
-//	cnew += number( "Cleak" );
-//      setNumber( "gleak", 1000.0/rnew-1000.0/rm );
-//      setNumber( "taunew", 1.0e-6*rnew*cnew );
-//
-//      double Enew = number( "Enew" );
-//      double gleak = number( "gleak" );
-//      setNumber( "Eleak", (Enew * (1000.0/rm + gleak) - 1000.0/rm * em) / gleak);
-//    }
-//    else if ( HaveC && changed( "Cleak" ) ) {
-//      double cnew = cm + number( "Cleak" );
-//      double rnew = number( "Rnew" );
-//      setNumber( "Cnew", cnew );
-//      setNumber( "taunew", 1.0e-6*rnew*cnew );
-//    }
-//    else if ( HaveC && changed( "Cnew" ) ) {
-//      double cnew = number( "Cnew" );
-//      double rnew = number( "Rnew" );
-//      setNumber( "Cleak", cnew - cm );
-//      setNumber( "taunew", 1.0e-6*rnew*cnew );
-//    }
-//    else if ( changed( "taunew" ) ) {
-//      double taunew = number( "taunew" );
-//      if ( HaveC && SetC ) {
-//	double rnew = number( "Rnew" );
-//    double cnew = taunew/1.0e-6/rnew;
-//	setNumber( "Cleak", cnew - cm );
-//	setNumber( "Cnew", cnew );
-//      }
-//      else {
-//    double rnew = 1.0e6*taunew/cm;
-//	setNumber( "Rnew", rnew );
-//    setNumber( "gleak", 1000.0/rnew-1000.0/rm );
-//
-//    double Enew = number( "Enew" );
-//    double gleak = number( "gleak" );
-//    setNumber( "Eleak", (Enew * (1000.0/rm + gleak) - 1000.0/rm * em) / gleak);
-//      }
-//    }
-//    else if ( changed( "Enew" )) {
-//      double Enew = number( "Enew" );
-//      double gleak = number( "gleak" );
-//      setNumber( "Eleak", (Enew * (1000.0/rm + gleak) - 1000.0/rm * em) / gleak);
-//    }
-//    else if ( ! changed( "Eleak" ) )
-//      update = false;
-//    setNotify( sn );
-//    if ( update ) {
-//      delFlags( Parameter::changedFlag() );
-//      STW.updateValues();
-//    }
-//  }
 }
 
 
