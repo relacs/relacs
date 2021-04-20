@@ -131,18 +131,19 @@ void SetLeak::notify( void )
   double cm = number( "Cm", 0.0, "pF" );
   double em = number( "Em", 0.0, "mV" );
 
-//  cerr << "\nbefore adjustments in setleak:\n";
-//  cerr << "Rm=" << number( "Rm" ) << "\n";
-//  cerr << "Cm=" << number( "Cm" ) << "\n";
-//  cerr << "Taum=" << number( "Taum" ) << "\n";
-//  cerr << "Em=" << number( "Em" ) << "\n";
-//  cerr << "gleak=" << number( "gleak" ) << "\n";
-//  cerr << "Eleak=" << number( "Eleak" ) << "\n";
-//  cerr << "Cleak=" << number( "Cleak" ) << "\n";
-//  cerr << "Rnew=" << number( "Rnew" ) << "\n";
-//  cerr << "Enew=" << number( "Enew" ) << "\n";
-//  cerr << "Cnew=" << number( "Cnew" ) << "\n";
-//  cerr << "taunew=" << number( "taunew" ) << "\n\n";
+  cerr << "\nbefore adjustments in setleak:\n";
+  cerr << "Rm=" << number( "Rm" ) <<        ", changed=" << changed("Rm") << "\n";
+  cerr << "Cm=" << number( "Cm" ) <<        ", changed=" << changed("Cm") << "\n";
+  cerr << "Taum=" << number( "Taum" ) <<    ", changed=" << changed("Taum") << "\n";
+  cerr << "Em=" << number( "Em" ) <<        ", changed=" << changed("Em") << "\n";
+  cerr << "gleak=" << number( "gleak" ) <<  ", changed=" << changed("gleak") << "\n";
+  cerr << "Eleak=" << number( "Eleak" ) <<  ", changed=" << changed("Eleak") << "\n";
+  cerr << "Cleak=" << number( "Cleak" ) <<  ", changed=" << changed("Cleak") << "\n";
+  cerr << "Rnew=" << number( "Rnew" ) <<    ", changed=" << changed("Rnew") << "\n";
+  cerr << "Enew=" << number( "Enew" ) <<    ", changed=" << changed("Enew") << "\n";
+  cerr << "Cnew=" << number( "Cnew" ) <<    ", changed=" << changed("Cnew") << "\n";
+  cerr << "taunew=" << number( "taunew" ) << ", changed=" << changed("taunew") <<"\n\n";
+
 
   if ( rm > 1.0e-6 && cm > 1.0e-6 ) {
     bool update = true;
@@ -204,19 +205,27 @@ void SetLeak::notify( void )
     }
   }
 
-//  cerr << "\nafter adjustments:\n";
-//  cerr << "Rm=" << number( "Rm" ) << "\n";
-//  cerr << "Cm=" << number( "Cm" ) << "\n";
-//  cerr << "Taum=" << number( "Taum" ) << "\n";
-//  cerr << "Em=" << number( "Em" ) << "\n";
-//  cerr << "gleak=" << number( "gleak" ) << "\n";
-//  cerr << "Eleak=" << number( "Eleak" ) << "\n";
-//  cerr << "Cleak=" << number( "Cleak" ) << "\n";
-//  cerr << "Rnew=" << number( "Rnew" ) << "\n";
-//  cerr << "Enew=" << number( "Enew" ) << "\n";
-//  cerr << "Cnew=" << number( "Cnew" ) << "\n";
-//  cerr << "taunew=" << number( "taunew" ) << "\n\n";
+  cerr << "\nafter adjustments:\n";
+  cerr << "Rm="   << number( "Rm" ) << "\n";
+  cerr << "Em="   << number( "Em" ) << "\n";
+  cerr << "Cm="   << number( "Cm" ) << "\n";
+  cerr << "Taum=" << number( "Taum" ) << "\n";
+  cerr << "gleak=" << number( "gleak" ) << "\n";
+  cerr << "Eleak=" << number( "Eleak" ) << "\n";
+  cerr << "Cleak=" << number( "Cleak" ) << "\n";
+  cerr << "Rnew=" << number( "Rnew" ) << "\n";
+  cerr << "Enew=" << number( "Enew" ) << "\n";
+  cerr << "Cnew=" << number( "Cnew" ) << "\n";
+  cerr << "taunew=" << number( "taunew" ) << "\n\n";
 
+//  lockMetaData();
+//  metaData().setNumber( "Cell>gleak", number( "gleak", 0.0, "nS" ), 0.0, "nS" );
+//  metaData().setNumber( "Cell>Eleak", number( "Eleak", 0.0, "pA" ), 0.0, "pA" );
+//  metaData().setNumber( "Cell>Cleak", number( "Cleak", 0.0, "pF" ), 0.0, "pF" );
+//  metaData().setNumber( "Cell>rnew", number( "Rnew", 0.0, "MOhm" ), 0.0, "MOhm" );
+//  metaData().setNumber( "Cell>enew", number( "Enew", 0.0, "pA" ), 0.0, "pA" );
+//  metaData().setNumber( "Cell>cnew", number( "Cnew", 0.0, "pF" ), 0.0, "pF" );
+//  unlockMetaData();
 }
 
 
@@ -300,23 +309,47 @@ int SetLeak::main( void )
 
   unsetNotify();
   lockMetaData();
-  setNumber( "Rm", metaData().number( "Cell>rm", 0.0, "MOhm" ) );
-  setNumber( "Cm", metaData().number( "Cell>cm", 0.0, "pF" ) );
-  setNumber( "Taum", metaData().number( "Cell>taum", 0.0, "s" ) );
-  setNumber( "Em", metaData().number( "Cell>em", 0.0, "mV" ) );
+  setNumber( "Rm", metaData().number( "Cell>rm", 0.0, "MOhm" ), 0.0, "MOhm" );
+  setNumber( "Cm", metaData().number( "Cell>cm", 0.0, "pF" ), 0.0, "pF" );
+  setNumber( "Taum", metaData().number( "Cell>taum", 0.0, "ms" ), 0.0, "ms" );
+  setNumber( "Em", metaData().number( "Cell>em", 0.0, "mV" ), 0.0, "mV" );
+  setNumber( "Rnew", metaData().number( "Cell>rnew", 0.0, "MOhm" ), 0.0, "MOhm" );
+  setNumber( "Enew", metaData().number( "Cell>enew", 0.0, "mV" ), 0.0, "mV" );
+  setNumber( "Cnew", metaData().number( "Cell>cnew", 0.0, "pF" ), 0.0, "pF" );
+
+  cerr << "\n";
+  cerr << "Rm: "  <<   number( "Rm"   , 0.0, "MOhm") << "\n";
+  cerr << "Cm: " <<    number( "Cm"   , 0.0, "pF") << "\n";
+  cerr << "Taum: " <<  number( "Taum" , 0.0, "ms") << "\n";
+  cerr << "Em: " <<    number( "Em"   , 0.0, "mV") << "\n";
+  cerr << "Rnew: " <<  number( "Rnew" , 0.0, "MOhm") << "\n";
+  cerr << "Enew: " <<  number( "Enew" , 0.0, "mV") << "\n";
+  cerr << "Cnew: " <<  number( "Cnew" , 0.0, "pF") << "\n";
+
+
   unlockMetaData();
-  setNumber( "Eleak", E );
-  setNumber( "gleak", g );
-  setNumber( "Cleak", C );
-  delFlags( Parameter::changedFlag() );
-  addFlags( "gleak", Parameter::changedFlag() );
-  notify();  // calls already STW.updateValues()
-  if ( HaveC ) {
-    addFlags( "Cleak", Parameter::changedFlag() );
-    notify();
+
+  if ( number( "Rnew", 0.0, "MOhm" ) < 1e-6 ) {
+    setNumber("gleak", g, 0.0, "nS");
+    setNumber("Eleak", E, 0.0, "pA");
+    setNumber("Cleak", C, 0.0, "pF");
+    setNumber("Rnew", number( "Rm" , 0.0, "MOhm"), 0.0, "MOhm");
+    setNumber("Enew", number( "Em" , 0.0, "mV"), 0.0, "mV");
+    setNumber("Cnew", number( "Cm" , 0.0, "pF"), 0.0, "pF");
+    delFlags( Parameter::changedFlag() );
+    addFlags( "gleak", Parameter::changedFlag() );
   }
+  else
+    delFlags( Parameter::changedFlag() );
+    addFlags( "Rnew", Parameter::changedFlag() );
+
+  notify();  // calls already STW.updateValues()
+//  if ( HaveC ) {
+//    addFlags( "Cleak", Parameter::changedFlag() );
+//    notify();
+//  }
   setNotify();
-  notify();
+//  notify();
 
   if ( interactive ) {
     postCustomEvent( 13 ); // STW.assign();
@@ -328,6 +361,7 @@ int SetLeak::main( void )
     sleepWait();
     postCustomEvent( 12 ); // clearFocus();
     // set new values:
+
     if ( Change ) {
       g = Zero ? 0.0 : number( "gleak" );
       E = Zero ? 0.0 : number( "Eleak" );
@@ -362,14 +396,27 @@ int SetLeak::main( void )
     warning( "Failed to write new values: " + signal.errorText() );
     return Failed;
   }
+
 //  unsetNotify();
   setNumber( "Cleak", C );
   setNumber( "gleak", g );
   setNumber( "Eleak", E );
-//  setToDefaults();
+
+  lockMetaData();
+  metaData().setNumber( "Cell>gleak", number( "gleak", 0.0, "nS" ), 0.0, "nS" );
+  metaData().setNumber( "Cell>Eleak", number( "Eleak", 0.0, "pA" ), 0.0, "pA" );
+  metaData().setNumber( "Cell>Cleak", number( "Cleak", 0.0, "pF" ), 0.0, "pF" );
+  metaData().setNumber( "Cell>rnew", number( "Rnew", 0.0, "MOhm" ), 0.0, "MOhm" );
+  metaData().setNumber( "Cell>enew", number( "Enew", 0.0, "pA" ), 0.0, "pA" );
+  metaData().setNumber( "Cell>cnew", number( "Cnew", 0.0, "pF" ), 0.0, "pF" );
+  unlockMetaData();
+
+  unsetNotify();
+  setToDefaults();
 //  notify();  // calls already STW.updateValues()
-//  setNotify();
-  
+  setNotify();
+
+
   sleep( 0.01 );
   return Completed;
 }

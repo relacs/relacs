@@ -335,17 +335,11 @@ UpdateDCParameters::UpdateDCParameters( void )
       double Eleak = sl->number( "Eleak", 0.0, "pA" );
       double Cleak = sl->number( "Cleak", 0.0, "pF" );
 
-      cerr << "\ninput parameters\n";
-      cerr << "gleak=" << gleak << "\n";
-//      cerr << "rleak=" << rleak << "\n";
-      cerr << "Eleak=" << Eleak << "\n";
-      cerr << "Cleak=" << Cleak << "\n";
-
-      cerr << "\nold parameters\n";
-      cerr << "RMOn=" << RMOn << "\n";
-      cerr << "gLOn=" << 1000.0/RMOn << "\n";
-      cerr << "EM=" << EM << "\n";
-      cerr << "CMOn=" << CMOn << "\n";
+//      cerr << "\nold parameters\n";
+//      cerr << "RMOn=" << RMOn << "\n";
+//      cerr << "gLOn=" << 1000.0/RMOn << "\n";
+//      cerr << "EM=" << EM << "\n";
+//      cerr << "CMOn=" << CMOn << "\n";
 
       double gLOn = 1000.0/RMOn;
       gLOn = gLOn - gleak;
@@ -355,11 +349,11 @@ UpdateDCParameters::UpdateDCParameters( void )
       EM = ((gLOn + gleak) * EM - Eleak) / gLOn;
       CMOn = CMOn - Cleak;
 
-      cerr << "\nnew parameters\n";
-      cerr << "RMOn=" << RMOn << "\n";
-      cerr << "gLOn=" << gLOn << "\n";
-      cerr << "EM=" << EM << "\n";
-      cerr << "CMOn=" << CMOn << "\n";
+//      cerr << "\nnew parameters\n";
+//      cerr << "RMOn=" << RMOn << "\n";
+//      cerr << "gLOn=" << gLOn << "\n";
+//      cerr << "EM=" << EM << "\n";
+//      cerr << "CMOn=" << CMOn << "\n";
     }
 
 
@@ -490,13 +484,51 @@ UpdateDCParameters::UpdateDCParameters( void )
 
       if ( setdata ) {
         lockMetaData();
-        metaData().setNumber( "Cell>vrest", 0.001*VRest, 0.001*VRestsd );
-        metaData().setNumber( "Cell>rm", RMOn  );
+
+        RePro* sl = repro( "SetLeak[Ephys]" );
+        double gleak = sl->number( "gleak", 0.0, "nS" );
+        double Eleak = sl->number( "Eleak", 0.0, "pA" );
+        double Cleak = sl->number( "Cleak", 0.0, "pF" );
+        cerr << "\nupdateparameters, setdata:\n";
+        cerr << "\ninput parameters\n";
+        cerr << "gleak=" << gleak << "\n";
+        cerr << "Eleak=" << Eleak << "\n";
+        cerr << "Cleak=" << Cleak << "\n";
+
+        cerr << "vrest=" << VRest << "\n";
+        cerr << "rm=" << RMOn << "\n";
+        cerr << "rmss=" << RMss << "\n";
+        cerr << "cm=" << CMOn << "\n";
+        cerr << "taum=" << TauMOn << "\n";
+        cerr << "em=" << EM << "\n";
+
+
+        metaData().setNumber( "Cell>vrest", VRest, 0.0, "mV" );
+        metaData().setNumber( "Cell>rm", RMOn, 0.0, "MOhm" );
         metaData().setNumber( "Cell>rmss", RMss  );
-        metaData().setNumber( "Cell>cm", CMOn );
-        metaData().setNumber( "Cell>taum", 0.001*TauMOn );
-        metaData().setNumber( "Cell>em", EM );
+        metaData().setNumber( "Cell>cm", CMOn, 0.0, "pF" );
+        metaData().setNumber( "Cell>taum", TauMOn, 0.0, "ms" );
+        metaData().setNumber( "Cell>em", EM, 0.0, "mV" );
         unlockMetaData();
+
+
+
+        sl->unsetNotify();
+        sl->setNumber( "Rm", metaData().number( "Cell>rm", 0.0, "MOhm" ) );
+        sl->setNumber( "Em", metaData().number( "Cell>em", 0.0, "mV" ) );
+        sl->setNumber( "Cm", metaData().number( "Cell>cm", 0.0, "pF" ) );
+        sl->setNumber( "Taum", metaData().number( "Cell>taum", 0.0, "s" ) );
+        sl->notify();
+        sl->setNotify();
+        lockMetaData();
+        metaData().setNumber( "Cell>gleak", sl->number( "gleak", 0.0, "nS" ), 0.0, "nS" );
+        metaData().setNumber( "Cell>Eleak", sl->number( "Eleak", 0.0, "pA" ), 0.0, "pA" );
+        metaData().setNumber( "Cell>Cleak", sl->number( "Cleak", 0.0, "pF" ), 0.0, "pF" );
+        metaData().setNumber( "Cell>rnew",  sl->number( "Rnew", 0.0, "MOhm" ), 0.0, "MOhm" );
+        metaData().setNumber( "Cell>enew",  sl->number( "Enew", 0.0, "pA" ), 0.0, "pA" );
+        metaData().setNumber( "Cell>cnew",  sl->number( "Cnew", 0.0, "pF" ), 0.0, "pF" );
+        unlockMetaData();
+
       }
     }
 
