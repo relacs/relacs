@@ -130,6 +130,8 @@ public:
   void plot( void );
     /*! Analyze data. */
   void analyze( void );
+    /*! Return estimated EOD frequency. */
+  double fishRate( double time );
 
 
 private:
@@ -145,6 +147,7 @@ private:
   double DeltaFStep;
   double DeltaFMin;
   double DeltaFMax;
+  int EODMult;
   bool UseContrast;
   double ContrastMin;
   double ContrastMax;
@@ -156,6 +159,10 @@ private:
   double Before;
   double After;
   double JARAverageTime;
+  double MinEODFreq;
+  double MaxEODFreq;
+  bool UsePSD;
+  int NFFT;
   double ChirpAverageTime;
   double EODSaveTime;
   bool GenerateStimulus;

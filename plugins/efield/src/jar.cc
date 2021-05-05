@@ -38,6 +38,7 @@ JAR::JAR( void )
   DeltaFStep = 2.0;
   DeltaFMax = 12.0;
   DeltaFMin = -12.0;
+  EODMult = 1;
   UseContrast = true;
   ContrastMin = 0.1;
   ContrastMax = 0.2;
@@ -65,6 +66,7 @@ JAR::JAR( void )
   addNumber( "deltafmin", "Minimum delta f", DeltaFMin, -10000.0, 10000.0, 2.0, "Hz" );
   addText( "deltafrange", "Range of delta f's", "" );
   addSelection( "deltafshuffle", "Order of delta f's", RangeLoop::sequenceStrings() );
+  addInteger( "eodmult", "EOD multiples", EODMult, 0, 100, 1 );
   addInteger( "repeats", "Repeats", Repeats, 0, 1000, 2 ).setStyle( OptWidget::SpecialInfinite );
   newSection( "Amplitudes" );
   addSelection( "amplsel", "Stimulus amplitude", "contrast|absolute" );
@@ -86,6 +88,10 @@ JAR::JAR( void )
   addNumber( "after", "Time after stimulation to be analyzed", After, 0.0, 100000.0, 1.0, "seconds" );
   addBoolean( "savetraces", "Save traces during pause", true );
   addNumber( "jaraverage", "Time for measuring EOD rate", JARAverageTime, 0.01, 10000.0, 0.02, "seconds", "ms" );
+  addBoolean( "usepsd", "Use power spectrum to measure EOD frequency", true );
+  addNumber( "mineodfreq", "Minimum expected EOD frequency", 100.0, 0.0, 10000.0, 10.0, "Hz" ).setActivation( "usepsd", "true" );
+  addNumber( "maxeodfreq", "Maximum expected EOD frequency", 2000.0, 0.0, 10000.0, 10.0, "Hz" ).setActivation( "usepsd", "true" );
+  addNumber( "eodfreqprec", "Precision of EOD frequency measurement", 1.0, 0.0, 100.0, 0.1, "Hz" ).setActivation( "usepsd", "true" );
   addNumber( "chirpaverage", "Time for measuring chirp data", ChirpAverageTime, 0.01, 1000.0, 0.01, "seconds", "ms" );
   addNumber( "eodsavetime", "Duration of EOD to be saved", EODSaveTime, 0.0, 10000.0, 0.01, "seconds", "ms" );
   
@@ -184,6 +190,10 @@ int JAR::main( void )
   After = number( "after" );
   bool savetraces = boolean( "savetraces" );
   JARAverageTime = number( "jaraverage" );
+  UsePSD = boolean( "usepsd" );
+  MinEODFreq = number( "mineodfreq" );
+  MaxEODFreq = number( "maxeodfreq" );
+  double eodfreqprec = number( "eodfreqprec" );
   ChirpAverageTime = number( "chirpaverage" );
   EODSaveTime = number( "eodsavetime" );
   double fakefish = number( "fakefish" );
@@ -261,6 +271,23 @@ int JAR::main( void )
   DeltaFRange.setSequence( deltafshuffle );
   OutData signal;
 
+  NFFT = 0;
+  if ( UsePSD ) {
+    NFFT = nextPowerOfTwo( (int)::ceil( 1.0/trace( EODTrace ).stepsize()/eodfreqprec ) );
+    eodfreqprec = 1.0/trace( EODTrace ).interval( NFFT );
+    if ( JARAverageTime < 1.0/eodfreqprec ) {
+      double newaveragetime = 1.0/eodfreqprec;
+      warning( "averagetime of " + Str( JARAverageTime ) + 
+	       "s is too small for requested frequency resolution. Set it to " +
+	       Str( newaveragetime ) + "s for now." );
+      JARAverageTime = newaveragetime;
+    }
+  }
+  if ( JARAverageTime > Pause ) {
+    warning( "Pause of " + Str( Pause ) + "s is smaller than averagetime of " + Str( JARAverageTime ) + "s. Set it to averagetime for now." );
+    Pause = JARAverageTime;
+  }
+
   // data:
   Response.clear();
   Response.resize( Contrasts.size() );
@@ -298,19 +325,17 @@ int JAR::main( void )
   P.unlock();
 
   // EOD rate:
+  sleep( JARAverageTime );
   if ( fakefish > 0.0 ) {
     FishRate = fakefish;
   }
   else {
-    if ( events( EODEvents ).frequency( JARAverageTime ) < 10.0 ) {
-      warning( "Missing EOD!<br>Either no fish or threshold of EOD Detector too high.", 5.0 );
-      return Failed;
-    }
-    FishRate = events( EODEvents ).frequency( ReadCycles );
-    if ( FishRate <= 0.0 ) {
-      warning( "Not enough EOD cycles recorded!", 5.0 );
-      return Failed;
-    }
+    FishRate = fishRate( currentTime() );
+  }
+  printlog( "EOD Frequency of fish is " + Str( FishRate, 0, 1, 'f' ) + "Hz" );
+  if ( FishRate < 1.0 ) {
+    warning( "No fish EOD detected!<br>Either no fish or threshold of EOD Detector too high." );
+    return Failed;
   }
 
   // trigger:
@@ -350,18 +375,20 @@ int JAR::main( void )
 
 	Contrast = Contrasts[ContrastCount];
 	DeltaF = *DeltaFRange;
+
+	FishRate = fishRate( currentTime() );
 	
 	// create signal:
 	signal.setTrace( GlobalEField );
 	if ( GenerateStimulus ) {
 	  signal.clear();
 	  if ( SineWave ) {
-	    StimulusRate = FishRate + DeltaF;
+	    StimulusRate = EODMult*FishRate + DeltaF;
 	    double p = 1.0;
 	    if ( fabs( DeltaF ) > 0.01 )
-	      p = rint( StimulusRate / fabs( DeltaF ) ) / StimulusRate;
+	      p = 1.0 / fabs( DeltaF );
 	    else
-	      p = 1.0/StimulusRate;
+	      p = 1.0/FishRate;
 	    int n = (int)::rint( Duration / p );
 	    if ( n < 1 )
 	      n = 1;
@@ -370,13 +397,14 @@ int JAR::main( void )
 	    IntensityGain = 1.0;
 	  }
 	  else if ( LocalEODEvents[0] >= 0 ) {
+	    StimulusRate = EODMult*FishRate + DeltaF;
 	    // extract an EOD waveform:
 	    double t1 = events( LocalEODEvents[0] ).back( ReadCycles );
 	    double t2 = events( LocalEODEvents[0] ).back();
 	    trace( LocalEODTrace[0] ).copy( t1, t2, signal );
 	    double g = signal.maximize( 0 );
-	    signal.setSampleRate( trace( LocalEODTrace[0] ).sampleRate() * ( FishRate + DeltaF ) / FishRate );
-	    signal.setCarrierFreq( FishRate + DeltaF );
+	    signal.setSampleRate( trace( LocalEODTrace[0] ).sampleRate() * StimulusRate / FishRate );
+	    signal.setCarrierFreq( StimulusRate );
 	    signal.setIdent( "EOD" );
 	    StimulusRate = ReadCycles/signal.duration();
 	    double maxamplitude = trace( LocalEODTrace[0] ).maxValue() - trace( LocalEODTrace[0] ).minValue();
@@ -1122,15 +1150,7 @@ void JAR::analyze( void )
   const EventData &eodlocal = LocalEODEvents[0] >= 0 ? events( LocalEODEvents[0] ) : events( EODEvents );
 
   // EOD rate:
-  double teod = signalTime();
-  for ( int k=0; k<50; k++ ) {
-    FishRate = eodglobal.frequency( teod - JARAverageTime, teod );
-    if ( FishRate > 1.0 )
-      break;
-    teod -= JARAverageTime;
-  }
-  if ( FishRate <= 1.0 )
-    FishRate = eodglobal.frequency( signalTime(), signalTime() + JARAverageTime );
+  FishRate = fishRate( signalTime() );
   if ( FishRate <= 1.0 )
     printlog( "warning: could not get the fishes EOD frequency!" );
 
@@ -1385,6 +1405,36 @@ void JAR::analyze( void )
 							 FirstRate, LastRate,
 							 jar, Chirps.size() );
   
+}
+
+
+double JAR::fishRate( double time )
+{
+  double fishrate = 0.0;
+  if ( UsePSD ) {
+    SampleDataF data( 0.0, JARAverageTime, trace( EODTrace ).stepsize() );
+    trace( EODTrace ).copy( time-JARAverageTime, data );
+    SampleDataF power( NFFT );
+    rPSD( data, power );
+    double threshold = power.max( MinEODFreq, MaxEODFreq );
+    EventData powerpeaks( 1000, true );
+    peaks( power, powerpeaks, 0.1*threshold );
+    double maxpower = 0.0;
+    double maxfreq = 0.0;
+    for ( int i=0; i<powerpeaks.size(); i++ ) {
+      if ( powerpeaks[i] >= MinEODFreq && powerpeaks[i] <= MaxEODFreq ) {
+	if ( powerpeaks.eventSize( i ) > maxpower ) {
+	  maxpower = powerpeaks.eventSize( i );
+	  maxfreq = powerpeaks[i];
+	}
+      }
+    }
+    fishrate = maxfreq;
+  }
+  else {
+    fishrate = events( EODEvents ).frequency( time-JARAverageTime, time );
+  }
+  return fishrate;
 }
 
 
