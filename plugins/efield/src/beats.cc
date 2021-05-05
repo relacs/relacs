@@ -33,7 +33,7 @@ namespace efield {
 
 
 Beats::Beats( void )
-  : RePro( "Beats", "efield", "Jan Benda", "2.6", "Nov 4, 2016" )
+  : RePro( "Beats", "efield", "Jan Benda", "2.7", "May 5, 2021" )
 {
   // add some parameter as options:
   newSection( "Stimulation" );
@@ -43,6 +43,7 @@ Beats::Beats( void )
   addNumber( "ramp", "Duration of linear ramp", 0.5, 0, 10000.0, 0.1, "seconds" );
   addText( "deltafrange", "Range of delta f's", "10" ).setUnit( "Hz" );
   addSelection( "deltafshuffle", "Order of delta f's", RangeLoop::sequenceStrings() );
+  addInteger( "eodmult", "EOD multiples", 1, 0, 100, 1 );
   addBoolean( "fixeddf", "Keep delta f fixed", false );
   addNumber( "amplitude", "Amplitude", 1.0, 0.0, 1000.0, 0.1, "mV/cm" );
   addSelection( "amtype", "Amplitude modulation of signal", "none|sine|rectangular" );
@@ -105,6 +106,7 @@ int Beats::main( void )
   amas.range( amampls );
   string deltafrange = text( "deltafrange" );
   RangeLoop::Sequence deltafshuffle = RangeLoop::Sequence( index( "deltafshuffle" ) );
+  int eodmult = integer( "eodmult" );
   bool fixeddf = boolean( "fixeddf" );
   int repeats = integer( "repeats" );
   bool generatechirps = boolean( "generatechirps" );
@@ -375,7 +377,7 @@ int Beats::main( void )
 
       // create signal:
       double starttime = currentTime();
-      double stimulusrate = fishrate + deltaf;
+      double stimulusrate = eodmult*fishrate + deltaf;
       double ramptime = 0.0;
       Options chirpheader;
       double chirpfrequency = 0.0;
@@ -542,9 +544,9 @@ int Beats::main( void )
 	  chirpheader.clear();
 	  double p = 1.0;
 	  if ( fabs( deltaf ) > 0.01 )
-	    p = rint( stimulusrate / fabs( deltaf ) ) / stimulusrate;
+	    p = 1.0 / fabs( deltaf );
 	  else
-	    p = 1.0/stimulusrate;
+	    p = 1.0/fishrate;
 	  int n = (int)::rint( duration / p );
 	  if ( n < 1 )
 	    n = 1;
@@ -819,7 +821,7 @@ int Beats::main( void )
       else
 	fishchirps.clear();
       P.draw();
-      save( deltaf, amplitude, duration, pause, amtype, amampls, amfreqs,
+      save( deltaf, eodmult, amplitude, duration, pause, amtype, amampls, amfreqs,
 	    fishrate, stimulusrate, nfft, eodfreqprec,
 	    eodfrequencies, eodamplitudes, eodfrequency, fishchirps, playedchirptimes,
 	    stimfrequency, chirpheader, split, FileCount );
@@ -963,7 +965,7 @@ void Beats::initPlot( double deltaf, double amplitude, double duration, double e
 }
 
 
-void Beats::save( double deltaf, double amplitude, double duration, double pause,
+void Beats::save( double deltaf, int eodmult, double amplitude, double duration, double pause,
 		  int amtype, const vector<double> &amampls, const vector<double> &amfreqs,
 		  double fishrate, double stimulusrate, int nfft, double eodfreqprec,
 		  const MapD eodfrequencies[], const MapD eodamplitudes[], const MapD &eodfrequency, 
@@ -975,6 +977,7 @@ void Beats::save( double deltaf, double amplitude, double duration, double pause
   header.addNumber( "EODf", fishrate, "Hz", "%.1f" );
   header.addNumber( "Delta f", deltaf, "Hz", "%.1f" );
   header.addNumber( "StimulusFrequency", stimulusrate, "Hz", "%.1f" );
+  header.addInteger( "EODMultiple", eodmult );
   header.addNumber( "Amplitude", amplitude, "mV/cm", "%.3f" );
   if ( amtype > 0 ) {
     header.addText( "AMType", amtype == 2? "Rectangular" : "Sine" );
