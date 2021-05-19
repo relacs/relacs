@@ -497,6 +497,10 @@ int JAR::main( void )
 	else
 	  s = "Amplitude: <b>" + Str( Contrast, "%g" ) + "mV/cm</b>";
 	s += "  Delta F:  <b>" + Str( DeltaF, 0, 1, 'f' ) + "Hz</b>";
+	if ( EODMult != 1 ) {
+	  s += "  @ EOD multiple: <b>" + Str( EODMult, "%d" ) + "</b>";
+	  s += "  (=<b>" + Str( StimulusRate, "%.1f" ) + "Hz)</b>";
+	}
 	s += "  Loop:  <b>" + Str( Count+1 ) + "</b>";
 	int rc = DeltaFRange.remainingBlockCount() + 
 	  (Contrasts.size()-ContrastCount-1)*DeltaFRange.size()*DeltaFRange.blockRepeat()*DeltaFRange.singleRepeat();

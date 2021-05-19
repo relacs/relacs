@@ -673,6 +673,10 @@ int Beats::main( void )
 
       // meassage:
       Str s = "Delta f: <b>" + Str( deltaf, "%g" ) + "Hz</b>";
+      if ( eodmult != 1 ) {
+	s += "  @ EOD multiple: <b>" + Str( eodmult, "%d" ) + "</b>";
+	s += "  (=<b>" + Str( stimulusrate, "%.1f" ) + "Hz)</b>";
+      }
       s += "  Amplitude: <b>" + Str( amplitude, "%g" ) + "mV/cm</b>";
       if ( amtype > 0 ) {
 	s += "  <b>";
