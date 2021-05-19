@@ -12,16 +12,16 @@ librelacsplot_la_CPPFLAGS = \
     -I$(srcdir)/../../daq/include \
     -I$(srcdir)/../../options/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS)
+    $(QT_CPPFLAGS)
 else
 librelacsplot_la_CPPFLAGS = \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS)
+    $(QT_CPPFLAGS)
 endif
 
 librelacsplot_la_LDFLAGS = \
     -version-info 0:0:0 \
-    $(QT4_LDFLAGS) $(GSL_LIBS)
+    $(QT_LDFLAGS) $(GSL_LIBS)
 
 if RELACS_TOP_BUILD
 librelacsplot_la_LIBADD = \
@@ -29,7 +29,7 @@ librelacsplot_la_LIBADD = \
     ../../numerics/src/librelacsnumerics.la \
     ../../daq/src/librelacsdaq.la \
     ../../options/src/librelacsoptions.la \
-    $(QT4_LIBS) \
+    $(QT_LIBS) \
     $(MATH_LIBS)
 else
 librelacsplot_la_LIBADD = \
@@ -37,7 +37,7 @@ librelacsplot_la_LIBADD = \
     -lrelacsnumerics \
     -lrelacsdaq \
     -lrelacsoptions \
-    $(QT4_LIBS) \
+    $(QT_LIBS) \
     $(MATH_LIBS)
 endif
 

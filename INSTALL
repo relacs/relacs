@@ -10,7 +10,7 @@ sudo apt-get -y install libjack-jackd2-dev libportaudio2 libportaudiocpp0 portau
 
 install packages required by RELACS:
 ```
-sudo apt-get -y install autoconf automake libtool libtool-bin g++ libc6-dev libqt4-dev libgsl0-dev libsndfile1-dev libcomedi-dev libusb-1.0.0-dev doxygen xmlto git
+sudo apt-get -y install autoconf automake libtool libtool-bin g++ libc6-dev qtbase5-dev libgsl-dev libsndfile1-dev libcomedi-dev libusb-1.0-0-dev doxygen doxygen-latex graphviz xmlto git
 ```
 
 - for Fedora based systems (using yum/dnf), login as superuser (su):
@@ -22,7 +22,7 @@ dnf -y install jack-audio-connection-kit-devel portaudio-devel
 
 install packages required by RELACS:
 ```
-dnf -y install autoconf automake libtool gcc-c++ qt4-devel gsl-devel libsndfile-devel comedilib-devel libusb-devel doxygen xmlto git
+dnf -y install autoconf automake libtool gcc-c++ qt5-devel gsl-devel libsndfile-devel comedilib-devel libusb-devel doxygen xmlto git
 ```
 
 - after having installed the packages change into the directory of the
@@ -46,23 +46,23 @@ Here are the details:
    libtool-bin (Debian only)
    g++ (Debian) gcc-c++ (Fedora)
    libc6-dev (Debian only)
-   libqt4-dev (Debian) qt4-devel (Fedora)
-   libgsl0-dev (Debian) gsl-devel (Fedora)
+   qtbase5-dev (Debian) qt5-devel (Fedora)
+   libgsl-dev (Debian) gsl-devel (Fedora)
    libsndfile1-dev (Debian) libsndfile-devel (Fedora)
    libcomedi-dev (Debian) comedilib-devel (Fedora)
-   libusb-1.0.0-dev (Debian) libusb-devel (Fedora)
+   libusb-1.0-0-dev (Debian) libusb-devel (Fedora)
    doxygen
    xmlto
    git
 
 On Debian or Ubuntu based systems execute:
 ```
-sudo apt-get install autoconf automake libtool g++ libc6-dev libqt4-dev libgsl0-dev libsndfile1-dev libcomedi-dev libusb-1.0.0-dev doxygen xmlto git
+sudo apt-get install autoconf automake libtool g++ libc6-dev qtbase5-dev libgsl-dev libsndfile1-dev libcomedi-dev libusb-1.0-0-dev doxygen xmlto git
 ```
 
 On Fedora/RedHat based systems execute:
 ```
-dnf -y install autoconf automake libtool gcc-c++ qt4-devel gsl-devel libsndfile-devel comedilib-devel libusb-devel doxygen xmlto git
+dnf -y install autoconf automake libtool gcc-c++ qt5-devel gsl-devel libsndfile-devel comedilib-devel libusb-devel doxygen xmlto git
 ```
 
 For the audio monitor we need libportaudio version 19. 

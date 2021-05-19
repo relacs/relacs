@@ -2424,6 +2424,7 @@ void SaveFiles::NixFile::appendValue( nix::DataArray &array, string value )
   array.setData( value, offset );
 }
 
+
 void SaveFiles::NixFile::appendValue( nix::DataArray &array, const std::vector<double> &values ) 
 {
   if ( !array )
@@ -2438,7 +2439,7 @@ void SaveFiles::NixFile::appendValue( nix::DataArray &array, const std::vector<d
   nix::NDSize count = new_size;
   count[0] = 1;
   array.dataExtent( new_size );
-  array.setData( nix::DataType::Double, &values, count, offset );
+  array.setData( nix::DataType::Double, values.data(), count, offset );
 }
 
 

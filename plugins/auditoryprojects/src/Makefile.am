@@ -25,11 +25,11 @@ libauditoryprojectsspikeprecision_la_CPPFLAGS = \
     -I$(top_srcdir)/plugins/acoustic/include \
     -I$(top_srcdir)/plugins/auditory/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libauditoryprojectsspikeprecision_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libauditoryprojectsspikeprecision_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -43,7 +43,7 @@ libauditoryprojectsspikeprecision_la_LIBADD = \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libauditoryprojectsspikeprecision_la_OBJECTS) : moc_spikeprecision.cc
 
@@ -68,11 +68,11 @@ libauditoryprojectsisoresponse_la_CPPFLAGS = \
     -I$(top_srcdir)/plugins/acoustic/include \
     -I$(top_srcdir)/plugins/auditory/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libauditoryprojectsisoresponse_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libauditoryprojectsisoresponse_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -86,7 +86,7 @@ libauditoryprojectsisoresponse_la_LIBADD = \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libauditoryprojectsisoresponse_la_OBJECTS) : moc_isoresponse.cc
 
@@ -111,11 +111,11 @@ libauditoryprojectsoneclick_la_CPPFLAGS = \
     -I$(top_srcdir)/plugins/acoustic/include \
     -I$(top_srcdir)/plugins/auditory/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libauditoryprojectsoneclick_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libauditoryprojectsoneclick_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -129,7 +129,7 @@ libauditoryprojectsoneclick_la_LIBADD = \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libauditoryprojectsoneclick_la_OBJECTS) : moc_oneclick.cc
 
@@ -153,11 +153,11 @@ libauditoryprojectsfiphaselocking_la_CPPFLAGS = \
     -I$(top_srcdir)/plugins/acoustic/include \
     -I$(top_srcdir)/plugins/auditory/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libauditoryprojectsfiphaselocking_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libauditoryprojectsfiphaselocking_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -171,7 +171,7 @@ libauditoryprojectsfiphaselocking_la_LIBADD = \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libauditoryprojectsfiphaselocking_la_OBJECTS) : moc_fiphaselocking.cc
 
@@ -196,11 +196,11 @@ libauditoryprojectsmothasongs_la_CPPFLAGS = \
     -I$(top_srcdir)/plugins/acoustic/include \
     -I$(top_srcdir)/plugins/auditory/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)$(GSL_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)$(GSL_CPPFLAGS)
 
 libauditoryprojectsmothasongs_la_LDFLAGS = \
     -module -avoid-version \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS) $(GSL_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS) $(GSL_LDFLAGS)
 
 libauditoryprojectsmothasongs_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
@@ -214,7 +214,7 @@ libauditoryprojectsmothasongs_la_LIBADD = \
     $(top_builddir)/daq/src/librelacsdaq.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
-    $(QT4_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libauditoryprojectsmothasongs_la_OBJECTS) : moc_mothasongs.cc
 

@@ -19,16 +19,16 @@ libmultielectrodemultista_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libmultielectrodemultista_la_LDFLAGS = \
     -module -avoid-version \
     $(top_builddir)/plugins/ephys/src/libephystraces.la \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libmultielectrodemultista_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT4_LIBS) $(NIX_LIBS)
+    $(QT_LIBS) $(NIX_LIBS)
 
 $(libmultielectrodemultista_la_OBJECTS) : moc_multista.cc
 
@@ -50,16 +50,16 @@ libmultielectrodemultitracesta_la_CPPFLAGS = \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \
-    $(QT4_CPPFLAGS) $(NIX_CPPFLAGS)
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
 libmultielectrodemultitracesta_la_LDFLAGS = \
     -module -avoid-version \
     $(top_builddir)/plugins/ephys/src/libephystraces.la \
-    $(QT4_LDFLAGS) $(NIX_LDFLAGS)
+    $(QT_LDFLAGS) $(NIX_LDFLAGS)
 
 libmultielectrodemultitracesta_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
-    $(QT4_LIBS) $(NIX_LIBS)
+    $(QT_LIBS) $(NIX_LIBS)
 
 $(libmultielectrodemultitracesta_la_OBJECTS) : moc_multitracesta.cc
 
