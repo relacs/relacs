@@ -34,6 +34,8 @@ StepAndSin::StepAndSin( void )
 {
   // add some options:
 //  addSection( "StepAndSin" );
+  newSection( "Stimulus" );
+
   addNumber( "actmintest", "Minimum testing Potential (act)", -120.0, -200.0, 200.0, 1.0, "mV" );
   addNumber( "actmaxtest", "Maximum testing Potential (act)", 60.0, -200.0, 200.0, 5.0, "mV" );
   addNumber( "stepsize", "Step testing potential (act)", 5.0, 0.0, 200.0, 1.0, "mV" );

@@ -37,9 +37,7 @@ namespace voltageclamp {
 CombinedStimulus::CombinedStimulus( void )
   : PNSubtraction( "CombinedStimulus", "voltageclamp", "Lukas Sonnenberg", "1.0", "May 01, 2020" )
 {
-  addNumber( "pause", "Duration of pause between outputs", 0.4, 0.001, 1000.0, 0.001, "s", "ms" );
-  addInteger( "repeats", "Repetitions of stimulus", 1, 0, 10000, 1 ).setStyle( OptWidget::SpecialInfinite );
-  addNumber( "holdingpotential", "Holding potential", -100.0, -200.0, 200.0, 1.0, "mV" );
+  newSection( "Stimulus" );
 
   addSection( "Noise Stimulus" );
   addNumber( "noiseduration", "duration (ColoredNoise)", 3, 0.001, 100000.0, 0.001, "s", "s" );
@@ -59,7 +57,7 @@ CombinedStimulus::CombinedStimulus( void )
   addNumber( "tailduration", "Tail test step duration", 0.0007, 0.0, 100.0, 0.0001, "s", "ms" );
   addNumber( "stepsize", "Step testing potential (act/inact/tail)", 5.0, 0.0, 200.0, 1.0, "mV" );
   addNumber( "stepduration", "Duration for each Potential Step (act/inact/tail)", 0.02, 0.0, 1000.0, 0.001, "s", "ms" );
-//
+
   addSection( "Sampling Pulses" );
   addBoolean( "samplingpulses", "Sampling Pulses", false );
   addNumber( "pulserate", "Rate of sampling pulses", 4.0, 0.0, 1000.0, .01, "Hz" ).setActivation( "samplingpulses", "true" );
@@ -67,6 +65,13 @@ CombinedStimulus::CombinedStimulus( void )
   addNumber( "Vact", "Activation Potential", -10.0, -200.0, 100.0, 1.0, "mV" ).setActivation( "samplingpulses", "true" );
   addNumber( "tdeact", "Deactivation Potential", 0.017, 0.0, 1.0, 0.0001, "s", "ms" ).setActivation( "samplingpulses", "true" );
   addNumber( "tact", "Deactivation Potential", 0.003, 0.0, 1.0, 0.0001, "s", "ms" ).setActivation( "samplingpulses", "true" );
+
+  newSection( "General" );
+  addNumber( "pause", "Duration of pause between outputs", 0.4, 0.001, 1000.0, 0.001, "s", "ms" );
+  addInteger( "repeats", "Repetitions of stimulus", 1, 0, 10000, 1 ).setStyle( OptWidget::SpecialInfinite );
+  addNumber( "holdingpotential", "Holding potential", -100.0, -200.0, 200.0, 1.0, "mV" );
+
+//
 
 
   setWidget( &P );
@@ -227,23 +232,23 @@ OutData CombinedStimulus::ColoredNoise() {
   // get next power of two
   int power = 1;
   while(power < signal.size()) {
-    power *=2;
+    power *= 2;
   }
   //frequency range
-  SampleDataD f( power );
+  SampleDataD f( power/2 );
   for (int k=0; k<f.size(); k++) {
     f[k] = k / (power * signal.stepsize());
   };
-  SampleDataD f2( power );
+  SampleDataD f2( power/2 );
   for (int k=0; k<f2.size(); k++) {
-    f2[k] = -f[f.size()-k];
+    f2[k] = f[f.size()-k];
   };
   f.append( f2 );
 
   //draw random numbers on fourier space and transfer to time space
   SampleDataD data( power );
   for ( int k=0; k<data.size(); k++ ) {
-    data[k] = expFunc2(abs(f[k]), expParam) * (rnd() - 0.5);
+    data[k] = expFunc2(f[k], expParam) * rnd.gaussian(); // * (rnd() - 0.5);
   }
   hcFFT( data );
   double datastd = 0.0;
@@ -252,6 +257,11 @@ OutData CombinedStimulus::ColoredNoise() {
   }
   datastd = sqrt(datastd);
   data *= noisestd/datastd;
+  cerr << "datastd=" << datastd << "\n\n";
+  cerr << "min=" << min(data) << "\n\n";
+  cerr << "max=" << max(data) << "\n\n";
+  cerr << "max=" << max(data) << "\n\n";
+  cerr << "noiseduration=" << number("noiseduration") << "\n\n";
 
     //go back to holdingpotential
   OutData signal3;

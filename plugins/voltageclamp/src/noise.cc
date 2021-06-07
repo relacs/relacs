@@ -32,6 +32,8 @@ namespace voltageclamp {
 Noise::Noise( void )
   : PNSubtraction( "Noise", "voltageclamp", "Lukas Sonnenberg", "1.0", "Dec 10, 2019" ) {
   // options:
+  newSection( "Stimulus" );
+
   addNumber( "holdingpotential", "Holdingpotential", -100.0, -200.0, 200.0, 1.0, "mV", "mV" );
   addNumber( "offset", "Offset", 50.0, -200.0, 200.0, 1.0, "mV", "mV" );
   addNumber( "amplitude", "Amplitude", 50.0, 0.0, 100000.0, 1.0, "mV", "mV" );

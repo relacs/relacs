@@ -32,6 +32,8 @@ Ramp::Ramp( void )
   : PNSubtraction( "Ramp", "voltageclamp", "Lukas Sonnenberg", "1.0", "Aug 23, 2018" )
 {
   // add some options:
+  newSection( "Stimulus" );
+
   addSection( "Stimulus" );
   addNumber( "pause", "Duration of pause bewteen outputs", 0.4, 0.001, 1000.0, 0.001, "sec", "ms" );
   addInteger( "repeats", "Repetitions of stimulus", 1, 0, 10000, 1 ).setStyle( OptWidget::SpecialInfinite );

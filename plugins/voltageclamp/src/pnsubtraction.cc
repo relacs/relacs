@@ -26,6 +26,11 @@
 #include <iterator> // for back_inserter
 #include <relacs/randomstring.h>
 #include <relacs/ephys/amplifiercontrol.h>
+#include <relacs/spectrum.h>
+#include <relacs/sampledata.h>
+#include <iostream>
+
+
 
 using namespace relacs;
 
@@ -41,12 +46,26 @@ PNSubtraction::PNSubtraction( const string &name,
 {
   // add some options:
   newSection( "QualityControl" );
+  addSection( "P/N Subtraction" );
   addNumber( "pn", "p/N", -4, -100, 100, 1 );
+
+  addSection( "Chirp Prepulse" );
   addBoolean( "qualitycontrol", "Quality control", true );
   addNumber( "pulseduration", "Pulse duration", 0.1, 0.0, 1000.0, 0.001, "sec", "ms").setActivation( "qualitycontrol", "true" );
   addNumber( "f0", "minimum pulse frequency", 10.0, 0.0, 1000.0, 1.0, "Hz", "Hz" ).setActivation( "qualitycontrol", "true" );
   addNumber( "f1", "maximum pulse frequency", 500.0, 0.0, 5000.0, 1.0, "Hz", "Hz" ).setActivation( "qualitycontrol", "true" );
-  addNumber( "PCS_derivativekernelwidth", "derivative kernel width", 1.0, 1.0, 1000.0, 1.0 ).setActivation( "qualitycontrol", "true" );
+//  addNumber( "PCS_derivativekernelwidth", "derivative kernel width", 1.0, 1.0, 1000.0, 1.0 ).setActivation( "qualitycontrol", "true" );
+
+  addSection( "WhiteNoise Prepulse" );
+  addBoolean( "qualitycontrol_whitenoise", "Quality control whitenoise", true );
+  addNumber( "noiseduration_wn", "Noise duration", 0.1, 0.0, 1000.0, 0.001, "sec", "ms").setActivation( "qualitycontrol_whitenoise", "true" );
+  addNumber( "holdingpotential_wn", "Noise holding potential", -120.0, -200.0, 200.0, 1.0, "mV" ).setActivation( "qualitycontrol_whitenoise", "true" );
+  addNumber( "fmin", "minimum noise frequency", 10.0, 0.0, 1000.0, 1.0, "Hz", "Hz" ).setActivation( "qualitycontrol_whitenoise", "true" );
+  addNumber( "fmax", "maximum noise frequency", 500.0, 0.0, 5000.0, 1.0, "Hz", "Hz" ).setActivation( "qualitycontrol_whitenoise", "true" );
+  addNumber( "noisestd", "Noise standard deviation", 10.0, 1.0, 200.0, 1.0, "mV" ).setActivation( "qualitycontrol_whitenoise", "true" );
+
+  //  addNumber( "PCS_derivativekernelwidth", "derivative kernel width", 1.0, 1.0, 1000.0, 1.0 ).setActivation( "qualitycontrol", "true" );
+
 }
 
 int PNSubtraction::main( void )
@@ -57,11 +76,18 @@ int PNSubtraction::main( void )
 SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdingpotential, double &pause, double &mintime, double &maxtime, double &t0) {
   int pn = number( "pn" );
   double samplerate = signal.sampleRate();
-  bool qualitycontrol = boolean( "qualitycontrol" );
 
+  bool qualitycontrol = boolean( "qualitycontrol" );
   double pulseduration = number( "pulseduration" );
   double f0 = number( "f0" );
   double f1 = number( "f1" );
+
+  bool qualitycontrol_whitenoise = boolean( "qualitycontrol_whitenoise");
+  double noiseduration = number( "noiseduration_wn" );
+  double holdingpotential_wn = number( "holdingpotential_wn" );
+  double fmin = number( "fmin" );
+  double fmax = number( "fmax" );
+  double noisestd = number( "noisestd" );
 
   // assign random id for later connection between qualitycontrol, pn and traces
   std::string randomId = randomString(40);
@@ -114,6 +140,90 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
 //  ArrayD Vp;
 
   double stepduration = 0.010;
+  if ( qualitycontrol_whitenoise ) {
+    OutData wn_signal1;
+    wn_signal1.setTrace( PotentialOutput[0] );
+    wn_signal1.constWave( stepduration, -1.0, -100 );
+
+    OutData wn_signal2;
+    wn_signal2.setTrace( PotentialOutput[0] );
+    wn_signal2.constWave( stepduration, -1.0, -170 );
+
+    OutData wn_signal3;
+    wn_signal3.setTrace( PotentialOutput[0] );
+    wn_signal3.constWave( stepduration, -1.0, -135 );
+
+    // WhitenoiseStimulus
+    //potential base
+    OutData wn_signal4;
+    wn_signal4.setTrace( PotentialOutput[0] );
+    wn_signal4.constWave( noiseduration, -1.0, holdingpotential_wn );
+
+    OutData wn_signal5;
+    wn_signal5.setTrace( PotentialOutput[0] );
+    wn_signal5.constWave( 0.010, -1.0, holdingpotential );
+
+    // get next power of two
+    int power = 1;
+    while(power < wn_signal4.size()) {
+      power *= 2;
+    }
+
+    //frequency range
+    SampleDataD f( power/2 );
+    for (int k=0; k<f.size(); k++) {
+      f[k] = k / (power * wn_signal4.stepsize());
+    };
+    SampleDataD f2( power/2 );
+    for (int k=0; k<f2.size(); k++) {
+      f2[k] = -f[f.size()-k];
+    };
+    f.append( f2 );
+
+    //draw random numbers on fourier space and transfer to time space
+    SampleDataD data( power );
+    for ( int k=0; k<data.size(); k++ ) {
+      data[k] = (rnd.gaussian());
+    }
+    hcFFT( data );
+    double datastd = 0.0;
+    for ( int k=0; k<data.size(); k++ ) {
+      datastd += data[k]*data[k] / (data.size() - 1);
+    }
+    datastd = sqrt(datastd);
+    data *= noisestd/datastd;
+
+    // get stimulus of prefered length
+    for (int k=0; k<wn_signal4.size(); k++) {
+      wn_signal4[k] += data[k];
+    }
+
+    wn_signal1.append( wn_signal2 );
+    wn_signal1.append( wn_signal3 );
+    wn_signal1.append( wn_signal4 );
+    wn_signal1.append( wn_signal5 );
+
+    wn_signal1.description().setType( "stimulus/QualityControl_WhiteNoise" );
+    Options opts_wn = wn_signal1.description();
+    Parameter &wn_rid = opts_wn.addText( "TraceId", randomId );
+    Parameter &wn_f0 = opts_wn.addNumber( "fmin", fmin );
+    Parameter &wn_f1 = opts_wn.addNumber( "fmax", fmax );
+    Parameter &wn_dur = opts_wn.addNumber( "noiseduration_wn", fmax );
+    wn_signal1.setMutable( wn_rid );
+    wn_signal1.setMutable( wn_f0 );
+    wn_signal1.setMutable( wn_f1 );
+    wn_signal1.setMutable( wn_dur );
+    wn_signal1.setDescription( opts_wn );
+
+
+    write(wn_signal1);
+//    if (interrupt()) {
+//      break;
+//    };
+    sleep(pause);
+  }
+
+
   if ( qualitycontrol ) {
     OutData qc_signal1;
     qc_signal1.setTrace( PotentialOutput[0] );
@@ -146,9 +256,11 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
     Parameter &qc_rid = opts_qc.addText( "TraceId", randomId );
     Parameter &qc_f0 = opts_qc.addNumber( "f1", f0 );
     Parameter &qc_f1 = opts_qc.addNumber( "f0", f1 );
+    Parameter &qc_dur = opts_qc.addNumber( "pulseduration", f1 );
     qc_signal1.setMutable( qc_rid );
     qc_signal1.setMutable( qc_f0 );
     qc_signal1.setMutable( qc_f1 );
+    qc_signal1.setMutable( qc_dur );
     qc_signal1.setDescription( opts_qc );
 
     write(qc_signal1);
@@ -233,7 +345,7 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
 
 
 ArrayD PNSubtraction::dxdt( const ArrayD &x, const double &dt ) {
-  double kernelsize = number( "PCS_derivativekernelwidth");
+  double kernelsize = 1;//number( "PCS_derivativekernelwidth");
   ArrayD x2( x.size() );
   ArrayD dx( x.size() );
 

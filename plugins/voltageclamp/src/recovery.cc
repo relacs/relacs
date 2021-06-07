@@ -33,6 +33,8 @@ Recovery::Recovery( void )
   : PNSubtraction( "Recovery", "voltageclamp", "Lukas Sonnenberg", "1.0", "Aug 21, 2018" )
 {
   // add some options:
+  newSection( "Stimulus" );
+
   addSection( "Stimulus" );
   addNumber( "duration0", "Stimulus duration0", 0.01, 0.001, 100000.0, 0.001, "s", "ms" );
   addNumber( "duration1", "Stimulus duration1", 0.1, 0.001, 100000.0, 0.001, "s", "ms" );

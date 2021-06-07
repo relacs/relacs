@@ -34,6 +34,8 @@ SlowInactivation::SlowInactivation( void )
   : PNSubtraction( "SlowInactivation", "voltageclamp", "Lukas Sonnenberg", "1.0", "Jul 25, 2020" )
 {
   // add some options:
+  newSection( "Stimulus" );
+
   addSection( "Stimulus" );
   addNumber( "mintest", "Minimum testing potential", -120.0, -200.0, 200.0, 1.0, "mV");
   addNumber( "maxtest", "Maximum testing potential", -10.0, -200.0, 200.0, 1.0, "mV");
