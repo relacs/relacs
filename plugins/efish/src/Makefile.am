@@ -11,7 +11,8 @@ pluginlib_LTLIBRARIES = \
     libefishficurve.la \
     libefishfilestimulus.la \
     libefishchirps.la \
-    libefisheigenmanniachirps.la
+    libefisheigenmanniachirps.la \
+    libefishthreefish.la
 
 if RELACS_COND_TML
 pluginlib_LTLIBRARIES += \
@@ -470,6 +471,43 @@ libefisheigenmanniachirps_la_include_HEADERS = $(HEADER_PATH)/eigenmanniachirps.
 
 
 
+libefishthreefish_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/datafile/include \
+    -I$(top_srcdir)/plot/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(srcdir)/../include \
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)$(GSL_CPPFLAGS)
+
+libefishthreefish_la_LDFLAGS = \
+    -module -avoid-version \
+    $(QT_LDFLAGS) $(NIX_LDFLAGS) $(GSL_LDFLAGS)
+
+libefishthreefish_la_LIBADD = \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+
+$(libefishthreefish_la_OBJECTS) : moc_threefish.cc
+
+libefishthreefish_la_SOURCES = threefish.cc
+
+libefishthreefish_la_includedir = $(pkgincludedir)/efish
+
+libefishthreefish_la_include_HEADERS = $(HEADER_PATH)/threefish.h
+
+
+
 check_PROGRAMS = \
     linktest_libefishbaselineactivity_la \
     linktest_libefishsession_la \
@@ -480,7 +518,8 @@ check_PROGRAMS = \
     linktest_libefishchirps_la \
     linktest_libefishrobottofishposition_la \
     linktest_libefishmovingobjects_la \
-    linktest_libefisheigenmanniachirps_la
+    linktest_libefisheigenmanniachirps_la \
+    linktest_libefishthreefish_la
 
 if RELACS_COND_TML
 check_PROGRAMS += \
@@ -522,5 +561,8 @@ linktest_libefishmovingobjects_la_LDADD = libefishmovingobjects.la
 
 linktest_libefisheigenmanniachirps_la_SOURCES = linktest.cc
 linktest_libefisheigenmanniachirps_la_LDADD = libefisheigenmanniachirps.la
+
+linktest_libefishthreefish_la_SOURCES = linktest.cc
+linktest_libefishthreefish_la_LDADD = libefishthreefish.la
 
 TESTS = $(check_PROGRAMS)
