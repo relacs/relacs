@@ -308,32 +308,7 @@ int ThreeFish::main( void )
       for ( ; pindex < plast; ++pindex )
 	amtraces.back().push( pindex.time() - signalTime(), *pindex ); 
 
-      P.lock();
-      // stimulus:
-      P[0].clear();
-      for ( unsigned int i=0; i<amtraces.size()-1; i++ )
-	P[0].plot( amtraces[i], 1.0, Plot::DarkGreen, 2, Plot::Solid );
-      P[0].plot( amtraces.back(), 1.0, Plot::Green, 2, Plot::Solid );
-
-      // rate and spikes:
-      int maxspikes = 20;
-      if ( SpikeEvents[0] >= 0 ) {
-	P[1].clear();
-	if ( ! P[1].zoomedYRange() )
-	  P[1].setYRange( 0.0, maxrate );
-	int j = 0;
-	double delta = repeats > 0 && repeats < maxspikes ? 1.0/repeats : 1.0/maxspikes;
-	int offs = (int)spikes.size() > maxspikes ? spikes.size() - maxspikes : 0;
-	for ( int i=offs; i<spikes.size(); i++ ) {
-	  j++;
-	  P[1].plot( spikes[i], 1.0,
-		     1.0 - delta*(j-0.1), Plot::Graph, 2, Plot::StrokeUp,
-		     delta*0.8, Plot::Graph, Plot::Red, Plot::Red );
-	}
-	P[1].plot( spikerate, 1.0, Plot::Yellow, 2, Plot::Solid );
-      }
-      P.draw();
-      P.unlock();
+      plot( amtraces, spikes, spikerate, maxrate, repeats );
 
       fishEOD(fishrate, fishamplitude);
     }
@@ -341,6 +316,38 @@ int ThreeFish::main( void )
 
   stop();
   return Completed;
+}
+
+
+void ThreeFish::plot( const vector< MapD > &amtraces, const EventList &spikes,
+		      const SampleDataD &spikerate, double maxrate, int repeats )
+{
+  P.lock();
+  // stimulus:
+  P[0].clear();
+  for ( unsigned int i=0; i<amtraces.size()-1; i++ )
+    P[0].plot( amtraces[i], 1.0, Plot::DarkGreen, 2, Plot::Solid );
+  P[0].plot( amtraces.back(), 1.0, Plot::Green, 2, Plot::Solid );
+
+  // rate and spikes:
+  int maxspikes = 20;
+  if ( SpikeEvents[0] >= 0 ) {
+    P[1].clear();
+    if ( ! P[1].zoomedYRange() )
+      P[1].setYRange( 0.0, maxrate );
+    int j = 0;
+    double delta = repeats > 0 && repeats < maxspikes ? 1.0/repeats : 1.0/maxspikes;
+    int offs = (int)spikes.size() > maxspikes ? spikes.size() - maxspikes : 0;
+    for ( int i=offs; i<spikes.size(); i++ ) {
+      j++;
+      P[1].plot( spikes[i], 1.0,
+		 1.0 - delta*(j-0.1), Plot::Graph, 2, Plot::StrokeUp,
+		 delta*0.8, Plot::Graph, Plot::Red, Plot::Red );
+    }
+    P[1].plot( spikerate, 1.0, Plot::Yellow, 2, Plot::Solid );
+  }
+  P.draw();
+  P.unlock();
 }
 
 

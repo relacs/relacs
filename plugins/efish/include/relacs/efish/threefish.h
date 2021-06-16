@@ -73,6 +73,8 @@ public:
 
   ThreeFish( void );
   virtual int main( void );
+  void plot( const vector< MapD > &amtraces, const EventList &spikes,
+	     const SampleDataD &spikerate, double maxrate, int repeats );
 
 
 protected:
