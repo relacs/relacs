@@ -21,6 +21,7 @@
 
 #include <vector>
 #include <relacs/map.h>
+#include <relacs/tablekey.h>
 #include <relacs/outdata.h>
 #include <relacs/kernel.h>
 #include <relacs/rangeloop.h>
@@ -31,25 +32,25 @@ namespace efish {
 
 
 ThreeFish::ThreeFish( void )
-  : RePro( "ThreeFish", "efish", "Jan Benda", "1.0", "Jun 15, 2021" )
+  : RePro( "ThreeFish", "efish", "Jan Benda", "1.2", "Jun 16, 2021" )
 {
   newSection( "Stimulus" );
   addNumber( "duration1", "Duration of signal", 1.0, 0.01, 1000.0, 0.01, "seconds", "ms" );
   addNumber( "deltaf1min", "Minimum delta f (beat frequency) of first fish", 0.0, -100.0, 100.0, 0.01, "EODf" );
-  addNumber( "deltaf1max", "Maximum delta f (beat frequency) of first fish", 1.0, -100.0, 100.0, 0.01, "EODf" );
+  addNumber( "deltaf1max", "Maximum delta f (beat frequency) of first fish", 0.5, -100.0, 100.0, 0.01, "EODf" );
   addNumber( "deltaf1step", "Increment delta f (beat frequency) of first fish", 0.1, 0.0, 100.0, 0.01, "EODf" );
   addNumber( "contrast1", "Contrast of first fish", 0.1, 0.0, 1.0, 0.01, "", "%" );
 
   addNumber( "duration2", "Duration of second fish", 1.0, 0.01, 1000.0, 0.01, "seconds", "ms" );
-  addNumber( "offset2", "Offset of second fish", 0.0, 0.0, 1000.0, 0.01, "seconds", "ms" );
+  addNumber( "delay2", "Delay of second fish", 0.0, 0.0, 1000.0, 0.01, "seconds", "ms" );
   addNumber( "deltaf2min", "Minimum delta f (beat frequency) of second fish", 0.0, -100.0, 100.0, 0.01, "EODf" );
-  addNumber( "deltaf2max", "Maximum delta f (beat frequency) of second fish", 1.0, -100.0, 100.0, 0.01, "EODf" );
+  addNumber( "deltaf2max", "Maximum delta f (beat frequency) of second fish", 0.5, -100.0, 100.0, 0.01, "EODf" );
   addNumber( "deltaf2step", "Increment delta f (beat frequency) of second fish", 0.1, 0.0, 100.0, 0.01, "EODf" );
   addNumber( "contrast2", "Contrast of second fish", 0.1, 0.0, 1.0, 0.01, "", "%" );
   addSelection( "shuffle", "Order of delta f's", RangeLoop::sequenceStrings() );
   addInteger( "increment", "Initial increment for delta f's", -1, -1000, 1000, 1 );
   addInteger( "repeats", "Repeats", 10, 1, 100000, 2 );
-  addNumber( "pause", "Pause between signals", 0.1, 0.0, 1000.0, 0.01, "seconds", "ms" );
+  addNumber( "pause", "Pause between signals", 0.5, 0.0, 1000.0, 0.01, "seconds", "ms" );
   newSection( "Analysis" );
   addNumber( "before", "Spikes recorded before stimulus", 0.1, 0.0, 1000.0, 0.005, "seconds", "ms" );
   addNumber( "after", "Spikes recorded after stimulus", 0.1, 0.0, 1000.0, 0.005, "seconds", "ms" );
@@ -118,7 +119,7 @@ int ThreeFish::main( void )
   double deltaf1step = number( "deltaf1step" );
   double contrast1 = number( "contrast1" );
   double duration2 = number( "duration2" );
-  double offset2 = number( "offset2" );
+  double delay2 = number( "delay2" );
   double deltaf2min = number( "deltaf2min" );
   double deltaf2max = number( "deltaf2max" );
   double deltaf2step = number( "deltaf2step" );
@@ -135,6 +136,16 @@ int ThreeFish::main( void )
   if ( LocalEODTrace[0] < 0 || LocalEODEvents[0] < 0 ) {
     warning( "Local EOD recording with EOD events required!" );
     return Failed;
+  }
+
+  if ( pause < after || pause < 0.5 ) {
+    warning( "Pause too short!", 4.0 );
+    pause = 0.5;
+  }
+
+  if ( delay2 + duration2 > duration1 ) {
+    warning( "Signal of second fish too long!", 4.0 );
+    duration2 = duration1 - delay2;
   }
 
   // plot trace:
@@ -168,6 +179,8 @@ int ThreeFish::main( void )
   dfrange2.setSequence( deltafshuffle );
 
   // data:
+  double deltaf1 = 0.0;
+  double deltaf2 = 0.0;
   vector< MapD > amtraces;
   amtraces.reserve( repeats );
   EventList spikes;
@@ -223,7 +236,8 @@ int ThreeFish::main( void )
 
   for ( dfrange1.reset(); ! dfrange1 && softStop() == 0; ++dfrange1 ) {
     for ( dfrange2.reset(); ! dfrange2 && softStop() == 0; ++dfrange2 ) {
-      double deltaf1 = *dfrange1 * fishrate;
+      // stimulus:
+      deltaf1 = *dfrange1 * fishrate;
       if ( fabs( deltaf1) < 1e-6 )
 	continue;
       OutData fish1;
@@ -237,7 +251,7 @@ int ThreeFish::main( void )
       fish1.description()["Frequency"].addFlags( OutData::Mutable );
       fish1.description()["DeltaF"].addFlags( OutData::Mutable );
     
-      double deltaf2 = *dfrange2 * fishrate;
+      deltaf2 = *dfrange2 * fishrate;
       if ( fabs( deltaf2) < 1e-6 )
 	continue;
       OutData fish2;
@@ -246,7 +260,7 @@ int ThreeFish::main( void )
 	return Failed;
       }
       fish2 *= contrast2/(contrast1 + contrast2);
-      double offs = offset2;
+      double offs = delay2;
       if ( fabs( deltaf1 ) > 1e-6 && offs > 1e-6 ) {
 	int n = ::round( offs * deltaf1 );
 	if ( n < 1 )
@@ -268,7 +282,7 @@ int ThreeFish::main( void )
       double intensity = (contrast1+contrast2) * fishamplitude;
       signal.setIntensity( intensity );
       
-      // meassage: 
+      // message: 
       Str s = "Delta F1: <b>" + Str( deltaf1, 0, 1, 'f' ) + "Hz</b>";
       s += "  Contrast1: <b>" + Str( 100.0 * contrast1, 0, 5, 'g' ) + "%</b>";
       s += "  Delta F2: <b>" + Str( deltaf2, 0, 1, 'f' ) + "Hz</b>";
@@ -280,42 +294,56 @@ int ThreeFish::main( void )
 
       sleepOn( signal.duration() + pause );
       if ( interrupt() ) {
-	//save();
+	save( fishrate, fishamplitude, deltaf1, deltaf2,
+	      spikes, spikerate, amtraces );
 	stop();
 	return Aborted;
       }
       timeStamp();
 
       // analyze:
-      if ( dfrange2.finishedSingle() ) {
+      analyze( amtraces, spikes, spikerate, maxrate, duration1, before, after, sigma );
+
+      plot( amtraces, spikes, spikerate, maxrate, repeats );
+
+      if ( dfrange2.lastSingle() ) {
+	save( fishrate, fishamplitude, deltaf1, deltaf2,
+	      spikes, spikerate, amtraces );
 	amtraces.clear();
 	spikes.clear();
 	maxrate = 100.0;
       }
-      spikes.push( events( SpikeEvents[0] ), signalTime()-before,
-		   signalTime()+duration1+after, signalTime() );
-      spikes.rate( spikerate, GaussKernel( sigma ) );
-      double maxr = max( spikerate );
-      if ( maxr+100.0 > maxrate )
-	maxrate = ::ceil((maxr+100.0)/20.0)*20.0;
-
-      // EOD transdermal amplitude:
-      const EventData &localeod = events( LocalEODEvents[0] );
-      EventSizeIterator pindex = localeod.begin( signalTime() );
-      EventSizeIterator plast = localeod.begin( signalTime() + duration1 );
-      amtraces.push_back( MapD() );
-      amtraces.back().reserve( plast - pindex + 1 );
-      for ( ; pindex < plast; ++pindex )
-	amtraces.back().push( pindex.time() - signalTime(), *pindex ); 
-
-      plot( amtraces, spikes, spikerate, maxrate, repeats );
 
       fishEOD(fishrate, fishamplitude);
     }
   }
 
+  save( fishrate, fishamplitude, deltaf1, deltaf2,
+	spikes, spikerate, amtraces );
   stop();
   return Completed;
+}
+
+
+void ThreeFish::analyze( vector< MapD > &amtraces, EventList &spikes,
+			 SampleDataD &spikerate, double &maxrate,
+			 double duration, double before, double after, double sigma )
+{
+  spikes.push( events( SpikeEvents[0] ), signalTime()-before,
+	       signalTime()+duration+after, signalTime() );
+  spikes.rate( spikerate, GaussKernel( sigma ) );
+  double maxr = max( spikerate );
+  if ( maxr+100.0 > maxrate )
+    maxrate = ::ceil((maxr+100.0)/20.0)*20.0;
+
+  // EOD transdermal amplitude:
+  const EventData &localeod = events( LocalEODEvents[0] );
+  EventSizeIterator pindex = localeod.begin( signalTime() );
+  EventSizeIterator plast = localeod.begin( signalTime() + duration );
+  amtraces.push_back( MapD() );
+  amtraces.back().reserve( plast - pindex + 1 );
+  for ( ; pindex < plast; ++pindex )
+    amtraces.back().push( pindex.time() - signalTime(), *pindex ); 
 }
 
 
@@ -348,6 +376,117 @@ void ThreeFish::plot( const vector< MapD > &amtraces, const EventList &spikes,
   }
   P.draw();
   P.unlock();
+}
+
+
+void ThreeFish::saveRate( const Options &header, const SampleDataD &spikerate )
+{
+  // create file:
+  ofstream df( addPath( "threefish-rate.dat" ).c_str(),
+	       ofstream::out | ofstream::app );
+  if ( ! df.good() )
+    return;
+
+  // write header and key:
+  header.save( df, "# ", 0, Options::FirstOnly );
+  df << '\n';
+  TableKey key;
+  key.addNumber( "time", "ms", "%9.2f" );
+  key.addNumber( "rate", "Hz", "%5.1f" );
+  key.saveKey( df, true, false );
+
+  // write data:
+  for ( int j=0; j<spikerate.size(); j++ ) {
+    key.save( df, 1000.0 * spikerate.pos( j ), 0 );
+    key.save( df, spikerate[j] );
+    df << '\n';
+  }
+  df << "\n\n";
+}
+
+
+void ThreeFish::saveSpikes( const Options &header, const EventList &spikes )
+{
+  // create file:
+  ofstream df( addPath( "threefish-spikes.dat" ).c_str(),
+	       ofstream::out | ofstream::app );
+  if ( ! df.good() )
+    return;
+
+  // write header and key:
+  TableKey key;
+  key.addNumber( "time", "ms", "%9.2f" );
+  header.save( df, "# ", 0, Options::FirstOnly );
+  df << '\n';
+  key.saveKey( df, true, false );
+
+  // write data:
+  for ( int k=0; k<spikes.size(); k++ ) {
+    df << '\n';
+    df << "# trial: " << k << '\n';
+    if ( spikes[k].empty() ) {
+      df << "  -0" << '\n';
+    }
+    else {
+      for ( int j=0; j<spikes[k].size(); j++ ) {
+	key.save( df, 1000.0 * spikes[k][j], 0 );
+	df << '\n';
+      }
+    }
+  }
+  df << "\n\n";
+}
+
+
+void ThreeFish::saveAmpl( const Options &header, const vector< MapD > &amtraces )
+{
+  // create file:
+  ofstream df( addPath( "threefish-ams.dat" ).c_str(),
+	       ofstream::out | ofstream::app );
+  if ( ! df.good() )
+    return;
+
+  // write header and key:
+  TableKey key;
+  key.addNumber( "time", "ms", "%9.2f", 3 );
+  key.addNumber( "ampl", trace( LocalEODTrace[0] ).unit(), "%5.3f", 3 );
+  header.save( df, "# ", 0, Options::FirstOnly );
+  df << '\n';
+  key.saveKey( df, true, false, 1 );
+
+  // write data:
+  for ( unsigned int k=0; k<amtraces.size(); k++ ) {
+    df << '\n';
+    df << "# trial: " << k << '\n';
+    for ( int j=0; j<amtraces[k].size(); j++ ) {
+      key.save( df, 1000.0*amtraces[k].x(j), 0 );
+      key.save( df, amtraces[k].y(j), 1 );
+      df << '\n';
+    }
+  }
+  df << "\n\n";
+}
+
+
+void ThreeFish::save( double fishrate, double fishamplitude, double deltaf1, double deltaf2,
+		      const EventList &spikes, const SampleDataD &spikerate,
+		      const vector< MapD > &amtraces )
+{
+  if ( spikes.empty() )
+    return;
+  
+  Options header;
+  header.addInteger( "index", totalRuns() );
+  header.addNumber( "EOD rate", "Hz", "%.1f" ).setNumber( fishrate );
+  header.addNumber( "EOD amplitude", trace( LocalEODTrace[0] ).unit(), "%.2f" ).setNumber( fishamplitude );
+  header.addNumber( "Deltaf1", "Hz", "%.1f" ).setNumber( deltaf1 );
+  header.addNumber( "Deltaf2", "Hz", "%.1f" ).setNumber( deltaf2 );
+  header.addText( "session time", sessionTimeStr() );
+  header.newSection( settings() );
+  
+  saveSpikes( header, spikes );
+  saveRate( header, spikerate );
+  saveAmpl( header, amtraces );
 }
 
 

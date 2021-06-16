@@ -22,6 +22,7 @@
 #ifndef _RELACS_EFISH_THREEFISH_H_
 #define _RELACS_EFISH_THREEFISH_H_ 1
 
+#include <relacs/options.h>
 #include <relacs/multiplot.h>
 #include <relacs/repro.h>
 #include <relacs/ephys/traces.h>
@@ -36,18 +37,18 @@ namespace efish {
 \class ThreeFish
 \brief [RePro] Beats of three fish
 \author Jan Benda
-\version 1.0 (Jun 15, 2021)
+\version 1.2 (Jun 16, 2021)
 \par Options
 - \c Stimulus
     - \c duration1=1000ms: Duration of signal (\c number)
     - \c deltaf1min=0EODf: Minimum delta f (beat frequency) of first fish (\c number)
-    - \c deltaf1max=1EODf: Maximum delta f (beat frequency) of first fish (\c number)
+    - \c deltaf1max=0.5EODf: Maximum delta f (beat frequency) of first fish (\c number)
     - \c deltaf1step=0.1EODf: Increment delta f (beat frequency) of first fish (\c number)
     - \c contrast1=10%: Contrast of first fish (\c number)
     - \c duration2=1000ms: Duration of second fish (\c number)
-    - \c offset2=0ms: Offset of second fish (\c number)
+    - \c delay2=0ms: Offset of second fish (\c number)
     - \c deltaf2min=0EODf: Minimum delta f (beat frequency) of second fish (\c number)
-    - \c deltaf2max=1EODf: Maximum delta f (beat frequency) of second fish (\c number)
+    - \c deltaf2max=0.5EODf: Maximum delta f (beat frequency) of second fish (\c number)
     - \c deltaf2step=0.1EODf: Increment delta f (beat frequency) of second fish (\c number)
     - \c contrast2=10%: Contrast of second fish (\c number)
     - \c shuffle=Up: Order of delta f's (\c string)
@@ -73,15 +74,23 @@ public:
 
   ThreeFish( void );
   virtual int main( void );
-  void plot( const vector< MapD > &amtraces, const EventList &spikes,
-	     const SampleDataD &spikerate, double maxrate, int repeats );
-
+  
 
 protected:
 
   int fishEOD(double &rate, double &amplitude);
   int makeEOD(double fishrate, double deltaf, double duration,
 	      double phase, OutData &eod);
+  void plot( const vector< MapD > &amtraces, const EventList &spikes,
+	     const SampleDataD &spikerate, double maxrate, int repeats );
+  void analyze( vector< MapD > &amtraces, EventList &spikes,
+		SampleDataD &spikerate, double &maxrate,
+		double duration, double before, double after, double sigma );
+  void saveRate( const Options &header, const SampleDataD &spikerate );
+  void saveSpikes( const Options &header, const EventList &spikes );
+  void saveAmpl( const Options &header, const vector< MapD > &amtracesa );
+  void save( double fishrate, double fishamplitude, double deltaf1, double deltaf2,
+	     const EventList &spikes, const SampleDataD &spikerate, const vector< MapD > &amtraces );
   void stop( void );
 
   MultiPlot P;
