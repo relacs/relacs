@@ -489,6 +489,9 @@ libefishthreefish_la_LDFLAGS = \
 
 libefishthreefish_la_LIBADD = \
     $(top_builddir)/relacs/src/librelacs.la \
+    $(builddir)/../../ephys/src/libephystraces.la \
+    $(builddir)/../../efield/src/libefieldtraces.la \
+    $(builddir)/../../efield/src/libefieldeodtools.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
     $(top_builddir)/plot/src/librelacsplot.la \
     $(top_builddir)/datafile/src/librelacsdatafile.la \
