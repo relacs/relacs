@@ -61,13 +61,13 @@ ThreeFish::ThreeFish( void )
 }
 
 
-int ThreeFish::fishEOD(double &rate, double &amplitude)
+int ThreeFish::fishEOD(double pause, double &rate, double &amplitude)
 {
   // EOD rate:
   if ( EODEvents >= 0 )
-    rate = events( EODEvents ).frequency( currentTime() - 0.5, currentTime() );
+    rate = events( EODEvents ).frequency( currentTime() - pause, currentTime() );
   else if ( LocalEODEvents[0] >= 0 )
-    rate = events( LocalEODEvents[0] ).frequency( currentTime() - 0.5, currentTime() );
+    rate = events( LocalEODEvents[0] ).frequency( currentTime() - pause, currentTime() );
   else {
     warning( "No EOD present or not enough EOD cycles recorded!" );
     return 1;
@@ -75,7 +75,7 @@ int ThreeFish::fishEOD(double &rate, double &amplitude)
 
   // EOD amplitude:
   double ampl = eodAmplitude( trace( LocalEODTrace[0] ),
-			      currentTime() - 0.5, currentTime() );
+			      currentTime() - pause, currentTime() );
   if ( ampl <= 1.0e-8 ) {
     warning( "No EOD amplitude on local EOD electrode!" );
     return 1;
@@ -138,9 +138,9 @@ int ThreeFish::main( void )
     return Failed;
   }
 
-  if ( pause < after || pause < 0.5 ) {
+  if ( pause < after ) {
     warning( "Pause too short!", 4.0 );
-    pause = 0.5;
+    pause = after;
   }
 
   if ( delay2 + duration2 > duration1 ) {
@@ -153,12 +153,12 @@ int ThreeFish::main( void )
 
   // clear output lines:
   writeZero( GlobalAMEField );
-  sleep( 0.5 );
+  sleep( pause );
 
   // EOD:
   double fishrate = 0.0;
   double fishamplitude = 0.0;
-  if ( fishEOD(fishrate, fishamplitude) )
+  if ( fishEOD(pause, fishrate, fishamplitude) )
     return Failed;
 
   // adjust transdermal EOD:
@@ -314,7 +314,7 @@ int ThreeFish::main( void )
 	maxrate = 100.0;
       }
 
-      fishEOD(fishrate, fishamplitude);
+      fishEOD(pause, fishrate, fishamplitude);
     }
   }
 

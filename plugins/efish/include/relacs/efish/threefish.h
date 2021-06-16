@@ -78,7 +78,7 @@ public:
 
 protected:
 
-  int fishEOD(double &rate, double &amplitude);
+  int fishEOD(double pause, double &rate, double &amplitude);
   int makeEOD(double fishrate, double deltaf, double duration,
 	      double phase, OutData &eod);
   void plot( const vector< MapD > &amtraces, const EventList &spikes,
