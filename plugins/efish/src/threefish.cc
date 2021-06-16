@@ -19,6 +19,8 @@
   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <vector>
+#include <relacs/map.h>
 #include <relacs/outdata.h>
 #include <relacs/kernel.h>
 #include <relacs/rangeloop.h>
@@ -141,11 +143,20 @@ int ThreeFish::main( void )
   // clear output lines:
   writeZero( GlobalAMEField );
   sleep( 0.5 );
+
+  // EOD:
   double fishrate = 0.0;
   double fishamplitude = 0.0;
   if ( fishEOD(fishrate, fishamplitude) )
     return Failed;
 
+  // adjust transdermal EOD:
+  adjustGain( trace( LocalEODTrace[0] ),
+	      ( 1.0 + contrast1 + contrast2 ) * 1.1 * fishamplitude );
+  detectorEventsOpts( LocalBeatPeakEvents[0] ).setNumber( "threshold",
+    min(contrast1, contrast2)*fishamplitude );
+
+  // delta f ranges:
   RangeLoop dfrange1;  
   dfrange1.set( deltaf1min, deltaf1max, deltaf1step, 1, 1, 1 );
   dfrange1.setIncrement( increment );
@@ -157,6 +168,8 @@ int ThreeFish::main( void )
   dfrange2.setSequence( deltafshuffle );
 
   // data:
+  vector< MapD > amtraces;
+  amtraces.reserve( repeats );
   EventList spikes;
   SampleDataD spikerate( -before, duration1+after, 0.0005 );
   double maxrate = 100.0;
@@ -178,7 +191,7 @@ int ThreeFish::main( void )
     P[0].setXRange( 0.0, duration1 );
   else
     P[0].setXRange( 0.0, 1.0 );
-  P[0].setYLabel( "AM" );
+  P[0].setYLabel( "AM [" + trace( LocalEODTrace[0] ).unit() + "]" );
   P[0].setYLabelPos( 2.0, Plot::FirstMargin, 0.5, Plot::Graph, 
 		     Plot::Center, -90.0 );
   P[0].setAutoScaleY();
@@ -254,7 +267,6 @@ int ThreeFish::main( void )
       // stimulus intensity:
       double intensity = (contrast1+contrast2) * fishamplitude;
       signal.setIntensity( intensity );
-      detectorEventsOpts( LocalBeatPeakEvents[0] ).setNumber( "threshold", 1.5*signal.intensity() );
       
       // meassage: 
       Str s = "Delta F1: <b>" + Str( deltaf1, 0, 1, 'f' ) + "Hz</b>";
@@ -274,23 +286,34 @@ int ThreeFish::main( void )
       }
       timeStamp();
 
+      // analyze:
       if ( dfrange2.finishedSingle() ) {
+	amtraces.clear();
 	spikes.clear();
 	maxrate = 100.0;
       }
       spikes.push( events( SpikeEvents[0] ), signalTime()-before,
 		   signalTime()+duration1+after, signalTime() );
       spikes.rate( spikerate, GaussKernel( sigma ) );
-  
       double maxr = max( spikerate );
       if ( maxr+100.0 > maxrate )
 	maxrate = ::ceil((maxr+100.0)/20.0)*20.0;
 
+      // EOD transdermal amplitude:
+      const EventData &localeod = events( LocalEODEvents[0] );
+      EventSizeIterator pindex = localeod.begin( signalTime() );
+      EventSizeIterator plast = localeod.begin( signalTime() + duration1 );
+      amtraces.push_back( MapD() );
+      amtraces.back().reserve( plast - pindex + 1 );
+      for ( ; pindex < plast; ++pindex )
+	amtraces.back().push( pindex.time() - signalTime(), *pindex ); 
+
       P.lock();
       // stimulus:
       P[0].clear();
-      P[0].plot( (contrast1+contrast2)*signal+1.0, 1.0, Plot::Green, 2, Plot::Solid );
-      P[0].setYRange( 1.0-(contrast1+contrast2), 1.0+contrast1+contrast2 );
+      for ( unsigned int i=0; i<amtraces.size()-1; i++ )
+	P[0].plot( amtraces[i], 1.0, Plot::DarkGreen, 2, Plot::Solid );
+      P[0].plot( amtraces.back(), 1.0, Plot::Green, 2, Plot::Solid );
 
       // rate and spikes:
       int maxspikes = 20;
