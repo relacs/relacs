@@ -35,16 +35,16 @@ ThreeFish::ThreeFish( void )
 {
   newSection( "Stimulus" );
   addNumber( "duration1", "Duration of signal", 1.0, 0.01, 1000.0, 0.01, "seconds", "ms" );
-  addNumber( "deltaf1min", "Minimum delta f (beat frequency) of first fish", 0.0, -10000.0, 10000.0, 5.0, "Hz" );
-  addNumber( "deltaf1max", "Maximum delta f (beat frequency) of first fish", 100.0, -10000.0, 10000.0, 5.0, "Hz" );
-  addNumber( "deltaf1step", "Increment delta f (beat frequency) of first fish", 10.0, 0.0, 1000.0, 1.0, "Hz" );
+  addNumber( "deltaf1min", "Minimum delta f (beat frequency) of first fish", 0.0, -100.0, 100.0, 0.01, "EODf" );
+  addNumber( "deltaf1max", "Maximum delta f (beat frequency) of first fish", 1.0, -100.0, 100.0, 0.01, "EODf" );
+  addNumber( "deltaf1step", "Increment delta f (beat frequency) of first fish", 0.1, 0.0, 100.0, 0.01, "EODf" );
   addNumber( "contrast1", "Contrast of first fish", 0.1, 0.0, 1.0, 0.01, "", "%" );
 
   addNumber( "duration2", "Duration of second fish", 1.0, 0.01, 1000.0, 0.01, "seconds", "ms" );
   addNumber( "offset2", "Offset of second fish", 0.0, 0.0, 1000.0, 0.01, "seconds", "ms" );
-  addNumber( "deltaf2min", "Minimum delta f (beat frequency) of second fish", 0.0, -10000.0, 10000.0, 5.0, "Hz" );
-  addNumber( "deltaf2max", "Maximum delta f (beat frequency) of second fish", 100.0, -10000.0, 10000.0, 5.0, "Hz" );
-  addNumber( "deltaf2step", "Increment delta f (beat frequency) of second fish", 10.0, 0.0, 1000.0, 1.0, "Hz" );
+  addNumber( "deltaf2min", "Minimum delta f (beat frequency) of second fish", 0.0, -100.0, 100.0, 0.01, "EODf" );
+  addNumber( "deltaf2max", "Maximum delta f (beat frequency) of second fish", 1.0, -100.0, 100.0, 0.01, "EODf" );
+  addNumber( "deltaf2step", "Increment delta f (beat frequency) of second fish", 0.1, 0.0, 100.0, 0.01, "EODf" );
   addNumber( "contrast2", "Contrast of second fish", 0.1, 0.0, 1.0, 0.01, "", "%" );
   addSelection( "shuffle", "Order of delta f's", RangeLoop::sequenceStrings() );
   addInteger( "increment", "Initial increment for delta f's", -1, -1000, 1000, 1 );
@@ -222,22 +222,22 @@ int ThreeFish::main( void )
   timeStamp();
 
   for ( dfrange1.reset(); ! dfrange1 && softStop() == 0; ++dfrange1 ) {
-    double deltaf1 = *dfrange1;
-    if ( fabs( deltaf1) < 1e-6 )
-      continue;
-    OutData fish1;
-    if ( makeEOD(fishrate, deltaf1, duration1, 0.0, fish1) ) {
-      stop();
-      return Failed;
-    }
-    fish1 *= contrast1/(contrast1 + contrast2);
-    fish1.description().insertNumber( "DeltaF", "Phase", deltaf1, "Hz" );
-    fish1.description().insertNumber( "Contrast", "Frequency", 100.0*contrast1, "%" );
-    fish1.description()["Frequency"].addFlags( OutData::Mutable );
-    fish1.description()["DeltaF"].addFlags( OutData::Mutable );
-
     for ( dfrange2.reset(); ! dfrange2 && softStop() == 0; ++dfrange2 ) {
-      double deltaf2 = *dfrange2;
+      double deltaf1 = *dfrange1 * fishrate;
+      if ( fabs( deltaf1) < 1e-6 )
+	continue;
+      OutData fish1;
+      if ( makeEOD(fishrate, deltaf1, duration1, 0.0, fish1) ) {
+	stop();
+	return Failed;
+      }
+      fish1 *= contrast1/(contrast1 + contrast2);
+      fish1.description().insertNumber( "DeltaF", "Phase", deltaf1, "Hz" );
+      fish1.description().insertNumber( "Contrast", "Frequency", 100.0*contrast1, "%" );
+      fish1.description()["Frequency"].addFlags( OutData::Mutable );
+      fish1.description()["DeltaF"].addFlags( OutData::Mutable );
+    
+      double deltaf2 = *dfrange2 * fishrate;
       if ( fabs( deltaf2) < 1e-6 )
 	continue;
       OutData fish2;
