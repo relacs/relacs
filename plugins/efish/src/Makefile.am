@@ -480,6 +480,8 @@ libefishthreefish_la_CPPFLAGS = \
     -I$(top_srcdir)/plot/include \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
+    -I$(srcdir)/../../ephys/include \
+    -I$(srcdir)/../../efield/include \
     -I$(srcdir)/../include \
     $(QT_CPPFLAGS) $(NIX_CPPFLAGS)$(GSL_CPPFLAGS)
 
