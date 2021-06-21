@@ -269,6 +269,7 @@ int ThreeFish::main( void )
 	offs = n / deltaf1;
       }
       fish2.setOffset( offs );
+      fish2.description().setName("fish2");
       fish2.description().insertNumber( "DeltaF", "Phase", deltaf2, "Hz" );
       fish2.description().insertNumber( "Contrast", "Frequency", 100.0*contrast2, "%" );
       fish2.description()["Frequency"].addFlags( OutData::Mutable );
