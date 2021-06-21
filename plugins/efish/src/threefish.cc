@@ -250,6 +250,7 @@ int ThreeFish::main( void )
       fish1.description().insertNumber( "Contrast", "Frequency", 100.0*contrast1, "%" );
       fish1.description()["Frequency"].addFlags( OutData::Mutable );
       fish1.description()["DeltaF"].addFlags( OutData::Mutable );
+      fish1.description()["Duration"].addFlags( OutData::Mutable );
     
       deltaf2 = *dfrange2 * fishrate;
       if ( fabs( deltaf2) < 1e-6 )
@@ -272,6 +273,7 @@ int ThreeFish::main( void )
       fish2.description().insertNumber( "Contrast", "Frequency", 100.0*contrast2, "%" );
       fish2.description()["Frequency"].addFlags( OutData::Mutable );
       fish2.description()["DeltaF"].addFlags( OutData::Mutable );
+      fish2.description()["Duration"].addFlags( OutData::Mutable );
 
       OutData signal( fish1 );
       signal += fish2;
