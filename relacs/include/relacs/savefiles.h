@@ -531,7 +531,7 @@ protected:
     void saveMetadata ( const AllDevices *devices );
     void saveMetadata ( const MetaData &mtdt );
     void createStimulusTag ( const std::string &repro_name, const Options &stimulus_features,
-			     const deque< OutDataInfo > &stim_info, const Acquire *AQ,
+			     const deque< OutDataInfo > &stim_info, const deque< Options > &stim_refs, const Acquire *AQ,
 			     double start_time, double duration, NixStimulusInfo &info );
     void writeStimulus( const InList &IL, const EventList &EL,
 			const deque< OutDataInfo > &stimuliinfo,

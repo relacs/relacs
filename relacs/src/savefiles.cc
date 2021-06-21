@@ -524,7 +524,7 @@ void SaveFiles::extractMutables( Options &stimulusdescription, Options &mutables
     if ( (pi->flags() & OutData::Mutable) == OutData::Mutable ) {
       Parameter p( *pi );
       if ( ! secname.empty() )
-	p.setName( secname + "." + p.name() );
+	      p.setName( secname + "." + p.name() );
       mutables.add( p );
       pi->setText( "" );
       pi->setUnit( "" );
@@ -2118,7 +2118,7 @@ void SaveFiles::NixFile::writeChunk(NixTrace   &trace,
 
 
 void SaveFiles::NixFile::createStimulusTag( const std::string &tag_name, const Options &stimulus_features,
-					    const deque< OutDataInfo > &stim_info, const Acquire *AQ,
+					    const deque< OutDataInfo > &stim_info, const deque< Options > &stim_refs, const Acquire *AQ,
 					    double start_time, double duration, NixStimulusInfo &info )
 {
 
@@ -2195,7 +2195,6 @@ void SaveFiles::NixFile::createStimulusTag( const std::string &tag_name, const O
   if ( !stimulus_features.empty() ) {
     createFeaturesForOptions( stimulus_features, "relacs_feature", "" );
   }
-
   std::string channel_prefix;
   for ( size_t i = 0; i < stim_info.size(); ++i ) {
     std::string channel_prefix = stim_info.size() == 1 ? "" : "Output" + Str(stim_info[i].channel()) + "_";
@@ -2213,7 +2212,11 @@ void SaveFiles::NixFile::createStimulusTag( const std::string &tag_name, const O
 					  funit, "intensity", nix::LinkType::Indexed, nix::DataType::Double );
 
     // additional stim_options
-    createFeaturesForOptions( stim_info[i].description(), "relacs.feature.mutable", channel_prefix );
+    //createFeaturesForOptions( stim_info[i].description(), "relacs.feature.mutable", channel_prefix );
+  }
+  
+  for ( size_t i = 0; i < stim_refs.size(); ++i ) {
+    createFeaturesForOptions( stim_refs[i], "relacs.feature.mutable", "");
   }
 }
 
@@ -2283,7 +2286,7 @@ void SaveFiles::NixFile::writeStimulus( const InList &IL, const EventList &EL,
       current_stimulus_info = it->second;
     } else { // no match in store, create a new one
       current_stimulus_info = NixStimulusInfo();
-      createStimulusTag( tag_name, stim_options, stim_info, acquire, stimulus_start_time, 
+      createStimulusTag( tag_name, stim_options, stim_info, stimuliref, acquire, stimulus_start_time, 
                          stimulus_duration, current_stimulus_info );
       stim_info_buffer[tag_name] = current_stimulus_info;
       new_stim = true;
@@ -2359,6 +2362,9 @@ void SaveFiles::NixFile::createFeaturesForOptions( const Options &options, const
 							    type, unit, label, nix::LinkType::Indexed, dtype );
     }
   }
+  for ( Options::const_section_iterator si = options.sectionsBegin(); si != options.sectionsEnd(); ++si ) {
+    createFeaturesForOptions( *(*si), type, name_prefix );
+  }
 }
 
 
@@ -2391,6 +2397,9 @@ void SaveFiles::NixFile::storeOptionsToFeatures( const Options &options , const 
         }
       }    
     }
+  }
+  for ( Options::const_section_iterator si = options.sectionsBegin(); si != options.sectionsEnd(); ++si ) {
+    storeOptionsToFeatures( *(*si), "" );
   }
 }
 
