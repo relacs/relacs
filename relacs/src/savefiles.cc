@@ -516,14 +516,16 @@ void SaveFiles::save( const OutList &signal )
 }
 
 
-void SaveFiles::extractMutables( Options &stimulusdescription, Options &mutables ) const
+void SaveFiles::extractMutables( Options &stimulusdescription, Options &mutables, const string &secname ) const
 {
   for ( Options::iterator pi = stimulusdescription.begin();
 	pi != stimulusdescription.end();
 	++pi ) {
     if ( (pi->flags() & OutData::Mutable) == OutData::Mutable ) {
-            mutables.add( *pi );
-      // stimulusdescription.erase( *pi );
+      Parameter p( *pi );
+      if ( ! secname.empty() )
+	p.setName( secname + "." + p.name() );
+      mutables.add( p );
       pi->setText( "" );
       pi->setUnit( "" );
       if ( pi->isNumber() )
@@ -533,7 +535,7 @@ void SaveFiles::extractMutables( Options &stimulusdescription, Options &mutables
   for ( Options::section_iterator si = stimulusdescription.sectionsBegin();
 	si != stimulusdescription.sectionsEnd();
 	++si ) {
-    extractMutables( *(*si), mutables );
+    extractMutables( *(*si), mutables, (*si)->name() );
   }
 }
 

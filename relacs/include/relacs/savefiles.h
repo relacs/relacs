@@ -222,7 +222,8 @@ protected:
     /*! Write events to files. \sa saveTraces() */
   void writeEvents( bool stimulus );
     /*! Extract mutables from a section of a stimulus description. */
-  void extractMutables( Options &stimulusdescription, Options &mutables ) const;
+  void extractMutables( Options &stimulusdescription, Options &mutables,
+			const string &secname="" ) const;
     /*! Write pending stimuli to files. \sa save( const OutData& ), save( const OutList& ) */
   void writeStimulus( void );
     /*! Write information about a RePro to files. \sa save( const RePro& ) */
