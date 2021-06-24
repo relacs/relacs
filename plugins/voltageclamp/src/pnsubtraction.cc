@@ -235,12 +235,20 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
     
     OutData qc_signal3;
     qc_signal3.setTrace( PotentialOutput[0] );
-    qc_signal3.constWave( stepduration, -1.0, -135 );
+    qc_signal3.constWave( stepduration, -1.0, holdingpotential-20.0 );
 
     OutData qc_signal4;
     qc_signal4.setTrace( PotentialOutput[0] );
     qc_signal4.sweepWave( pulseduration, -1.0, f0, f1, 20.0, 0.0 );
-    qc_signal4 = qc_signal4 + holdingpotential - 20;
+
+    double beta = pulseduration / log(f1 / f0);
+    for ( int i=0; i<pulseduration/samplerate; i++ ) {
+      double a1 = f1/f0;
+      double a2 = i/samplerate/pulseduration;
+      qc_signal4[i] = sin(2 * 3.14159265358979323846 * beta * f0 * (std::pow(a1, a2) - 1.0))*20.0;
+    }
+    qc_signal4 += holdingpotential - 20.0;
+//    qc_signal4 = qc_signal4 + holdingpotential - 20;
 
     OutData qc_signal5;
     qc_signal5.setTrace( PotentialOutput[0] );
