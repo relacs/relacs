@@ -103,9 +103,13 @@ int StepAndSin::main( void )
     signal.constWave( holdingpotential );
     OutData act = Act();
     OutData sinsum = Sins();
+    OutData signal3;
+    signal3.setTrace(PotentialOutput[0]);
+    signal3.constWave( 0.01, -1.0, holdingpotential );
 
     signal.append( act );
     signal.append( sinsum );
+    signal.append( signal3 );
 
     Options opts = signal.description();
     double t0 = -0.002;
