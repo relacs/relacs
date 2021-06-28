@@ -35,17 +35,33 @@ ThreeFish::ThreeFish( void )
   : RePro( "ThreeFish", "efish", "Jan Benda", "1.2", "Jun 16, 2021" )
 {
   newSection( "Stimulus" );
+  addBoolean( "relativeeods", "stimulus frequencies are given relative to the fish's eodf", true );
+  addBoolean( "absfreqs", "stimulus frequencies are given as absolute frequencies", true ).setActivation( "relativeeods", "false" );
+
   addNumber( "duration1", "Duration of signal", 1.0, 0.01, 1000.0, 0.01, "seconds", "ms" );
-  addNumber( "deltaf1min", "Minimum delta f (beat frequency) of first fish", 0.0, -100.0, 100.0, 0.01, "EODf" );
-  addNumber( "deltaf1max", "Maximum delta f (beat frequency) of first fish", 0.5, -100.0, 100.0, 0.01, "EODf" );
-  addNumber( "deltaf1step", "Increment delta f (beat frequency) of first fish", 0.1, 0.0, 100.0, 0.01, "EODf" );
+  addNumber( "deltaf1min", "Minimum delta f (beat frequency) of first fish", 0.0, -100.0, 100.0, 0.01, "EODf" ).setActivation( "relativeeods", "true" );
+  addNumber( "deltaf1max", "Maximum delta f (beat frequency) of first fish", 0.5, -100.0, 100.0, 0.01, "EODf" ).setActivation( "relativeeods", "true" );
+  addNumber( "deltaf1step", "Increment delta f (beat frequency) of first fish", 0.1, 0.0, 100.0, 0.01, "EODf" ).setActivation( "relativeeods", "true" );
+  addNumber( "deltaf1minabs", "Minimum delta f (beat frequency) of first fish", 10.0, 0.0, 5000.0, 0.01, "Hz" ).setActivation( "relativeeods", "false" ).addActivation( "absfreqs", "false" );
+  addNumber( "deltaf1maxabs", "Maximum delta f (beat frequency) of first fish", 20, 0.0, 5000.0, 0.01, "Hz" ).setActivation( "relativeeods", "false" ).addActivation( "absfreqs", "false" );
+  addNumber( "deltaf1stepabs", "Increment delta f (beat frequency) of first fish", 10, 0.0, 500.0, 0.01, "Hz" ).setActivation( "relativeeods", "false" ).addActivation( "absfreqs", "false" );
+  addNumber( "freq1min", "Minimum frequency of first fish", 10.0, 0.0, 5000.0, 0.01, "Hz" ).setActivation( "relativeeods", "false" ).addActivation( "absfreqs", "true" );
+  addNumber( "freq1max", "Maximum frequency of first fish", 20, 0.0, 5000.0, 0.01, "Hz" ).setActivation( "relativeeods", "false" ).addActivation( "absfreqs", "true" );
+  addNumber( "freq1step", "Increment frequency of first fish", 10, 0.0, 500.0, 0.01, "Hz" ).setActivation( "relativeeods", "false" ).addActivation( "absfreqs", "true" );
   addNumber( "contrast1", "Contrast of first fish", 0.1, 0.0, 1.0, 0.01, "", "%" );
 
   addNumber( "duration2", "Duration of second fish", 1.0, 0.01, 1000.0, 0.01, "seconds", "ms" );
   addNumber( "delay2", "Delay of second fish", 0.0, 0.0, 1000.0, 0.01, "seconds", "ms" );
-  addNumber( "deltaf2min", "Minimum delta f (beat frequency) of second fish", 0.0, -100.0, 100.0, 0.01, "EODf" );
-  addNumber( "deltaf2max", "Maximum delta f (beat frequency) of second fish", 0.5, -100.0, 100.0, 0.01, "EODf" );
-  addNumber( "deltaf2step", "Increment delta f (beat frequency) of second fish", 0.1, 0.0, 100.0, 0.01, "EODf" );
+  addNumber( "deltaf2min", "Minimum delta f (beat frequency) of second fish", 0.0, -100.0, 100.0, 0.01, "EODf" ).setActivation( "relativeeods", "true" );
+  addNumber( "deltaf2max", "Maximum delta f (beat frequency) of second fish", 0.5, -100.0, 100.0, 0.01, "EODf" ).setActivation( "relativeeods", "true" );
+  addNumber( "deltaf2step", "Increment delta f (beat frequency) of second fish", 0.1, 0.0, 100.0, 0.01, "EODf" ).setActivation( "relativeeods", "true" );
+  addNumber( "deltaf2minabs", "Minimum delta f (beat frequency) of second fish", 10.0, 0.0, 5000.0, 0.01, "Hz" ).setActivation( "relativeeods", "false" ).addActivation( "absfreqs", "false" );
+  addNumber( "deltaf2maxabs", "Maximum delta f (beat frequency) of second fish", 20, 0.0, 5000.0, 0.01, "Hz" ).setActivation( "relativeeods", "false" ).addActivation( "absfreqs", "false" );
+  addNumber( "deltaf2stepabs", "Increment delta f (beat frequency) of second fish", 10, 0.0, 500.0, 0.01, "Hz" ).setActivation( "relativeeods", "false" ).addActivation( "absfreqs", "false" );
+  addNumber( "freq2min", "Minimum frequency of second fish", 10.0, 0.0, 5000.0, 0.01, "Hz" ).setActivation( "relativeeods", "false" ).addActivation( "absfreqs", "true" );
+  addNumber( "freq2max", "Maximum frequency of second fish", 20, 0.0, 5000.0, 0.01, "Hz" ).setActivation( "relativeeods", "false" ).addActivation( "absfreqs", "true" );
+  addNumber( "freq2step", "Increment frequency of second fish", 10, 0.0, 500.0, 0.01, "Hz" ).setActivation( "relativeeods", "false" ).addActivation( "absfreqs", "true" );
+  
   addNumber( "contrast2", "Contrast of second fish", 0.1, 0.0, 1.0, 0.01, "", "%" );
   addSelection( "shuffle", "Order of delta f's", RangeLoop::sequenceStrings() );
   addInteger( "increment", "Initial increment for delta f's", -1, -1000, 1000, 1 );
@@ -113,17 +129,46 @@ int ThreeFish::makeEOD(double fishrate, double deltaf, double duration,
 int ThreeFish::main( void )
 {
   // get options:
+  bool releods = boolean( "relativeeods" );
+  bool absfreqs = boolean( "absfreqs" );
+
+  double deltaf1min, deltaf1max, deltaf1step;
+  double deltaf2min, deltaf2max, deltaf2step;
+
+  if ( releods ) {
+    deltaf1min = number( "deltaf1min" );
+    deltaf1max = number( "deltaf1max" );
+    deltaf1step = number( "deltaf1step" );
+
+    deltaf2min = number( "deltaf2min" );
+    deltaf2max = number( "deltaf2max" );
+    deltaf2step = number( "deltaf2step" );
+  } else {
+    if ( absfreqs ) {
+      deltaf1min = number( "freq1min" );
+      deltaf1max = number( "freq1max" );
+      deltaf1step = number( "freq1step" );
+
+      deltaf2min = number( "freq2min" );
+      deltaf2max = number( "freq2max" );
+      deltaf2step = number( "freq2step" );
+    } else {
+      deltaf1min = number( "deltaf1minabs" );
+      deltaf1max = number( "deltaf1maxabs" );
+      deltaf1step = number( "deltaf1stepabs" );
+
+      deltaf2min = number( "deltaf2minabs" );
+      deltaf2max = number( "deltaf2maxabs" );
+      deltaf2step = number( "deltaf2stepabs" );
+    }
+  }  
   double duration1 = number( "duration1" );
-  double deltaf1min = number( "deltaf1min" );
-  double deltaf1max = number( "deltaf1max" );
-  double deltaf1step = number( "deltaf1step" );
   double contrast1 = number( "contrast1" );
+
   double duration2 = number( "duration2" );
   double delay2 = number( "delay2" );
-  double deltaf2min = number( "deltaf2min" );
-  double deltaf2max = number( "deltaf2max" );
-  double deltaf2step = number( "deltaf2step" );
   double contrast2 = number( "contrast2" );
+
   RangeLoop::Sequence deltafshuffle = RangeLoop::Sequence( index( "shuffle" ) );
   int increment = integer( "increment" );
   int repeats = integer( "repeats" );
@@ -168,6 +213,8 @@ int ThreeFish::main( void )
     min(contrast1, contrast2)*fishamplitude );
 
   // delta f ranges:
+  cerr << "Deltafs: " <<  deltaf1min << "," << deltaf1max << "\t" <<  deltaf1min << "," << deltaf1max << endl;
+
   RangeLoop dfrange1;  
   dfrange1.set( deltaf1min, deltaf1max, deltaf1step, 1, 1, 1 );
   dfrange1.setIncrement( increment );
@@ -237,13 +284,22 @@ int ThreeFish::main( void )
   for ( dfrange1.reset(); ! dfrange1 && softStop() == 0; ++dfrange1 ) {
     for ( dfrange2.reset(); ! dfrange2 && softStop() == 0; ++dfrange2 ) {
       // stimulus:
-      deltaf1 = *dfrange1 * fishrate;
-      if ( fabs( deltaf1) < 1e-6 )
-	continue;
+      cerr << *dfrange1 << endl;
+      cerr << *dfrange2 << endl;
+      if ( releods )
+        deltaf1 = *dfrange1 * fishrate;
+      else {
+        if ( absfreqs )
+          deltaf1 = *dfrange1;
+        else
+          deltaf1 = *dfrange1 + fishrate;
+      }
+      if ( fabs( deltaf1 ) < 1e-6 )
+	      continue;
       OutData fish1;
       if ( makeEOD(fishrate, deltaf1, duration1, 0.0, fish1) ) {
-	stop();
-	return Failed;
+	      stop();
+	      return Failed;
       }
       fish1 *= contrast1/(contrast1 + contrast2);
       fish1.description().insertNumber( "DeltaF", "Phase", deltaf1, "Hz" );
@@ -251,22 +307,29 @@ int ThreeFish::main( void )
       fish1.description()["Frequency"].addFlags( OutData::Mutable );
       fish1.description()["DeltaF"].addFlags( OutData::Mutable );
       fish1.description()["Duration"].addFlags( OutData::Mutable );
-    
-      deltaf2 = *dfrange2 * fishrate;
+
+      if ( releods )
+        deltaf2 = *dfrange2 * fishrate;
+      else {
+        if ( absfreqs )
+          deltaf2 = *dfrange2;
+        else
+          deltaf2 = *dfrange2 + fishrate;
+      }
       if ( fabs( deltaf2) < 1e-6 )
-	continue;
+	      continue;
       OutData fish2;
       if ( makeEOD(fishrate, deltaf2, duration2, 0.25*6.28318, fish2) ) {
-	stop();
-	return Failed;
+	      stop();
+	      return Failed;
       }
       fish2 *= contrast2/(contrast1 + contrast2);
       double offs = delay2;
       if ( fabs( deltaf1 ) > 1e-6 && offs > 1e-6 ) {
-	int n = ::round( offs * deltaf1 );
-	if ( n < 1 )
-	  n = 1;
-	offs = n / deltaf1;
+	      int n = ::round( offs * deltaf1 );
+	      if ( n < 1 )
+	        n = 1;
+	      offs = n / deltaf1;
       }
       fish2.setOffset( offs );
       fish2.description().setName("fish2");
@@ -275,7 +338,7 @@ int ThreeFish::main( void )
       fish2.description()["Frequency"].addFlags( OutData::Mutable );
       fish2.description()["DeltaF"].addFlags( OutData::Mutable );
       fish2.description()["Duration"].addFlags( OutData::Mutable );
-
+      cerr << "Stimulus: " <<  deltaf1 << "\t" << deltaf2 << endl;
       OutData signal( fish1 );
       signal += fish2;
       signal.setDelay( before );
