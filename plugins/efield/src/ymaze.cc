@@ -243,7 +243,6 @@ bool YMaze::estimateEodFrequency( double &fisheodf ) {
       }
       return true;
     } else {
-
       double bigeod = 0.0;
       double bigeodf = 0.0; 
       double min_eodf = number( "mineodfreq" );
@@ -326,9 +325,15 @@ MazeCondition YMaze::nextMazeCondition() {
 bool YMaze::drawNonRewardedFrequency( double &freq ) {
   std::vector<double> freqs;
   double range = freqRangeMax - freqRangeMin;
+  if ( range < 1.0e-8 ) {
+    warning( "Invalid frequency range, check options!" );
+    return false;
+  }
   int steps = floor(range/deltaf);
-  if ( steps == 0 )
+  if ( steps == 0 ) {
     error( "Invalid frequency range, check options!" );
+    return false;
+  }
   int step = rand() % steps;
   freq = freqRangeMin + step * deltaf;
   int count = 0;
@@ -337,35 +342,39 @@ bool YMaze::drawNonRewardedFrequency( double &freq ) {
     freq = freqRangeMin + step * deltaf;
     count++;
     if (count > 1000) {
-      error("YMaze: Could not shuffle a valid Non-rewarded stimulus frequency! Please check RePro settings!");
+      warning("YMaze: Could not shuffle a valid Non-rewarded stimulus frequency! Please check RePro settings!");
       return false;
     }
   }
   return true;
 }
 
-StimulusCondition YMaze::nextStimulusConditions() {
+bool YMaze::nextStimulusConditions(StimulusCondition &sc) {
   bool success = estimateEodFrequency( eodf );
   if ( !success ) {
     error("YMaze: Could not get a valid fish frequency!");
   }
   double noRewardFreq;
   bool valid = drawNonRewardedFrequency( noRewardFreq );
-  StimulusCondition sc;
+  if ( !valid ) {
+    return false;
+  }
   sc.rewardedFreq = rewardedFreq;
   sc.unrewardedFreq = noRewardFreq;
   sc.rewardedAmplitude = number("rewardsignalampl");
   sc.unrewardedAmplitude = number("nonrewardsignalampl");
   sc.valid = valid;
-  return sc;
+  return true;
 }
   
-TrialCondition YMaze::nextTrialCondition() {
-  TrialCondition tc;
+bool YMaze::nextTrialCondition(TrialCondition &tc) {
   tc.mazeCondition = nextMazeCondition();
-  tc.stimCondition = nextStimulusConditions();
+  StimulusCondition sc;
+  bool valid = nextStimulusConditions(sc);
+  if ( !valid )
+    return false;
   currentCondition = tc;
-  return tc;
+  return true;
 }
   
 void YMaze::createStimuli( const TrialCondition &tc ) {
@@ -391,7 +400,6 @@ void YMaze::createStimuli( const TrialCondition &tc ) {
   rwStim.description()["Frequency"].addFlags( OutData::Mutable );
   rwStim.setIdent( ident + "_rewarded" );
   outList.push( rwStim );
-  
   // unrewarded stimulus
   OutData nrwStim;
   if ( dumbasses ) {
@@ -429,7 +437,6 @@ void YMaze::createStimuli( const TrialCondition &tc ) {
   ntrlStim.description().addNumber( "Frequency", 0.0, "Hz" ).addFlags( OutData::Mutable );
   ntrlStim.setIdent( ident + "_neutral" );
   outList.push( ntrlStim );
-										     
   postCustomEvent( static_cast<int>(YMazeEvents::STIM_READY) );
 }
   
@@ -516,9 +523,14 @@ void YMaze::resetTable( void ) {
 
 void YMaze::customEvent( QEvent *qce ) {
   TrialCondition tc;
+  bool valid;
   switch ( qce->type() - QEvent::User ) {
   case static_cast<int>(BtnActions::NEXT_TRIAL):
-    tc = nextTrialCondition();
+    valid = nextTrialCondition(tc);
+    if ( !valid ) {
+      message( "Could not get next trial conditions check RePro settings!" );
+      break;
+    }
     currentCondition = tc;
     createStimuli( currentCondition ); 
     updateUI( currentCondition );

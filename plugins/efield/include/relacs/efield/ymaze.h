@@ -135,8 +135,8 @@ private:
   bool configureOutputTraces();
   
   MazeCondition nextMazeCondition();
-  TrialCondition nextTrialCondition();
-  StimulusCondition nextStimulusConditions();
+  bool nextTrialCondition(TrialCondition &tc);
+  bool nextStimulusConditions(StimulusCondition &sc);
 
   void createStimuli( const TrialCondition &tc );
   bool estimateEodFrequency( double &fisheodf );
