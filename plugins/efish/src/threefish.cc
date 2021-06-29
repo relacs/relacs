@@ -37,6 +37,7 @@ ThreeFish::ThreeFish( void )
   newSection( "Stimulus" );
   addBoolean( "relativeeods", "stimulus frequencies are given relative to the fish's eodf", true );
   addBoolean( "absfreqs", "stimulus frequencies are given as absolute frequencies", true ).setActivation( "relativeeods", "false" );
+  addNumber( "fakefish", "Assume a fish with frequency", 0.0, 0.0, 2000.0, 10.0, "Hz" ).setFlags( 1 );
 
   addNumber( "duration1", "Duration of signal", 1.0, 0.01, 1000.0, 0.01, "seconds", "ms" );
   addNumber( "deltaf1min", "Minimum delta f (beat frequency) of first fish", 0.0, -100.0, 100.0, 0.01, "EODf" ).setActivation( "relativeeods", "true" );
@@ -131,6 +132,7 @@ int ThreeFish::main( void )
   // get options:
   bool releods = boolean( "relativeeods" );
   bool absfreqs = boolean( "absfreqs" );
+  double fakefish = number( "fakefish" );
 
   double deltaf1min, deltaf1max, deltaf1step;
   double deltaf2min, deltaf2max, deltaf2step;
@@ -203,9 +205,14 @@ int ThreeFish::main( void )
   // EOD:
   double fishrate = 0.0;
   double fishamplitude = 0.0;
-  if ( fishEOD(pause, fishrate, fishamplitude) )
-    return Failed;
 
+  if ( fakefish > 0.0 ) {
+    fishrate = fakefish;
+    fishamplitude = 1.0;
+  } else {
+    if ( fishEOD(pause, fishrate, fishamplitude) )
+      return Failed;
+  }
   // adjust transdermal EOD:
   adjustGain( trace( LocalEODTrace[0] ),
 	      ( 1.0 + contrast1 + contrast2 ) * 1.1 * fishamplitude );
@@ -213,8 +220,6 @@ int ThreeFish::main( void )
     min(contrast1, contrast2)*fishamplitude );
 
   // delta f ranges:
-  cerr << "Deltafs: " <<  deltaf1min << "," << deltaf1max << "\t" <<  deltaf1min << "," << deltaf1max << endl;
-
   RangeLoop dfrange1;  
   dfrange1.set( deltaf1min, deltaf1max, deltaf1step, 1, 1, 1 );
   dfrange1.setIncrement( increment );
@@ -284,8 +289,6 @@ int ThreeFish::main( void )
   for ( dfrange1.reset(); ! dfrange1 && softStop() == 0; ++dfrange1 ) {
     for ( dfrange2.reset(); ! dfrange2 && softStop() == 0; ++dfrange2 ) {
       // stimulus:
-      cerr << *dfrange1 << endl;
-      cerr << *dfrange2 << endl;
       if ( releods )
         deltaf1 = *dfrange1 * fishrate;
       else {
@@ -338,14 +341,13 @@ int ThreeFish::main( void )
       fish2.description()["Frequency"].addFlags( OutData::Mutable );
       fish2.description()["DeltaF"].addFlags( OutData::Mutable );
       fish2.description()["Duration"].addFlags( OutData::Mutable );
-      cerr << "Stimulus: " <<  deltaf1 << "\t" << deltaf2 << endl;
       OutData signal( fish1 );
       signal += fish2;
       signal.setDelay( before );
       signal.clearError();
 
       // stimulus intensity:
-      double intensity = (contrast1+contrast2) * fishamplitude;
+      double intensity = (contrast1 + contrast2) * fishamplitude;
       signal.setIntensity( intensity );
       
       // message: 
