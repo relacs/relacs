@@ -38,6 +38,7 @@ ThreeFish::ThreeFish( void )
   addBoolean( "relativeeods", "stimulus frequencies are given relative to the fish's eodf", true );
   addBoolean( "absfreqs", "stimulus frequencies are given as absolute frequencies", true ).setActivation( "relativeeods", "false" );
   addNumber( "fakefish", "Assume a fish with frequency", 0.0, 0.0, 2000.0, 10.0, "Hz" ).setFlags( 1 );
+  addSelection( "amplsel", "Stimulus amplitudes are relative to the fish amplitude or absolute", "contrast|absolute" );
 
   addNumber( "duration1", "Duration of signal", 1.0, 0.01, 1000.0, 0.01, "seconds", "ms" );
   addNumber( "deltaf1min", "Minimum delta f (beat frequency) of first fish", 0.0, -100.0, 100.0, 0.01, "EODf" ).setActivation( "relativeeods", "true" );
@@ -49,7 +50,8 @@ ThreeFish::ThreeFish( void )
   addNumber( "freq1min", "Minimum frequency of first fish", 10.0, 0.0, 5000.0, 0.01, "Hz" ).setActivation( "relativeeods", "false" ).addActivation( "absfreqs", "true" );
   addNumber( "freq1max", "Maximum frequency of first fish", 20, 0.0, 5000.0, 0.01, "Hz" ).setActivation( "relativeeods", "false" ).addActivation( "absfreqs", "true" );
   addNumber( "freq1step", "Increment frequency of first fish", 10, 0.0, 500.0, 0.01, "Hz" ).setActivation( "relativeeods", "false" ).addActivation( "absfreqs", "true" );
-  addNumber( "contrast1", "Contrast of first fish", 0.1, 0.0, 1.0, 0.01, "", "%" );
+  addNumber( "contrast1", "Contrast of first fish", 0.1, 0.0, 1.0, 0.01, "", "%" ).setActivation( "amplsel", "contrast");
+  addNumber( "amplitude1", "Amplitude of first fish", 1.0, 0.0, 100.0, 0.1, "", "mV" ).setActivation( "amplsel", "absolute");
 
   addNumber( "duration2", "Duration of second fish", 1.0, 0.01, 1000.0, 0.01, "seconds", "ms" );
   addNumber( "delay2", "Delay of second fish", 0.0, 0.0, 1000.0, 0.01, "seconds", "ms" );
@@ -63,7 +65,9 @@ ThreeFish::ThreeFish( void )
   addNumber( "freq2max", "Maximum frequency of second fish", 20, 0.0, 5000.0, 0.01, "Hz" ).setActivation( "relativeeods", "false" ).addActivation( "absfreqs", "true" );
   addNumber( "freq2step", "Increment frequency of second fish", 10, 0.0, 500.0, 0.01, "Hz" ).setActivation( "relativeeods", "false" ).addActivation( "absfreqs", "true" );
   
-  addNumber( "contrast2", "Contrast of second fish", 0.1, 0.0, 1.0, 0.01, "", "%" );
+  addNumber( "contrast2", "Contrast of second fish", 0.1, 0.0, 1.0, 0.01, "", "%" ).setActivation( "amplsel", "contrast");
+  addNumber( "amplitude2", "Amplitude of second fish", 1.0, 0.0, 100.0, 0.1, "", "mV" ).setActivation( "amplsel", "absolute");
+
   addSelection( "shuffle", "Order of delta f's", RangeLoop::sequenceStrings() );
   addInteger( "increment", "Initial increment for delta f's", -1, -1000, 1000, 1 );
   addInteger( "repeats", "Repeats", 10, 1, 100000, 2 );
@@ -133,6 +137,7 @@ int ThreeFish::main( void )
   bool releods = boolean( "relativeeods" );
   bool absfreqs = boolean( "absfreqs" );
   double fakefish = number( "fakefish" );
+  string amplsel = text( "amplsel" );
 
   double deltaf1min, deltaf1max, deltaf1step;
   double deltaf2min, deltaf2max, deltaf2step;
@@ -166,10 +171,11 @@ int ThreeFish::main( void )
   }  
   double duration1 = number( "duration1" );
   double contrast1 = number( "contrast1" );
-
+  double amplitude1 = number( "amplitude1" );
   double duration2 = number( "duration2" );
   double delay2 = number( "delay2" );
   double contrast2 = number( "contrast2" );
+  double amplitude2 = number( "amplitude2" );
 
   RangeLoop::Sequence deltafshuffle = RangeLoop::Sequence( index( "shuffle" ) );
   int increment = integer( "increment" );
@@ -213,12 +219,15 @@ int ThreeFish::main( void )
     if ( fishEOD(pause, fishrate, fishamplitude) )
       return Failed;
   }
+  
   // adjust transdermal EOD:
-  adjustGain( trace( LocalEODTrace[0] ),
-	      ( 1.0 + contrast1 + contrast2 ) * 1.1 * fishamplitude );
-  detectorEventsOpts( LocalBeatPeakEvents[0] ).setNumber( "threshold",
-    min(contrast1, contrast2)*fishamplitude );
-
+  if ( amplsel == "contrast" ) {
+    adjustGain( trace( LocalEODTrace[0] ),
+	              ( 1.0 + contrast1 + contrast2 ) * 1.1 * fishamplitude );
+    detectorEventsOpts( LocalBeatPeakEvents[0] ).setNumber( "threshold",
+                        min(contrast1, contrast2)*fishamplitude );
+  }
+  
   // delta f ranges:
   RangeLoop dfrange1;  
   dfrange1.set( deltaf1min, deltaf1max, deltaf1step, 1, 1, 1 );
@@ -304,7 +313,10 @@ int ThreeFish::main( void )
 	      stop();
 	      return Failed;
       }
-      fish1 *= contrast1/(contrast1 + contrast2);
+      if ( amplsel == "contrast" )
+        fish1 *= contrast1 / (contrast1 + contrast2);
+      else
+        fish1 *= amplitude1 / (amplitude1 + amplitude2);
       fish1.description().insertNumber( "DeltaF", "Phase", deltaf1, "Hz" );
       fish1.description().insertNumber( "Contrast", "Frequency", 100.0*contrast1, "%" );
       fish1.description()["Frequency"].addFlags( OutData::Mutable );
@@ -326,7 +338,11 @@ int ThreeFish::main( void )
 	      stop();
 	      return Failed;
       }
-      fish2 *= contrast2/(contrast1 + contrast2);
+
+      if ( amplsel == "contrast" )
+        fish2 *= contrast2 / (contrast1 + contrast2);
+      else
+        fish2 *=  amplitude2 / (amplitude1 + amplitude2);
       double offs = delay2;
       if ( fabs( deltaf1 ) > 1e-6 && offs > 1e-6 ) {
 	      int n = ::round( offs * deltaf1 );
@@ -347,7 +363,12 @@ int ThreeFish::main( void )
       signal.clearError();
 
       // stimulus intensity:
-      double intensity = (contrast1 + contrast2) * fishamplitude;
+      double intensity = 1.0;
+      if ( amplsel == "contrast" )
+        intensity = (contrast1 + contrast2) * fishamplitude;
+      else
+        intensity = amplitude1 + amplitude2;
+
       signal.setIntensity( intensity );
       
       // message: 
