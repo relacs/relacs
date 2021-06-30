@@ -373,6 +373,8 @@ bool YMaze::nextTrialCondition(TrialCondition &tc) {
   bool valid = nextStimulusConditions(sc);
   if ( !valid )
     return false;
+  
+  tc.stimCondition = sc;
   currentCondition = tc;
   return true;
 }
