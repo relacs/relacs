@@ -560,7 +560,7 @@ void SaveFiles::writeStimulus( void )
   // extract mutable parameter from stimulus description to a subsection of stimuliref:
   deque< Options > stimuliref( Stimuli.size() );
   for ( unsigned int j=0; j<Stimuli.size(); j++ ) {
-    Options &mutables = stimuliref[j].newSection( "parameter" );
+    Options &mutables = stimuliref[j].newSection( Stimulus.size()>1?"parameter-"+Stimuli[j].traceName():"parameter" );
     extractMutables( Stimuli[j].description(), mutables );
     stimuliref[j].clearSections();
     // XXX once OutData does not have idents any more, the following lines can be erased:
