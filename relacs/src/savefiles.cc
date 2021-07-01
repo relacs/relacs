@@ -560,7 +560,7 @@ void SaveFiles::writeStimulus( void )
   // extract mutable parameter from stimulus description to a subsection of stimuliref:
   deque< Options > stimuliref( Stimuli.size() );
   for ( unsigned int j=0; j<Stimuli.size(); j++ ) {
-    Options &mutables = stimuliref[j].newSection( Stimulus.size()>1?"parameter-"+Stimuli[j].traceName():"parameter" );
+    Options &mutables = stimuliref[j].newSection( Stimuli.size()>1?"parameter-"+Stimuli[j].traceName():"parameter" );
     extractMutables( Stimuli[j].description(), mutables );
     stimuliref[j].clearSections();
     // XXX once OutData does not have idents any more, the following lines can be erased:
@@ -2195,9 +2195,10 @@ void SaveFiles::NixFile::createStimulusTag( const std::string &tag_name, const O
   if ( !stimulus_features.empty() ) {
     createFeaturesForOptions( stimulus_features, "relacs_feature", "" );
   }
+
   std::string channel_prefix;
-  for ( size_t i = 0; i < stim_info.size(); ++i ) {
-    std::string channel_prefix = stim_info.size() == 1 ? "" : "Output" + Str(stim_info[i].channel()) + "_";
+  for ( size_t i = 0; i < stim_refs.size(); ++i ) {
+    std::string channel_prefix = stim_refs.size() == 1 ? "" : "Output" + Str(stim_info[i].channel()) + "_";
     // amplitude
     fname = channel_prefix + info.name + "_amplitude";
     funit = "";
@@ -2211,12 +2212,7 @@ void SaveFiles::NixFile::createStimulusTag( const std::string &tag_name, const O
     info.features[fname] = createFeature( info.stimulus_mtag, fname, "relacs.feature.amplitude",
 					  funit, "intensity", nix::LinkType::Indexed, nix::DataType::Double );
 
-    // additional stim_options
-    //createFeaturesForOptions( stim_info[i].description(), "relacs.feature.mutable", channel_prefix );
-  }
-  
-  for ( size_t i = 0; i < stim_refs.size(); ++i ) {
-    createFeaturesForOptions( stim_refs[i], "relacs.feature.mutable", "");
+    createFeaturesForOptions( stim_refs[i], "relacs.feature.mutable", channel_prefix);
   }
 }
 
