@@ -387,15 +387,13 @@ void YMaze::createStimuli( const TrialCondition &tc ) {
   outList.clear();
   double sampleInterval = 1./samplerate;
 
-  OutData zero( 1, sampleInterval );
-  zero[0] = 0.0;
   // rewarded stimulus
   OutData rwStim;
   rwStim.setTrace( armTraceMap[tc.mazeCondition.rewarded] );
   rwStim.setSampleInterval( sampleInterval );
   rwStim.sineWave( duration, rwStim.sampleInterval(), tc.stimCondition.rewardedFreq,
 		   0.0, 1.0, 0.0 );
-  rwStim.append( zero );
+  rwStim.back() = 0.0;
   rwStim.setIntensity( tc.stimCondition.rewardedAmplitude/2. );
   rwStim.description().addText( "RewardedType", "rewarded" ).addFlags( OutData::Mutable );
   rwStim.description().addText( "Arm", toString(tc.mazeCondition.rewarded) ).addFlags( OutData::Mutable );
@@ -408,7 +406,7 @@ void YMaze::createStimuli( const TrialCondition &tc ) {
     nrwStim.setTrace( armTraceMap[tc.mazeCondition.unrewarded] );
     nrwStim.setSampleInterval( sampleInterval );
     nrwStim.constWave( duration, nrwStim.sampleInterval(), 0.0 );
-    nrwStim.append( zero ); 
+    nrwStim.back() = 0.0; 
     nrwStim.setIntensity( 0.000001 );
     nrwStim.description().addText( "RewardedType", "unrewarded" ).addFlags( OutData::Mutable );
     nrwStim.description().addText( "Arm", toString(tc.mazeCondition.unrewarded) ).addFlags( OutData::Mutable );
@@ -418,7 +416,7 @@ void YMaze::createStimuli( const TrialCondition &tc ) {
     nrwStim.setSampleInterval( sampleInterval );
     nrwStim.sineWave( duration, nrwStim.sampleInterval(), tc.stimCondition.unrewardedFreq,
 		      0.0, 1.0 , 0.0 );
-    nrwStim.append( zero );
+    nrwStim.back() = 0.0;
     nrwStim.setIntensity( tc.stimCondition.unrewardedAmplitude/2. );
     nrwStim.description().addText( "RewardedType", "unrewarded" ).addFlags( OutData::Mutable );
     nrwStim.description().addText( "Arm", toString(tc.mazeCondition.unrewarded) ).addFlags( OutData::Mutable );
@@ -432,7 +430,7 @@ void YMaze::createStimuli( const TrialCondition &tc ) {
   ntrlStim.setTrace( armTraceMap[tc.mazeCondition.neutral] );
   ntrlStim.setSampleInterval( sampleInterval );
   ntrlStim.constWave( duration, ntrlStim.sampleInterval(), 0.0 );
-  ntrlStim.append( zero ); 
+  ntrlStim.back() = 0.0; 
   ntrlStim.setIntensity( 0.000001 );
   ntrlStim.description().addText( "RewardedType", "neutral" ).addFlags( OutData::Mutable );
   ntrlStim.description().addText( "Arm", toString(tc.mazeCondition.neutral) ).addFlags( OutData::Mutable );
