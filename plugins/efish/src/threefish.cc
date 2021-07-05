@@ -381,6 +381,10 @@ int ThreeFish::main( void )
       }
       else
 	signal = fish1;
+      signal.back() = 0.0;
+      signal.description().clearSections();
+      signal.description().addNumber( "EODf", fishrate, "Hz" );
+      signal.description()["EODf"].addFlags( OutData::Mutable );
       signal.setDelay( before );
       signal.clearError();
 
