@@ -36,25 +36,40 @@ namespace efish {
 /*!
 \class ThreeFish
 \brief [RePro] Beats of three fish
-\author Jan Benda
-\version 1.2 (Jun 16, 2021)
+\author Jan Benda, Jan Grewe
+\version 1.4 (Jul 05, 2021)
 \par Options
 - \c Stimulus
+    - \c eodmultiples=true: Stimulus frequencies in multiples of EODf (\c boolean)
+    - \c relfreqs=true: Stimulus frequencies relative to EODf (\c boolean)
+    - \c skipeodf=true: Skip stimulus frequencies at EODf multiples (\c boolean)
+    - \c fakefish=0Hz: Assume a fish with frequency (\c number)
+    - \c amplsel=contrast: Stimulus amplitudes are relative to the fish amplitude or absolute (\c string)
+    - \c shuffle=Up: Order of delta f's (\c string)
+    - \c increment=-1: Initial increment for delta f's (\c integer)
+    - \c repeats=10: Repeats (\c integer)
+    - \c pause=500ms: Pause between signals (\c number)
+- \c Fish 1
     - \c duration1=1000ms: Duration of signal (\c number)
     - \c deltaf1min=0EODf: Minimum delta f (beat frequency) of first fish (\c number)
     - \c deltaf1max=0.5EODf: Maximum delta f (beat frequency) of first fish (\c number)
     - \c deltaf1step=0.1EODf: Increment delta f (beat frequency) of first fish (\c number)
+    - \c deltaf1minhz=10Hz: Minimum delta f (beat frequency) of first fish (\c number)
+    - \c deltaf1maxhz=100Hz: Maximum delta f (beat frequency) of first fish (\c number)
+    - \c deltaf1stephz=10Hz: Increment delta f (beat frequency) of first fish (\c number)
     - \c contrast1=10%: Contrast of first fish (\c number)
+    - \c amplitude1=1mV: Amplitude of first fish (\c number)
+- \c Fish 2
     - \c duration2=1000ms: Duration of second fish (\c number)
-    - \c delay2=0ms: Offset of second fish (\c number)
+    - \c delay2=0ms: Delay of second fish (\c number)
     - \c deltaf2min=0EODf: Minimum delta f (beat frequency) of second fish (\c number)
     - \c deltaf2max=0.5EODf: Maximum delta f (beat frequency) of second fish (\c number)
     - \c deltaf2step=0.1EODf: Increment delta f (beat frequency) of second fish (\c number)
+    - \c deltaf2minhz=10Hz: Minimum delta f (beat frequency) of second fish (\c number)
+    - \c deltaf2maxhz=100Hz: Maximum delta f (beat frequency) of second fish (\c number)
+    - \c deltaf2stephz=10Hz: Increment delta f (beat frequency) of second fish (\c number)
     - \c contrast2=10%: Contrast of second fish (\c number)
-    - \c shuffle=Up: Order of delta f's (\c string)
-    - \c increment=-1: Initial increment for delta f's (\c integer)
-    - \c repeats=10: Repeats (\c integer)
-    - \c pause=100ms: Pause between signals (\c number)
+    - \c amplitude2=1mV: Amplitude of second fish (\c number)
 - \c Analysis
     - \c before=100ms: Spikes recorded before stimulus (\c number)
     - \c after=100ms: Spikes recorded after stimulus (\c number)
