@@ -43,9 +43,10 @@ ThreeFish::ThreeFish( void )
   addSelection( "shuffle", "Order of delta f's", RangeLoop::sequenceStrings() );
   addInteger( "increment", "Initial increment for delta f's", -1, -1000, 1000, 1 );
   addInteger( "repeats", "Repeats", 10, 1, 100000, 2 );
+  addNumber( "duration12", "Duration of stimulus segment with both fish", 1.0, 0.01, 10000.0, 0.01, "seconds", "ms" );
   addNumber( "pause", "Pause between signals", 0.5, 0.0, 1000.0, 0.01, "seconds", "ms" );
-  newSection( "Fish 1" );
-  addNumber( "duration1", "Duration of signal", 1.0, 0.01, 1000.0, 0.01, "seconds", "ms" );
+  newSection( "Fish &1" );
+  addNumber( "duration1", "Duration of first fish alone", 0.0, 0.0, 1000.0, 0.01, "seconds", "ms" );
   addNumber( "deltaf1min", "Minimum delta f (beat frequency) of first fish", 0.0, -100.0, 100.0, 0.01, "EODf" ).setActivation( "eodmultiples", "true" );
   addNumber( "deltaf1max", "Maximum delta f (beat frequency) of first fish", 0.5, -100.0, 100.0, 0.01, "EODf" ).setActivation( "eodmultiples", "true" );
   addNumber( "deltaf1step", "Increment delta f (beat frequency) of first fish", 0.1, 0.0, 100.0, 0.01, "EODf" ).setActivation( "eodmultiples", "true" );
@@ -54,9 +55,8 @@ ThreeFish::ThreeFish( void )
   addNumber( "deltaf1stephz", "Increment delta f (beat frequency) of first fish", 10, 0.0, 1000.0, 1.0, "Hz" ).setActivation( "eodmultiples", "false" );
   addNumber( "contrast1", "Contrast of first fish", 0.1, 0.0, 1.0, 0.01, "", "%" ).setActivation( "amplsel", "contrast");
   addNumber( "amplitude1", "Amplitude of first fish", 1.0, 0.0, 100.0, 0.1, "", "mV" ).setActivation( "amplsel", "absolute");
-  newSection( "Fish 2" );
-  addNumber( "duration2", "Duration of second fish", 1.0, 0.01, 1000.0, 0.01, "seconds", "ms" );
-  addNumber( "delay2", "Delay of second fish", 0.0, 0.0, 1000.0, 0.01, "seconds", "ms" );
+  newSection( "Fish &2" );
+  addNumber( "duration2", "Duration of second fish alone", 0.0, 0.0, 1000.0, 0.01, "seconds", "ms" );
   addNumber( "deltaf2min", "Minimum delta f (beat frequency) of second fish", 0.0, -100.0, 100.0, 0.01, "EODf" ).setActivation( "eodmultiples", "true" );
   addNumber( "deltaf2max", "Maximum delta f (beat frequency) of second fish", 0.5, -100.0, 100.0, 0.01, "EODf" ).setActivation( "eodmultiples", "true" );
   addNumber( "deltaf2step", "Increment delta f (beat frequency) of second fish", 0.1, 0.0, 100.0, 0.01, "EODf" ).setActivation( "eodmultiples", "true" );
@@ -100,20 +100,26 @@ int ThreeFish::fishEOD(double pause, double &rate, double &amplitude)
 }
 
 
-int ThreeFish::makeEOD(double fishrate, double freq, double duration,
-		       double phase, OutData &eod)
+int ThreeFish::makeEOD(OutData &eod, double fishrate, double freq, double duration,
+		       double phase, bool fullperiods)
 {
   if ( freq < 1.0e-8 ) {
     warning( "Stimulus frequency is negative!" );
     return 1;
   }
-  double deltaf = fabs( freq - fishrate * round(freq/fishrate));
-  if ( deltaf > 0.1 && fishrate > 1.0 ) {
-    duration = round(duration*deltaf) / deltaf;     // multiples of beat
-    duration = round(duration*fishrate) / fishrate; // multiples of EODf
+  double deltaf = freq - fishrate * round(freq/fishrate);
+  if ( fullperiods && fabs( deltaf ) > 0.1 && fishrate > 1.0 ) {
+    int p = round(duration*fabs(deltaf));
+    if ( p < 1 )
+      p = 1;
+    duration = p / fabs(deltaf);     // multiples of beat
   }
   eod.setTrace( GlobalEField );
   eod.sineWave( duration, eod.minSampleInterval(), freq, phase );
+  eod.description().insertNumber( "DeltaF", "Phase", deltaf, "Hz" );
+  eod.description()["DeltaF"].addFlags( OutData::Mutable );
+  eod.description()["Frequency"].addFlags( OutData::Mutable );
+  eod.description()["Duration"].addFlags( OutData::Mutable );
   return 0;
 }
 
@@ -126,6 +132,7 @@ int ThreeFish::main( void )
   bool skipeodf = boolean( "skipeodf" );
   double fakefish = number( "fakefish" );
   string amplsel = text( "amplsel" );
+  double duration12 = number( "duration12" );
 
   double deltaf1min, deltaf1max, deltaf1step;
   double deltaf2min, deltaf2max, deltaf2step;
@@ -150,7 +157,6 @@ int ThreeFish::main( void )
   double contrast1 = number( "contrast1" );
   double amplitude1 = number( "amplitude1" );
   double duration2 = number( "duration2" );
-  double delay2 = number( "delay2" );
   double contrast2 = number( "contrast2" );
   double amplitude2 = number( "amplitude2" );
 
@@ -161,6 +167,8 @@ int ThreeFish::main( void )
   double before = number( "before" );
   double after = number( "after" );
   double sigma = number( "sigma" );
+
+  double duration = duration1 + duration2 + duration12;
 
   // check EODs:
   if ( LocalEODTrace[0] < 0 || LocalEODEvents[0] < 0 ) {
@@ -173,13 +181,13 @@ int ThreeFish::main( void )
     pause = after;
   }
 
-  if ( delay2 + duration2 > duration1 ) {
-    warning( "Signal of second fish too long!", 4.0 );
-    duration2 = duration1 - delay2;
+  if ( duration < 0.001 ) {
+    warning( "No duration for signal set!", 4.0 );
+    return Failed;
   }
 
   // plot trace:
-  tracePlotSignal( duration1, 0.0 );
+  tracePlotSignal( duration, 0.0 );
 
   // clear output lines:
   writeZero( GlobalAMEField );
@@ -222,7 +230,7 @@ int ThreeFish::main( void )
   vector< MapD > amtraces;
   amtraces.reserve( repeats );
   EventList spikes;
-  SampleDataD spikerate( -before, duration1+after, 0.0005 );
+  SampleDataD spikerate( -before, duration+after, 0.0005 );
   double maxrate = 100.0;
       
   // plot:
@@ -238,8 +246,8 @@ int ThreeFish::main( void )
   P[0].setXLabelPos( 0.0, Plot::Screen, 0.0, Plot::FirstAxis, 
 		     Plot::Left, 0.0 );
   P[0].setXTics();
-  if ( duration1 <= 1.0 )
-    P[0].setXRange( 0.0, duration1 );
+  if ( duration <= 1.0 )
+    P[0].setXRange( 0.0, duration );
   else
     P[0].setXRange( 0.0, 1.0 );
   P[0].setYLabel( "AM [" + trace( LocalEODTrace[0] ).unit() + "]" );
@@ -262,8 +270,8 @@ int ThreeFish::main( void )
   P[1].setYRange( 0.0, 100.0 );
   P[1].setYTics( );
   P[1].clear();
-  if ( duration1 <= 1.0 )
-    P[1].setXRange( 0.0, duration1 );
+  if ( duration <= 1.0 )
+    P[1].setXRange( 0.0, duration );
   else
     P[1].setXRange( 0.0, 1.0 );
   P.setCommonXRange( 0, 1 );
@@ -274,7 +282,8 @@ int ThreeFish::main( void )
 
   for ( dfrange2.reset(); ! dfrange2 && softStop() == 0; ++dfrange2 ) {
     for ( dfrange1.reset(); ! dfrange1 && softStop() == 0; ++dfrange1 ) {
-      // stimulus:
+      OutData signal;
+      // fish 1:
       deltaf1 = *dfrange1;
       if ( eodmultiples )
         deltaf1 *= fishrate;
@@ -285,23 +294,24 @@ int ThreeFish::main( void )
 	deltaf1 -= fishrate;
       if ( skipeodf && fabs( freq1 - fishrate * round(freq1/fishrate) ) < 0.5 )
 	continue;
-      OutData fish1;
-      if ( makeEOD(fishrate, freq1, duration1, 0.0, fish1) ) {
-	stop();
-	return Failed;
+      if ( duration1 > 0.001) {
+	OutData fish1;
+	if ( makeEOD(fish1, fishrate, freq1, duration1, 0.0, true) ) {
+	  stop();
+	  return Failed;
+	}
+	if ( amplsel == "contrast" ) {
+	  fish1 *= contrast1 / (contrast1 + contrast2);
+	  fish1.description().insertNumber( "Contrast", "Frequency", 100.0*contrast1, "%" );
+	}
+	else {
+	  fish1 *= amplitude1 / (amplitude1 + amplitude2);
+	  fish1.description().insertNumber( "Amplitude", "Frequency", amplitude1, "mV" );
+	}
+	fish1.description().setName("fish1alone");
+	signal = fish1;
       }
-      if ( amplsel == "contrast" )
-        fish1 *= contrast1 / (contrast1 + contrast2);
-      else
-        fish1 *= amplitude1 / (amplitude1 + amplitude2);
-      if ( relfreqs ) {
-	fish1.description().insertNumber( "DeltaF", "Phase", deltaf1, "Hz" );
-	fish1.description()["DeltaF"].addFlags( OutData::Mutable );
-      }
-      fish1.description().insertNumber( "Contrast", "Frequency", 100.0*contrast1, "%" );
-      fish1.description()["Frequency"].addFlags( OutData::Mutable );
-      fish1.description()["Duration"].addFlags( OutData::Mutable );
-
+      // fish 2:
       deltaf2 = *dfrange2;
       if ( eodmultiples )
         deltaf2 *= fishrate;
@@ -312,34 +322,65 @@ int ThreeFish::main( void )
 	deltaf2 -= fishrate;
       if ( skipeodf && fabs( freq2 - fishrate * round(freq2/fishrate) ) < 0.5 )
 	continue;
-      OutData fish2;
-      if ( makeEOD(fishrate, freq2, duration2, 0.25*6.28318, fish2) ) {
+      if ( duration2 > 0.001) {
+	OutData fish2;
+	if ( makeEOD(fish2, fishrate, freq2, duration2, 0.0, true) ) {
+	  stop();
+	  return Failed;
+	}
+	if ( amplsel == "contrast" ) {
+	  fish2 *= contrast2 / (contrast1 + contrast2);
+	  fish2.description().insertNumber( "Contrast", "Frequency", 100.0*contrast2, "%" );
+	}
+	else {
+	  fish2 *=  amplitude2 / (amplitude1 + amplitude2);
+	  fish2.description().insertNumber( "Amplitude", "Frequency", amplitude2, "mV" );
+	}
+	fish2.description().setName("fish2alone");
+	if ( signal.size() > 0 ) {
+	  fish2.description()["StartTime"].addFlags( OutData::Mutable );
+	  signal.append( fish2 );
+	}
+	else
+	  signal = fish2;
+      }
+      // fish 1+2:
+      OutData fish1;
+      if ( makeEOD(fish1, fishrate, freq1, duration12, 0.0, true) ) {
 	stop();
 	return Failed;
       }
-
-      if ( amplsel == "contrast" )
-        fish2 *= contrast2 / (contrast1 + contrast2);
-      else
-        fish2 *=  amplitude2 / (amplitude1 + amplitude2);
-      double offs = delay2;
-      if ( fabs( deltaf1 ) > 1e-6 && offs > 1e-6 ) {
-	int n = ::round( offs * deltaf1 );
-	if ( n < 1 )
-	  n = 1;
-	offs = n / deltaf1;
+      if ( amplsel == "contrast" ) {
+	fish1 *= contrast1 / (contrast1 + contrast2);
+	fish1.description().insertNumber( "Contrast", "Frequency", 100.0*contrast1, "%" );
       }
-      fish2.setOffset( offs );
+      else {
+	fish1 *= amplitude1 / (amplitude1 + amplitude2);
+	fish1.description().insertNumber( "Amplitude", "Frequency", amplitude1, "mV" );
+      }
+      fish1.description().setName("fish1");
+      OutData fish2;
+      if ( makeEOD(fish2, fishrate, freq2, fish1.duration(), 0.25*6.28318, false) ) {
+	stop();
+	return Failed;
+      }
+      if ( amplsel == "contrast" ) {
+	fish2 *= contrast2 / (contrast1 + contrast2);
+	fish2.description().insertNumber( "Contrast", "Frequency", 100.0*contrast2, "%" );
+      }
+      else {
+	fish2 *=  amplitude2 / (amplitude1 + amplitude2);
+	fish2.description().insertNumber( "Amplitude", "Frequency", amplitude2, "mV" );
+      }
       fish2.description().setName("fish2");
-      if ( relfreqs ) {
-	fish2.description().insertNumber( "DeltaF", "Phase", deltaf2, "Hz" );
-	fish2.description()["DeltaF"].addFlags( OutData::Mutable );
+      // combine fish and add to signal:
+      fish1 += fish2;
+      if ( signal.size() > 0 ) {
+	fish1.description()["StartTime"].addFlags( OutData::Mutable );
+	signal.append( fish1 );
       }
-      fish2.description().insertNumber( "Contrast", "Frequency", 100.0*contrast2, "%" );
-      fish2.description()["Frequency"].addFlags( OutData::Mutable );
-      fish2.description()["Duration"].addFlags( OutData::Mutable );
-      OutData signal( fish1 );
-      signal += fish2;
+      else
+	signal = fish1;
       signal.setDelay( before );
       signal.clearError();
 
@@ -372,7 +413,7 @@ int ThreeFish::main( void )
       timeStamp();
 
       // analyze:
-      analyze( amtraces, spikes, spikerate, maxrate, duration1, before, after, sigma );
+      analyze( amtraces, spikes, spikerate, maxrate, duration, before, after, sigma );
 
       plot( amtraces, spikes, spikerate, maxrate, repeats );
 

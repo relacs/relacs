@@ -48,9 +48,10 @@ namespace efish {
     - \c shuffle=Up: Order of delta f's (\c string)
     - \c increment=-1: Initial increment for delta f's (\c integer)
     - \c repeats=10: Repeats (\c integer)
+    - \c duration12=1000ms: Duration of stimulus segment with both fish (\c number)
     - \c pause=500ms: Pause between signals (\c number)
 - \c Fish 1
-    - \c duration1=1000ms: Duration of signal (\c number)
+    - \c duration1=0ms: Duration of first fish alone (\c number)
     - \c deltaf1min=0EODf: Minimum delta f (beat frequency) of first fish (\c number)
     - \c deltaf1max=0.5EODf: Maximum delta f (beat frequency) of first fish (\c number)
     - \c deltaf1step=0.1EODf: Increment delta f (beat frequency) of first fish (\c number)
@@ -60,7 +61,7 @@ namespace efish {
     - \c contrast1=10%: Contrast of first fish (\c number)
     - \c amplitude1=1mV: Amplitude of first fish (\c number)
 - \c Fish 2
-    - \c duration2=1000ms: Duration of second fish (\c number)
+    - \c duration2=0ms: Duration of second fish alone (\c number)
     - \c delay2=0ms: Delay of second fish (\c number)
     - \c deltaf2min=0EODf: Minimum delta f (beat frequency) of second fish (\c number)
     - \c deltaf2max=0.5EODf: Maximum delta f (beat frequency) of second fish (\c number)
@@ -94,8 +95,8 @@ public:
 protected:
 
   int fishEOD(double pause, double &rate, double &amplitude);
-  int makeEOD(double fishrate, double deltaf, double duration,
-	      double phase, OutData &eod);
+  int makeEOD(OutData &eod, double fishrate, double deltaf, double duration,
+	      double phase, bool fullperiods);
   void plot( const vector< MapD > &amtraces, const EventList &spikes,
 	     const SampleDataD &spikerate, double maxrate, int repeats );
   void analyze( vector< MapD > &amtraces, EventList &spikes,
