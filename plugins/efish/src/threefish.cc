@@ -215,12 +215,12 @@ int ThreeFish::main( void )
   
   // delta f ranges:
   RangeLoop dfrange1;  
-  dfrange1.set( deltaf1min, deltaf1max, deltaf1step, 1, 1, repeats );
+  dfrange1.set( deltaf1min, deltaf1max, deltaf1step, 1, 1, 1 );
   dfrange1.setIncrement( increment );
   dfrange1.setSequence( deltafshuffle );
 
   RangeLoop dfrange2;  
-  dfrange2.set( deltaf2min, deltaf2max, deltaf2step, 1, 1, 1 );
+  dfrange2.set( deltaf2min, deltaf2max, deltaf2step, 1, 1, repeats );
   dfrange2.setIncrement( increment );
   dfrange2.setSequence( deltafshuffle );
 
@@ -280,8 +280,8 @@ int ThreeFish::main( void )
 
   timeStamp();
 
-  for ( dfrange2.reset(); ! dfrange2 && softStop() == 0; ++dfrange2 ) {
-    for ( dfrange1.reset(); ! dfrange1 && softStop() == 0; ++dfrange1 ) {
+  for ( dfrange1.reset(); ! dfrange1 && softStop() == 0; ++dfrange1 ) {
+    for ( dfrange2.reset(); ! dfrange2 && softStop() == 0; ++dfrange2 ) {
       OutData signal;
       // fish 1:
       deltaf1 = *dfrange1;
@@ -404,7 +404,7 @@ int ThreeFish::main( void )
       s += "  Contrast1: <b>" + Str( 100.0 * contrast1, 0, 5, 'g' ) + "%</b>";
       s += "  Delta F2: <b>" + Str( deltaf2, 0, 1, 'f' ) + "Hz</b>";
       s += "  Contrast2: <b>" + Str( 100.0 * contrast2, 0, 5, 'g' ) + "%</b>";
-      s += "  Loop: <b>" + Str( dfrange1.count() ) + "</b>";
+      s += "  Loop: <b>" + Str( dfrange2.count() + 1 ) + "</b>";
       message( s );
 
       write( signal );
@@ -423,7 +423,7 @@ int ThreeFish::main( void )
 
       plot( amtraces, spikes, spikerate, maxrate, repeats );
 
-      if ( dfrange1.lastSingle() ) {
+      if ( dfrange2.lastSingle() ) {
 	save( fishrate, fishamplitude, deltaf1, deltaf2,
 	      spikes, spikerate, amtraces );
 	amtraces.clear();
