@@ -65,11 +65,13 @@ double EigenmanniaEOD::phaseShift( const double eodf, double threshold, bool ris
   double duration = 3. * eod_period;
   SampleDataD eod = getEOD( eodf, duration ); 
 
-  if ( threshold < min(eod) ) {
-    threshold = min(eod) + std::numeric_limits<double>::epsilon();
-  } else if (threshold > max(eod) ) {
-    threshold = max(eod) - std::numeric_limits<double>::epsilon() ;
-  }  
+  double eod_min = min(eod);
+  double eod_max = max(eod);
+  if ( threshold < eod_min ) {
+    threshold = eod_min + 2 * std::numeric_limits<double>::epsilon();
+  } else if (threshold > eod_max ) {
+    threshold = eod_max - 2 * std::numeric_limits<double>::epsilon() ;
+  }
 
   EventData crossings;
   if ( rising_flank ) {
@@ -77,9 +79,11 @@ double EigenmanniaEOD::phaseShift( const double eodf, double threshold, bool ris
   } else {
     falling( eod, crossings, threshold );
   }
-
+  cerr << crossings.size() << endl;
+  eod.save("eod_stub.dat");
   double shift = 0.0;
   if ( crossings.size() > 0 ) {
+    cerr << crossings[0] << "hooray" << endl;
     shift = 2 * pi() * (crossings[0] - sampling_interval)/eod_period ;
   } else {
     cerr << "EigenmanniaEOD: invalid threshold, could not figure out the phase shift!\n";
@@ -106,44 +110,56 @@ EODModel EigenChirp::eodModel( void ) const {
   return this->eod_model;
 }
 
+bool EigenChirp::createStartStopSignals( double eodf, double &threshold, SampleDataD &start_eod,
+                                         SampleDataD &stop_eod, SampleDataD &middle_eod ) const{
+  EigenmanniaEOD eod( this->eod_model, this->sampling_interval );
+  double eod_period = 1./eodf;
+  double duration = 3. * eod_period;
+  SampleDataD eod_signal = eod.getEOD( eodf, duration );
+  
+  double eod_min = min(eod_signal);
+  double eod_max = max(eod_signal);
+  double ystep = 0.125 * (eod_max - eod_min) * this->sampling_interval / eod_period;
+  if ( threshold < eod_min ) {
+    threshold = eod_min + ystep;
+  } else if (threshold > eod_max ) {
+    threshold = eod_max - ystep;
+  }
+
+  EventData crossings;
+  falling( eod_signal, crossings, threshold );
+  
+  eod_signal.copy( 0.0, crossings[0], start_eod );
+  eod_signal.copy( crossings[0], eod_period, stop_eod );
+  eod_signal.copy( crossings[0], crossings[0] + eod_period, middle_eod );
+  
+  threshold = start_eod.back();
+  return true;
+}
+
 //************************************************************************************
 //********                         Type A Chirp                                *******
 TypeAChirp::TypeAChirp( const double sampling_interval) :
   EigenChirp( sampling_interval ){}
     
 TypeAChirp::TypeAChirp( const double sampling_interval, const EODModel eod_model ):
-    EigenChirp( sampling_interval, eod_model){}
+    EigenChirp( sampling_interval, eod_model ){}
 
+SampleDataD TypeAChirp::getWaveform( const double eodf, const double chirp_duration, SignalContent signal, bool inverted) const {
+  /*
+  Type A waveform consists of a initial (partial) eod and an interruption that can be either at the bottom if signal content is Full or Ampullary, Or at the zero line if Signal content is DC ONLY 
+  */
+  double threshold = signal == SignalContent::FULL ? -10.0 : 0.0;
+  threshold *= inverted ? -1 : 1; 
 
-SampleDataD TypeAChirp::getWaveform( const double eodf, const double chirp_duration, SignalContent signal ) const {
-  EigenmanniaEOD eod( this->eod_model, this->sampling_interval );
-  double eod_period = 1./eodf;
-  double begin_eod_duration = eod_period;
-  double end_eod_duration = eod_period;
-  
-  double start_shift = eod.phaseShift( eodf );
-  double stop_shift = 0.0;
-  if (signal == SignalContent::FULL) {
-    stop_shift = eod.phaseShift( eodf, -10.);
-    cerr << "TypeA: " << chirp_duration << " shift:" << stop_shift << endl;
-    double delta_phi = stop_shift - start_shift; 
-    begin_eod_duration = (delta_phi/(2*eod.pi()) * eod_period);
-    end_eod_duration = eod_period + (2*eod.pi() - stop_shift + start_shift)/(2*eod.pi()) * eod_period;
-  } else if ( signal == SignalContent::NO_DC ) {
-    stop_shift = start_shift + 2 * eod.pi();
-  }
-  cerr << "Get start eod: " << begin_eod_duration << endl;
-  SampleDataD start_eod = eod.getEOD( eodf, begin_eod_duration, start_shift, false );
-  cerr << "Get end eod: " << end_eod_duration << " stop shift" << stop_shift << endl;
-  SampleDataD end_eod = eod.getEOD( eodf, end_eod_duration, stop_shift, false );
-  
-  double offset = signal == SignalContent::FULL ? start_eod[start_eod.size() - 1] : 0.0; 
-  SampleDataD chirp_data( static_cast<int>( floor( chirp_duration / sampling_interval ) ), 0.0, sampling_interval, offset );
-
-  SampleDataD result = start_eod;
+  SampleDataD start, stop, middle;
+  createStartStopSignals(eodf, threshold, start, stop, middle);
+  SampleDataD chirp_data( static_cast<int>( floor( chirp_duration / sampling_interval ) ), 0.0,
+                          sampling_interval, threshold );
+  SampleDataD result = start;
   result = result.append( chirp_data );
-  result = result.append( end_eod ); 
-
+  result = result.append( stop ); 
+  // result.save("typea_chrip.dat");
   return result;
 }
 
@@ -157,41 +173,25 @@ TypeBChirp::TypeBChirp( const double sampling_interval, const EODModel eod_model
     EigenChirp( sampling_interval, eod_model ) {}
 
 
-SampleDataD TypeBChirp::getWaveform( const double eodf, const double chirp_duration, SignalContent signal ) const {
-  EigenmanniaEOD eod( this->eod_model, this->sampling_interval );
+SampleDataD TypeBChirp::getWaveform( const double eodf, const double chirp_duration, SignalContent signal, bool inverted ) const {
+  double threshold = signal == SignalContent::FULL ? -10.0 : 0.0;
+  threshold *= inverted ? -1 : 1; 
+  
   double eod_period = 1./eodf;
   int interruption_count = static_cast<int>( ceil(chirp_duration/(2*eod_period)) );
-  double begin_eod_duration = eod_period;
-  double end_eod_duration = eod_period;
-  
-  double start_shift = eod.phaseShift( eodf );
-  double stop_shift = 0.0;
-  if (signal == SignalContent::FULL) {
-    stop_shift = eod.phaseShift( eodf, -10.);
-    double delta_phi = stop_shift - start_shift; 
-    begin_eod_duration = (delta_phi/(2*eod.pi()) * eod_period);  
-    end_eod_duration = eod_period + (2*eod.pi() - stop_shift + start_shift)/(2*eod.pi()) * eod_period;
-  } else if ( signal == SignalContent::NO_DC ) {
-    stop_shift = start_shift + 2 * eod.pi();
+
+  SampleDataD start, stop, middle;
+  createStartStopSignals(eodf, threshold, start, stop, middle);
+  SampleDataD chirp_data( static_cast<int>( floor( eod_period / sampling_interval ) ), 0.0,
+                          sampling_interval, threshold );
+  SampleDataD result = start;
+  result = result.append( chirp_data );
+  for ( int i =0; i < interruption_count; ++i) {
+    result.append( middle );
+    result.append( chirp_data );
   }
-  
-  SampleDataD start_eod = eod.getEOD( eodf, begin_eod_duration, start_shift, false );
-  double offset = signal == SignalContent::FULL ? start_eod[start_eod.size() - 1] : 0.0; 
-  SampleDataD end_eod = eod.getEOD( eodf, end_eod_duration, stop_shift, false );
-  SampleDataD intermediate_eod = eod.getEOD( eodf, eod_period, stop_shift, false );  
-  SampleDataD interruption_data( static_cast<int>( floor( eod_period / sampling_interval ) ), 0.0, sampling_interval, offset);
-  
-  SampleDataD result = start_eod;
-  for ( int i = 0; i < interruption_count; ++i ) {
-    for ( int j = 0; j < interruption_data.size(); ++j) {
-      result.push(interruption_data[j]);
-    }
-    if (i < interruption_count - 1) {
-      for ( int j = 0; j < intermediate_eod.size(); ++j)
-          result.push(intermediate_eod[j]);    
-    }
-  }  
-  result = result.append(end_eod);
+  result = result.append( stop ); 
+  result.save("typeb_chrip.dat");
   return result;
 }
 

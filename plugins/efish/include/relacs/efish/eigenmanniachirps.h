@@ -70,8 +70,10 @@ public:
   EigenChirp( const double sampling_interval );
   EigenChirp( const double sampling_interval, const EODModel model );
 
-  virtual SampleDataD getWaveform( const double eodf, const double chirp_duration, SignalContent signal ) const = 0;
+  virtual SampleDataD getWaveform( const double eodf, const double chirp_duration, SignalContent signal, bool inverted=false ) const = 0;
   
+  bool createStartStopSignals( double eodf, double &threshold, SampleDataD &start_eod, SampleDataD &stop_eod, SampleDataD &middle_eod ) const;
+
   void eodModel( EODModel model );
   EODModel eodModel( void ) const;
   
@@ -87,7 +89,7 @@ public:
   TypeAChirp( const double sampling_interval );
   TypeAChirp( const double sampling_interval, const EODModel model );
 
-  SampleDataD getWaveform( const double eodf, const double chirp_duration, SignalContent signal ) const;
+  SampleDataD getWaveform( const double eodf, const double chirp_duration, SignalContent signal, bool inverted=false ) const;
   
 };
 
@@ -98,7 +100,7 @@ public:
   TypeBChirp( const double sampling_interval );
   TypeBChirp( const double sampling_interval, const EODModel model );
 
-  SampleDataD getWaveform( const double eodf, const double chirp_duration, SignalContent signal ) const;
+  SampleDataD getWaveform( const double eodf, const double chirp_duration, SignalContent signal, bool inverted=false ) const;
   
 };
 
