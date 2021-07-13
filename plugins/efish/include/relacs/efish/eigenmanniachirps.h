@@ -132,7 +132,7 @@ private:
   double pause;
   int repeats;
   
-  EODModel eod_model;
+  EODModel eod_model_type;
   ChirpType chirp_type;
   SignalContent signal_content;
 

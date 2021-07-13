@@ -264,7 +264,7 @@ bool EigenmanniaChirps::createStimulus( void ) {
   stimData.clear();  
   string ident = name.size() == 0 ? "Eigenmannia chirps" : name;
   double sender_eodf = eodf + deltaf;
-  EigenmanniaEOD eod( eod_model );
+  EigenmanniaEOD eod_model( eod_model_type );
   SampleDataD eod_waveform;
   SampleDataD first_eod_waveform;
   SampleDataD chirp_waveform;
@@ -278,17 +278,18 @@ bool EigenmanniaChirps::createStimulus( void ) {
   if ( chirp_count * chirp_duration_s >= stimulus_duration ) {
     return false;
   }
+  
   if ( chirp_type == ChirpType::TYPE_A ){
-    TypeAChirp chirp( sampling_interval, eod_model);
+    TypeAChirp chirp( sampling_interval, eod_model_type);
     chirp_waveform = chirp.getWaveform( sender_eodf, chirp_duration_s, signal_content );
   } else {
-    TypeBChirp chirp( sampling_interval, eod_model);
+    TypeBChirp chirp( sampling_interval, eod_model_type);
     chirp_waveform = chirp.getWaveform( sender_eodf, chirp_duration_s, signal_content );
   }
   
-  double shift = eod.phaseShift( sender_eodf );
-  first_eod_waveform = eod.getEOD( sender_eodf, chirp_delay, shift, false );
-  eod_waveform = eod.getEOD( sender_eodf, ici, shift, false );
+  double shift = eod_model.phaseShift( sender_eodf );
+  first_eod_waveform = eod_model.getEOD( sender_eodf, chirp_delay, shift, false );
+  eod_waveform = eod_model.getEOD( sender_eodf, ici, shift, false );
 
   SampleDataD temp = first_eod_waveform;
   std::vector<double> chirp_times(chirp_count, 0.0);
@@ -331,9 +332,9 @@ int EigenmanniaChirps::readOptions( void ) {
 
   string model_selection = text( "eodmodel" );
   if (model_selection == "sinewave") {
-    eod_model = EODModel::SINE;
+    eod_model_type = EODModel::SINE;
   } else {
-    eod_model = EODModel::REALISTIC;
+    eod_model_type = EODModel::REALISTIC;
   }
   
   string chirp_selection = text( "chirptype" );
