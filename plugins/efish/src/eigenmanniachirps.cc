@@ -211,7 +211,7 @@ EigenmanniaChirps::EigenmanniaChirps( void )
   newSection( "Chirps" );
   addSelection( "chirptype", "Type of chirp", "TypeA|TypeB" );
   addNumber( "chirpdelay", "Minimum time until the first chrip", 1.0, 0.0, 1000.0, 0.01, "s");
-  addNumber( "chirpduration", "Minimum chirp duration, is extended to integer multiple of EOD period", 0.01, 0.001, 0.5, 0.001, "s", "ms" );
+  addInteger( "chirpduration", "Chirp duration in multiple of EOD period", 1, 0, 1000, 1, "EOD" );
   addNumber( "chirprate", "Rate at which the fake fish generates chirps.", 1.0, 0.001, 100.0, 0.1, "Hz" );
   addSelection( "signaltype", "Type of signal, whether it drives all, only ampullary, or only tuberous pathways", "all|tuberous only|ampullary only" );
    
@@ -310,18 +310,19 @@ bool EigenmanniaChirps::createStimulus( void ) {
   SampleDataD chirp_waveform;
   int chirp_count = static_cast<int>( floor( stimulus_duration * chirp_rate ) );
   double ici = stimulus_duration / chirp_count;
-  if ( ici < chirp_duration ) {
+  double chirp_duration_s = chirp_duration * 1./sender_eodf;
+  if ( ici < chirp_duration_s ) {
     return false; 
   }
-  if ( chirp_count * chirp_duration >= stimulus_duration ) {
+  if ( chirp_count * chirp_duration_s >= stimulus_duration ) {
     return false;
   }
   if ( chirp_type == ChirpType::TYPE_A ){
     TypeAChirp chirp( sampling_interval, eod_model);
-    chirp_waveform = chirp.getWaveform( sender_eodf, chirp_duration, signal_content );
+    chirp_waveform = chirp.getWaveform( sender_eodf, chirp_duration_s, signal_content );
   } else {
     TypeBChirp chirp( sampling_interval, eod_model);
-    chirp_waveform = chirp.getWaveform( sender_eodf, chirp_duration, signal_content );
+    chirp_waveform = chirp.getWaveform( sender_eodf, chirp_duration_s, signal_content );
   }
   
   double shift = eod.phaseShift( sender_eodf );
@@ -358,7 +359,7 @@ void EigenmanniaChirps::readOptions( void ) {
   name = text( "name" );
   stimulus_duration = number( "duration", 0.0, "s" );
   deltaf = number( "deltaf", 0.0, "Hz" );
-  chirp_duration = number( "chirpduration", 0.0, "s" );
+  chirp_duration = integer( "chirpduration" );
   chirp_rate = number( "chirprate", 0.0, "Hz" );
   chirp_delay = number( "chirpdelay", 0.0, "s" );
   pause = number( "pause", 0.0, "s" );
@@ -422,7 +423,7 @@ int EigenmanniaChirps::main( void ) {
     s += "  Delta F: <b>" + Str( deltaf, 0, 1, 'f' ) + "Hz</b>";
     s += "  Stim F: <b>" + Str( eodf + deltaf, 0, 1, 'f' ) + "Hz</b>";
     s += "  SignalType: <b>" + toString( signal_content ) + "</b>";
-    s += "  Chirp duration: <b>" + Str( chirp_duration ) + "</b>";
+    s += "  Chirp duration: <b>" + Str( chirp_duration ) + "EODs</b>";
     message( s );
 
     write( stimData );

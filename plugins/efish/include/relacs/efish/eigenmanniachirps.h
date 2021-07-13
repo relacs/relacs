@@ -115,7 +115,7 @@ private:
   double chirp_rate;
   double chirp_delay;
   double eodf;
-  double chirp_duration;
+  int chirp_duration;
   double deltaf;
   double sampling_interval;
   double receiver_amplitude;
