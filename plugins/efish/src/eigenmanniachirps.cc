@@ -145,12 +145,11 @@ TypeAChirp::TypeAChirp( const double sampling_interval) :
 TypeAChirp::TypeAChirp( const double sampling_interval, const EODModel eod_model ):
     EigenChirp( sampling_interval, eod_model ){}
 
-SampleDataD TypeAChirp::getWaveform( const double eodf, const double chirp_duration, SignalContent signal, bool inverted) const {
+SampleDataD TypeAChirp::getWaveform( const double eodf, const double chirp_duration, SignalContent signal ) const {
   /*
   Type A waveform consists of a initial (partial) eod and an interruption that can be either at the bottom if signal content is Full or Ampullary, Or at the zero line if Signal content is DC ONLY 
   */
   double threshold = signal == SignalContent::FULL ? -10.0 : 0.0;
-  threshold *= inverted ? -1 : 1; 
 
   SampleDataD start, stop, middle;
   createStartStopSignals(eodf, threshold, start, stop, middle);
@@ -173,9 +172,8 @@ TypeBChirp::TypeBChirp( const double sampling_interval, const EODModel eod_model
     EigenChirp( sampling_interval, eod_model ) {}
 
 
-SampleDataD TypeBChirp::getWaveform( const double eodf, const double chirp_duration, SignalContent signal, bool inverted ) const {
+SampleDataD TypeBChirp::getWaveform( const double eodf, const double chirp_duration, SignalContent signal ) const {
   double threshold = signal == SignalContent::FULL ? -10.0 : 0.0;
-  threshold *= inverted ? -1 : 1; 
   
   double eod_period = 1./eodf;
   int interruption_count = static_cast<int>( ceil(chirp_duration/(2*eod_period)) );
@@ -206,6 +204,7 @@ EigenmanniaChirps::EigenmanniaChirps( void )
   addSelection( "eodmodel", "Model for EOD creation.", "sinewave|realistic" );
   addInteger( "repeats", "Number of repeated trials with the same conditions.", 10, 0, 100000, 2 ).setStyle( OptWidget::SpecialInfinite );
   addNumber( "pause", "Minimal pause between trials.", 0.5, 0.0, 1000., 0.01, "s" );
+  addBoolean( "inverted", "Flips the foreign signal upside down i.e. the fish is on the other side.", false );
   addNumber( "fakefish", "Fake a receiver fish with the given frequency, set to zero to use the real one", 0.0, 0., 1500., 10., "Hz" );
   
   newSection( "Beat parameter" );
@@ -260,6 +259,16 @@ string EigenmanniaChirps::toString( SignalContent content ) {
   return str;
 }
 
+string EigenmanniaChirps::toString( EODModel model ) {
+  string str;
+  if ( model == EODModel::REALISTIC ){
+    str = "realistic";
+  } else {
+    str = "sinewave";
+  }
+  return str;
+}
+
 bool EigenmanniaChirps::createStimulus( void ) {
   stimData.clear();  
   string ident = name.size() == 0 ? "Eigenmannia chirps" : name;
@@ -278,7 +287,7 @@ bool EigenmanniaChirps::createStimulus( void ) {
   if ( chirp_count * chirp_duration_s >= stimulus_duration ) {
     return false;
   }
-  
+
   if ( chirp_type == ChirpType::TYPE_A ){
     TypeAChirp chirp( sampling_interval, eod_model_type);
     chirp_waveform = chirp.getWaveform( sender_eodf, chirp_duration_s, signal_content );
@@ -287,26 +296,37 @@ bool EigenmanniaChirps::createStimulus( void ) {
     chirp_waveform = chirp.getWaveform( sender_eodf, chirp_duration_s, signal_content );
   }
   
-  double shift = eod_model.phaseShift( sender_eodf );
-  first_eod_waveform = eod_model.getEOD( sender_eodf, chirp_delay, shift, false );
-  eod_waveform = eod_model.getEOD( sender_eodf, ici, shift, false );
+  first_eod_waveform = eod_model.getEOD( sender_eodf, chirp_delay, 0.0, true );
+  eod_waveform = eod_model.getEOD( sender_eodf, ici, 0.0, true );
 
   SampleDataD temp = first_eod_waveform;
   std::vector<double> chirp_times(chirp_count, 0.0);
   for ( int i = 0; i < chirp_count; ++i ){
-    chirp_times[i] = stimData.size() * sampling_interval + chirp_waveform.size() * sampling_interval / 2;
+    chirp_times[i] = temp.size() * sampling_interval + chirp_waveform.size() * sampling_interval / 2;
     temp.append( chirp_waveform );
     temp.append( eod_waveform );
   }
   stimData = temp;
-  stimData /= max(stimData);
+  stimData -= mean(stimData);
+  stimData /= max({max(stimData), abs(min(stimData))});
+  
+  if ( inverted )
+    stimData *= -1;
+  
+  
   if ( GlobalEField == -1) {
     warning("Did not find a valid GlobalEField trace, check output trace configuration!");
   }
   stimData.setTrace( GlobalEField );
   stimData.setSampleInterval( sampling_interval );
-  stimData.description().addNumber( "real duration", stimData.size() * sampling_interval, "s" );
-  stimData.description().addNumber( "real chrip duration", chirp_waveform.size() * sampling_interval, "s" );
+  stimData.description().addNumber( "real duration", stimData.size() * sampling_interval, "s" ).addFlags( OutData::Mutable );
+  stimData.description().addNumber( "real chirp duration", chirp_waveform.size() * sampling_interval, "s" ).addFlags( OutData::Mutable );
+  stimData.description().addNumber( "contrast", stimulus_contrast).addFlags( OutData::Mutable );
+  stimData.description().addNumber( "chirp duration", chirp_duration, "EOD").addFlags( OutData::Mutable );
+  stimData.description().addText( "signal content", toString(signal_content) ).addFlags( OutData::Mutable );
+  stimData.description().addText( "eod model", toString(eod_model_type) ).addFlags( OutData::Mutable );
+  stimData.description().addNumber( "inverted", int(inverted) ).addFlags( OutData::Mutable );
+  stimData.description().addNumber( "deltaf", deltaf, "Hz" ).addFlags( OutData::Mutable );
   Parameter &chirptime_p = stimData.description().addNumber( "ChirpTimes", 0.0, "s" ).addFlags( OutData::Mutable );
   chirptime_p.setNumber( chirp_times[0] );
   for ( size_t k=1; k<chirp_times.size(); k++ )
@@ -328,7 +348,8 @@ int EigenmanniaChirps::readOptions( void ) {
   sampling_interval = 1./20000;
   stimulus_contrast = number( "contrast" );
   fakefish = number("fakefish");
-  this->repeats = static_cast<int>(number( "repeats" ));
+  repeats = static_cast<int>(number( "repeats" ));
+  inverted = boolean( "inverted" );
 
   string model_selection = text( "eodmodel" );
   if (model_selection == "sinewave") {
