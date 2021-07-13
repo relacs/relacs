@@ -64,7 +64,24 @@ private:
 };
 
 
-class TypeAChirp {
+class EigenChirp {
+
+public:
+  EigenChirp( const double sampling_interval );
+  EigenChirp( const double sampling_interval, const EODModel model );
+
+  virtual SampleDataD getWaveform( const double eodf, const double chirp_duration, SignalContent signal ) const = 0;
+  
+  void eodModel( EODModel model );
+  EODModel eodModel( void ) const;
+  
+protected:
+  double sampling_interval;
+  EODModel eod_model;
+};
+
+
+class TypeAChirp : protected EigenChirp {
 
 public:
   TypeAChirp( const double sampling_interval );
@@ -72,17 +89,10 @@ public:
 
   SampleDataD getWaveform( const double eodf, const double chirp_duration, SignalContent signal ) const;
   
-  void eodModel( EODModel model );
-  EODModel eodModel( void ) const;
-  
-private:
-  double sampling_interval;
-  EODModel eod_model;
-
 };
 
 
-class TypeBChirp {
+class TypeBChirp : protected EigenChirp {
 
 public:
   TypeBChirp( const double sampling_interval );
@@ -90,12 +100,6 @@ public:
 
   SampleDataD getWaveform( const double eodf, const double chirp_duration, SignalContent signal ) const;
   
-  void eodModel( EODModel model );
-  EODModel eodModel( void ) const;
-  
-private:
-  double sampling_interval;
-  EODModel eod_model;
 };
 
 

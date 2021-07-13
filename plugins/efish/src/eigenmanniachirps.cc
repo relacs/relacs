@@ -87,23 +87,33 @@ double EigenmanniaEOD::phaseShift( const double eodf, double threshold, bool ris
   return shift;
 }
 
+
 //************************************************************************************
-//********                         Type A Chirp                                *******
-TypeAChirp::TypeAChirp( const double sampling_interval) :
-    sampling_interval(sampling_interval), eod_model(EODModel::REALISTIC) 
-    {}
+//********                      Eigen Chirp Base class                         *******
+EigenChirp::EigenChirp( const double sampling_interval) :
+ sampling_interval(sampling_interval), eod_model(EODModel::REALISTIC)
+  {}
 
-TypeAChirp::TypeAChirp( const double sampling_interval, const EODModel eod_model ):
+EigenChirp::EigenChirp( const double sampling_interval, const EODModel eod_model ) :
     sampling_interval( sampling_interval ), eod_model( eod_model )
-{}
+  {}
 
-void TypeAChirp::eodModel( EODModel model ) {
+void EigenChirp::eodModel( EODModel model ) {
   this->eod_model = model;
 }
 
-EODModel TypeAChirp::eodModel( void ) const {
+EODModel EigenChirp::eodModel( void ) const {
   return this->eod_model;
 }
+
+//************************************************************************************
+//********                         Type A Chirp                                *******
+TypeAChirp::TypeAChirp( const double sampling_interval) :
+  EigenChirp( sampling_interval ){}
+    
+TypeAChirp::TypeAChirp( const double sampling_interval, const EODModel eod_model ):
+    EigenChirp( sampling_interval, eod_model){}
+
 
 SampleDataD TypeAChirp::getWaveform( const double eodf, const double chirp_duration, SignalContent signal ) const {
   EigenmanniaEOD eod( this->eod_model, this->sampling_interval );
@@ -141,20 +151,11 @@ SampleDataD TypeAChirp::getWaveform( const double eodf, const double chirp_durat
 //************************************************************************************
 //********                         Type B Chirp                                *******
 TypeBChirp::TypeBChirp( const double sampling_interval) :
-    sampling_interval(sampling_interval), eod_model(EODModel::REALISTIC) 
-    {}
+    EigenChirp(sampling_interval) {}
 
-TypeBChirp::TypeBChirp( const double sampling_interval, const EODModel eod_model ):
-    sampling_interval( sampling_interval ), eod_model( eod_model )
-{}
+TypeBChirp::TypeBChirp( const double sampling_interval, const EODModel eod_model ) :
+    EigenChirp( sampling_interval, eod_model ) {}
 
-void TypeBChirp::eodModel( EODModel model ) {
-  this->eod_model = model;
-}
-
-EODModel TypeBChirp::eodModel( void ) const {
-  return this->eod_model;
-}
 
 SampleDataD TypeBChirp::getWaveform( const double eodf, const double chirp_duration, SignalContent signal ) const {
   EigenmanniaEOD eod( this->eod_model, this->sampling_interval );
@@ -420,7 +421,6 @@ int EigenmanniaChirps::readOptions( void ) {
     signal_content = SignalContent::FULL;
   }
   
-
   return 0;
 }
 
