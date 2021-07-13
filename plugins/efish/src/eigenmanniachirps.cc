@@ -79,11 +79,9 @@ double EigenmanniaEOD::phaseShift( const double eodf, double threshold, bool ris
   } else {
     falling( eod, crossings, threshold );
   }
-  cerr << crossings.size() << endl;
-  eod.save("eod_stub.dat");
+  // eod.save("eod_stub.dat");
   double shift = 0.0;
   if ( crossings.size() > 0 ) {
-    cerr << crossings[0] << "hooray" << endl;
     shift = 2 * pi() * (crossings[0] - sampling_interval)/eod_period ;
   } else {
     cerr << "EigenmanniaEOD: invalid threshold, could not figure out the phase shift!\n";
@@ -205,6 +203,8 @@ EigenmanniaChirps::EigenmanniaChirps( void )
   addInteger( "repeats", "Number of repeated trials with the same conditions.", 10, 0, 100000, 2 ).setStyle( OptWidget::SpecialInfinite );
   addNumber( "pause", "Minimal pause between trials.", 0.5, 0.0, 1000., 0.01, "s" );
   addBoolean( "inverted", "Flips the foreign signal upside down i.e. the fish is on the other side.", false );
+  addSelection( "signaltype", "Type of signal, whether it drives all, only ampullary, or only tuberous pathways", "all|tuberous only|ampullary only" );
+  addNumber( "filtercf", "Corner frequency of low pass filter for ampullary only stimuli.", 8, 0.1, 256., 0.5, "Hz" ).setActivation( "signaltype", "ampullary only" );
   addNumber( "fakefish", "Fake a receiver fish with the given frequency, set to zero to use the real one", 0.0, 0., 1500., 10., "Hz" );
   
   newSection( "Beat parameter" );
@@ -217,7 +217,6 @@ EigenmanniaChirps::EigenmanniaChirps( void )
   addNumber( "chirpdelay", "Minimum time until the first chrip", 1.0, 0.0, 1000.0, 0.01, "s");
   addInteger( "chirpduration", "Chirp duration in multiple of EOD period", 1, 0, 1000, 1, "EOD" );
   addNumber( "chirprate", "Rate at which the fake fish generates chirps.", 1.0, 0.001, 100.0, 0.1, "Hz" );
-  addSelection( "signaltype", "Type of signal, whether it drives all, only ampullary, or only tuberous pathways", "all|tuberous only|ampullary only" );
 }
 
 int EigenmanniaChirps::fishEOD(double pause, double &rate, double &amplitude)
@@ -255,6 +254,8 @@ string EigenmanniaChirps::toString( SignalContent content ) {
     str = "all channels";
   } else if ( content == SignalContent::NO_DC ) {
     str = "tuberous only";
+  } else {
+    str = "ampullary only";
   }
   return str;
 }
@@ -306,13 +307,22 @@ bool EigenmanniaChirps::createStimulus( void ) {
     temp.append( chirp_waveform );
     temp.append( eod_waveform );
   }
-  stimData = temp;
-  stimData -= mean(stimData);
-  stimData /= max({max(stimData), abs(min(stimData))});
-  
+
+  temp /= max({max( temp ), abs( min( temp ) )});
   if ( inverted )
-    stimData *= -1;
+    temp *= -1;
   
+  if ( signal_content == SignalContent::NO_AM ) {
+    // low-pass filter the stimulus for ampullary only stimuli
+    double tau = 1./(2 * EigenmanniaEOD::pi() * filter_corner_freq );
+    SampleDataD y(temp.size(), 0.0, temp.stepsize(), 0.0);
+    for (int i = 0; i < temp.size()-1; ++i) {
+      y[i+1] = y[i] + temp.stepsize()/tau * (temp[i+1] - y[i]);
+    }
+    stimData = y;
+  } else { 
+    stimData = temp;
+  }
   
   if ( GlobalEField == -1) {
     warning("Did not find a valid GlobalEField trace, check output trace configuration!");
@@ -333,6 +343,7 @@ bool EigenmanniaChirps::createStimulus( void ) {
     chirptime_p.addNumber( chirp_times[k] );
   
   stimData.setIdent( ident );
+  stimData.save("stimulus.dat");
   outList.push( stimData );
   return true;
 }
@@ -350,8 +361,9 @@ int EigenmanniaChirps::readOptions( void ) {
   fakefish = number("fakefish");
   repeats = static_cast<int>(number( "repeats" ));
   inverted = boolean( "inverted" );
-
+  filter_corner_freq = number( "filtercf" );
   string model_selection = text( "eodmodel" );
+
   if (model_selection == "sinewave") {
     eod_model_type = EODModel::SINE;
   } else {
@@ -371,8 +383,7 @@ int EigenmanniaChirps::readOptions( void ) {
   } else if ( chirp_location == "tuberous only" ) {
     signal_content = SignalContent::NO_DC;
   } else{
-    warning("ampullary only is not supported yet!");
-    signal_content = SignalContent::FULL;
+    signal_content = SignalContent::NO_AM;
   }
   
   return 0;

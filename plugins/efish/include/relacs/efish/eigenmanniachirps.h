@@ -36,11 +36,30 @@ namespace efish {
 \class EigenmanniaChirps
 \brief [RePro] Repro for stimulation with the Eigenmannia-like chirps, i.e. incomplete and complete interruptions. To be used for chripchamber as well as ephys experiments.
 \author Jan Grewe
-\version 1.0 (May 11, 2020)
+\version 1.2 (July 13, 2021)
+\par Options
+- \c General settings
+    - \c name="": Name of the Repro run, auto generated if empty (\c string)
+    - \c eodmodel=sinewave: The model used for EOD generation, realistic creates an Eigenmannia like signal (\c string)
+    - \c repeats=10: Number of stimulus repeats (\c integer)
+    - \c pause=0.5s: Pause between repeats in seconds (\c number)
+    - \c inverted=false: Inverts the signal to have the fish appearing oriented in a different way (\c boolean)
+    - \c signaltype=all: Type of signal, whether it drives all, only ampullary, or only tuberous pathways (\c string)
+    - \c filtercf=8Hz: Corner frequency of low pass filter for ampullary only stimuli. (\c number)
+    - \c fakefish=0Hz: Fake a receiver fish with the given frequency, set to zero to use the real one (\c number)
+- \c Beat parameter
+    - \c duration=1.0s: Target duration of the stimulu, may be extended because we use full EOD cycles (\c number)
+    - \c deltaf=20Hz: Difference frequency between reveiver and sender (\c number)
+    - \c contrast=20%: Contrast of fish (\c number)
+- \c Chirps
+    - \c chirptype=TypeA: Type of chirp TypeA or TypeB (\c string)
+    - \c chirpdelay=1.0s: Minimum time until first chirp occurs (\c number)
+    - \c chirpduration=1EOD: Duration of the chirp in EODs (\c integer)
+    - \c chirprate=1.0Hz: Rate with which the sender generate chirps (\c number)
 */
 
 enum class EODModel{ SINE = 0, REALISTIC = 1 };
-enum class SignalContent{ FULL = 0, NO_DC = 1}; // , NO_AM = 2};
+enum class SignalContent{ FULL = 0, NO_DC = 1, NO_AM = 2};
 enum class ChirpType{ TYPE_A = 0, TYPE_B =1};
 
 class EigenmanniaEOD {
@@ -130,6 +149,7 @@ private:
   double receiver_amplitude;
   double stimulus_contrast;
   double pause;
+  double filter_corner_freq;
   int repeats;
   bool inverted;
   
