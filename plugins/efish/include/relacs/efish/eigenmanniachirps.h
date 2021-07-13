@@ -24,6 +24,7 @@
 
 #include <relacs/repro.h>
 #include <relacs/efield/traces.h>
+#include <relacs/ephys/traces.h>
 #include <relacs/efield/eodtools.h>
 
 using namespace relacs;
@@ -100,6 +101,7 @@ private:
 
 class EigenmanniaChirps : 
         public RePro, 
+        public ephys::Traces,
         public efield::Traces, 
         public efield::EODTools
 {
@@ -115,6 +117,7 @@ private:
   double chirp_rate;
   double chirp_delay;
   double eodf;
+  double fakefish;
   int chirp_duration;
   double deltaf;
   double sampling_interval;
@@ -129,8 +132,9 @@ private:
 
   OutData stimData;
   OutList outList;
-  void readOptions( void );
+  int readOptions( void );
   bool createStimulus( void );
+  int fishEOD(double pause, double &rate, double &amplitude);
   bool estimateEodFrequency( double &fisheodf );
 
   string toString( SignalContent content );

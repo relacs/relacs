@@ -24,6 +24,7 @@
 
 using namespace relacs;
 using namespace std;
+
 namespace efish {
 
 //************************************************************************************
@@ -114,13 +115,16 @@ SampleDataD TypeAChirp::getWaveform( const double eodf, const double chirp_durat
   double stop_shift = 0.0;
   if (signal == SignalContent::FULL) {
     stop_shift = eod.phaseShift( eodf, -10.);
+    cerr << "TypeA: " << chirp_duration << " shift:" << stop_shift << endl;
     double delta_phi = stop_shift - start_shift; 
     begin_eod_duration = (delta_phi/(2*eod.pi()) * eod_period);
     end_eod_duration = eod_period + (2*eod.pi() - stop_shift + start_shift)/(2*eod.pi()) * eod_period;
   } else if ( signal == SignalContent::NO_DC ) {
     stop_shift = start_shift + 2 * eod.pi();
   }
+  cerr << "Get start eod: " << begin_eod_duration << endl;
   SampleDataD start_eod = eod.getEOD( eodf, begin_eod_duration, start_shift, false );
+  cerr << "Get end eod: " << end_eod_duration << " stop shift" << stop_shift << endl;
   SampleDataD end_eod = eod.getEOD( eodf, end_eod_duration, stop_shift, false );
   
   double offset = signal == SignalContent::FULL ? start_eod[start_eod.size() - 1] : 0.0; 
@@ -223,6 +227,29 @@ EigenmanniaChirps::EigenmanniaChirps( void )
   addNumber( "averagetime", "Time for computing EOD frequency", 2.0, 0.0, 100000.0, 1.0, "s" );  
 }
 
+int EigenmanniaChirps::fishEOD(double pause, double &rate, double &amplitude)
+{
+  // EOD rate:
+  if ( EODEvents >= 0 )
+    rate = events( EODEvents ).frequency( currentTime() - pause, currentTime() );
+  else if ( LocalEODEvents[0] >= 0 )
+    rate = events( LocalEODEvents[0] ).frequency( currentTime() - pause, currentTime() );
+  else {
+    warning( "No EOD present or not enough EOD cycles recorded!" );
+    return 1;
+  }
+
+  // EOD amplitude:
+  double ampl = eodAmplitude( trace( LocalEODTrace[0] ),
+			      currentTime() - pause, currentTime() );
+  if ( ampl <= 1.0e-8 ) {
+    warning( "No EOD amplitude on local EOD electrode!" );
+    return 1;
+  }
+  else
+    amplitude = ampl;
+  return 0;
+}
 
 bool EigenmanniaChirps::estimateEodFrequency( double &fisheodf ) {
   double averagetime = number( "averagetime" );
@@ -311,6 +338,7 @@ bool EigenmanniaChirps::createStimulus( void ) {
   int chirp_count = static_cast<int>( floor( stimulus_duration * chirp_rate ) );
   double ici = stimulus_duration / chirp_count;
   double chirp_duration_s = chirp_duration * 1./sender_eodf;
+  cerr << "Chirp duration: " << chirp_duration << " in s: " << chirp_duration_s << endl;
   if ( ici < chirp_duration_s ) {
     return false; 
   }
@@ -355,7 +383,7 @@ bool EigenmanniaChirps::createStimulus( void ) {
   return true;
 }
 
-void EigenmanniaChirps::readOptions( void ) {
+int EigenmanniaChirps::readOptions( void ) {
   name = text( "name" );
   stimulus_duration = number( "duration", 0.0, "s" );
   deltaf = number( "deltaf", 0.0, "Hz" );
@@ -365,6 +393,7 @@ void EigenmanniaChirps::readOptions( void ) {
   pause = number( "pause", 0.0, "s" );
   sampling_interval = 1./20000;
   stimulus_contrast = number( "contrast" );
+  fakefish = number("fakefish");
   this->repeats = static_cast<int>(number( "repeats" ));
 
   string model_selection = text( "eodmodel" );
@@ -391,16 +420,23 @@ void EigenmanniaChirps::readOptions( void ) {
     signal_content = SignalContent::FULL;
   }
   
-  bool success = estimateEodFrequency( eodf );
-  if (!success) {
-    warning("Could not estimate the fish frequency!");
-  }
+
+  return 0;
 }
 
 
 int EigenmanniaChirps::main( void ) {
   // get options:
-  readOptions();
+  int ret = readOptions();
+  if ( ret != 0 )
+    return Failed;
+  if ( fakefish > 0.0 ) {
+    eodf = fakefish;
+    receiver_amplitude = 1.0;
+  } else {
+    if ( fishEOD(pause, eodf, receiver_amplitude) )
+      return Failed;
+  }
   bool stimulus_ok = createStimulus();
   if (!stimulus_ok) {
     return Failed;
@@ -410,6 +446,7 @@ int EigenmanniaChirps::main( void ) {
     warning( "There is no EOD Trace! Cannot estimate fish amplitude and frequency! Expecting a LocalEOD or EOD trace, check input configuration. Exiting!" );
     return Failed;
   }
+  
   receiver_amplitude = eodAmplitude( trace(eod_trace), currentTime() - 0.5, currentTime() );
   
   // stimulus intensity:
