@@ -141,7 +141,6 @@ private:
   int readOptions( void );
   bool createStimulus( void );
   int fishEOD(double pause, double &rate, double &amplitude);
-  bool estimateEodFrequency( double &fisheodf );
 
   string toString( SignalContent content );
   string toString( ChirpType type );

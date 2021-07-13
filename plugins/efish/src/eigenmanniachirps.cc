@@ -219,13 +219,6 @@ EigenmanniaChirps::EigenmanniaChirps( void )
   addInteger( "chirpduration", "Chirp duration in multiple of EOD period", 1, 0, 1000, 1, "EOD" );
   addNumber( "chirprate", "Rate at which the fake fish generates chirps.", 1.0, 0.001, 100.0, 0.1, "Hz" );
   addSelection( "signaltype", "Type of signal, whether it drives all, only ampullary, or only tuberous pathways", "all|tuberous only|ampullary only" );
-   
-  newSection( "EOD estimation" );
-  addBoolean( "usepsd", "Use the power spectrum", true );
-  addNumber( "mineodfreq", "Minimum expected EOD frequency", 100.0, 0.0, 10000.0, 10.0, "Hz" ).setActivation( "usepsd", "true" );
-  addNumber( "maxeodfreq", "Maximum expected EOD frequency", 2000.0, 0.0, 10000.0, 10.0, "Hz" ).setActivation( "usepsd", "true" );
-  addNumber( "eodfreqprec", "Precision of EOD frequency measurement", 1.0, 0.0, 100.0, 0.1, "Hz" ).setActivation( "usepsd", "true" );
-  addNumber( "averagetime", "Time for computing EOD frequency", 2.0, 0.0, 100000.0, 1.0, "s" );  
 }
 
 int EigenmanniaChirps::fishEOD(double pause, double &rate, double &amplitude)
@@ -250,67 +243,6 @@ int EigenmanniaChirps::fishEOD(double pause, double &rate, double &amplitude)
   else
     amplitude = ampl;
   return 0;
-}
-
-bool EigenmanniaChirps::estimateEodFrequency( double &fisheodf ) {
-  double averagetime = number( "averagetime" );
-  fisheodf = number( "fakefish" );
-  if ( fisheodf < 0.1 ) {
-    if ( !boolean( "usepsd" ) ) {
-      fisheodf = events( EODEvents ).frequency( currentTime() - averagetime, currentTime() );
-      if ( EODEvents < 0 ) {
-	      warning( "need EOD events of the EOD Trace." );
-	      fisheodf = number( "fakefisheodf" );
-	      return false;
-      }
-      return true;
-    } else {
-      double bigeod = 0.0;
-      double bigeodf = 0.0; 
-      double min_eodf = number( "mineodfreq" );
-      double max_eodf = number( "maxeodfreq" );
-      double eodf_prec = number( "eodfreqprec" );
-      int intrace = EODTrace;
-      if ( intrace == -1 ) {
-        cerr << "INTRACE! " << intrace; 
-        return false;
-      }
-      int nfft = 1;
-
-      nfft = nextPowerOfTwo( (int)::ceil( 1.0/trace( intrace ).stepsize()/eodf_prec ) );
-      eodf_prec = 1.0/trace( intrace ).stepsize()/nfft;
-      if ( averagetime < 2.0/trace( intrace ).stepsize()/nfft ) {
-	      averagetime = 2.0/trace( intrace ).stepsize()/nfft;
-	      warning( "averagetime is too small for requested frequency resolution. I set it to " +
-		    Str( averagetime ) + "s for now." );
-      }
-
-      SampleDataF data( 0.0, averagetime, trace( intrace ).stepsize() );
-      trace( intrace ).copy( currentTime() - averagetime, data );
-      SampleDataF power( nfft );
-      rPSD( data, power );
-      double threshold = power.max( min_eodf, max_eodf );
-      EventData powerpeaks( 1000, true );
-      peaks( power, powerpeaks, 0.2*threshold );
-      double maxpower = 0.0;
-      double maxfreq = 0.0;
-      for ( int i=0; i<powerpeaks.size(); i++ ) {
-	      if ( powerpeaks[i] >= min_eodf && powerpeaks[i] <= max_eodf ) {
-	        if ( powerpeaks.eventSize( i ) > maxpower ) {
-	          maxpower = powerpeaks.eventSize( i );
-	          maxfreq = powerpeaks[i];
-	        }
-	      }
-      }
-      if ( bigeod < maxpower ) {
-	      bigeod = maxpower;
-	      bigeodf = maxfreq;
-      }
-      fisheodf = bigeodf;
-      return true;
-    }
-  }
-  return true;
 }
 
 string EigenmanniaChirps::toString( ChirpType type ) {
@@ -339,7 +271,7 @@ bool EigenmanniaChirps::createStimulus( void ) {
   int chirp_count = static_cast<int>( floor( stimulus_duration * chirp_rate ) );
   double ici = stimulus_duration / chirp_count;
   double chirp_duration_s = chirp_duration * 1./sender_eodf;
-  cerr << "Chirp duration: " << chirp_duration << " in s: " << chirp_duration_s << endl;
+
   if ( ici < chirp_duration_s ) {
     return false; 
   }
