@@ -209,7 +209,7 @@ EigenmanniaChirps::EigenmanniaChirps( void )
   
   newSection( "Beat parameter" );
   addNumber( "duration", "Total trial duration", 1.0, 0.001, 100000.0, 0.001, "s", "ms" );
-  addNumber( "deltaf", "Difference frequency", 20., 0.1, 1000., 1.0, "Hz" );
+  addNumber( "deltaf", "Difference frequency", 20., -1000.0, 1000., 1.0, "Hz" );
   addNumber( "contrast", "Strength of sender relative to receiver.", 0.2, 0.0, 1.0, 0.01, "", "%" );
   
   newSection( "Chirps" );
