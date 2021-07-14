@@ -102,7 +102,7 @@ protected:
 };
 
 
-class TypeAChirp : protected EigenChirp {
+class TypeAChirp : public EigenChirp {
 
 public:
   TypeAChirp( const double sampling_interval );
@@ -113,7 +113,7 @@ public:
 };
 
 
-class TypeBChirp : protected EigenChirp {
+class TypeBChirp : public EigenChirp {
 
 public:
   TypeBChirp( const double sampling_interval );
