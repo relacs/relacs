@@ -516,14 +516,16 @@ void SaveFiles::save( const OutList &signal )
 }
 
 
-void SaveFiles::extractMutables( Options &stimulusdescription, Options &mutables ) const
+void SaveFiles::extractMutables( Options &stimulusdescription, Options &mutables, const string &secname ) const
 {
   for ( Options::iterator pi = stimulusdescription.begin();
 	pi != stimulusdescription.end();
 	++pi ) {
     if ( (pi->flags() & OutData::Mutable) == OutData::Mutable ) {
-            mutables.add( *pi );
-      // stimulusdescription.erase( *pi );
+      Parameter p( *pi );
+      if ( ! secname.empty() )
+	      p.setName( secname + "." + p.name() );
+      mutables.add( p );
       pi->setText( "" );
       pi->setUnit( "" );
       if ( pi->isNumber() )
@@ -533,7 +535,7 @@ void SaveFiles::extractMutables( Options &stimulusdescription, Options &mutables
   for ( Options::section_iterator si = stimulusdescription.sectionsBegin();
 	si != stimulusdescription.sectionsEnd();
 	++si ) {
-    extractMutables( *(*si), mutables );
+    extractMutables( *(*si), mutables, (*si)->name() );
   }
 }
 
@@ -558,7 +560,7 @@ void SaveFiles::writeStimulus( void )
   // extract mutable parameter from stimulus description to a subsection of stimuliref:
   deque< Options > stimuliref( Stimuli.size() );
   for ( unsigned int j=0; j<Stimuli.size(); j++ ) {
-    Options &mutables = stimuliref[j].newSection( "parameter" );
+    Options &mutables = stimuliref[j].newSection( Stimuli.size()>1?"parameter-"+Stimuli[j].traceName():"parameter" );
     extractMutables( Stimuli[j].description(), mutables );
     stimuliref[j].clearSections();
     // XXX once OutData does not have idents any more, the following lines can be erased:
@@ -2121,7 +2123,7 @@ void SaveFiles::NixFile::writeChunk(NixTrace   &trace,
 
 
 void SaveFiles::NixFile::createStimulusTag( const std::string &tag_name, const Options &stimulus_features,
-					    const deque< OutDataInfo > &stim_info, const Acquire *AQ,
+					    const deque< OutDataInfo > &stim_info, const deque< Options > &stim_refs, const Acquire *AQ,
 					    double start_time, double duration, NixStimulusInfo &info )
 {
 
@@ -2200,8 +2202,8 @@ void SaveFiles::NixFile::createStimulusTag( const std::string &tag_name, const O
   }
 
   std::string channel_prefix;
-  for ( size_t i = 0; i < stim_info.size(); ++i ) {
-    std::string channel_prefix = stim_info.size() == 1 ? "" : "Output" + Str(stim_info[i].channel()) + "_";
+  for ( size_t i = 0; i < stim_refs.size(); ++i ) {
+    std::string channel_prefix = stim_refs.size() == 1 ? "" : "Output" + Str(stim_info[i].channel()) + "_";
     // amplitude
     fname = channel_prefix + info.name + "_amplitude";
     funit = "";
@@ -2215,8 +2217,7 @@ void SaveFiles::NixFile::createStimulusTag( const std::string &tag_name, const O
     info.features[fname] = createFeature( info.stimulus_mtag, fname, "relacs.feature.amplitude",
 					  funit, "intensity", nix::LinkType::Indexed, nix::DataType::Double );
 
-    // additional stim_options
-    createFeaturesForOptions( stim_info[i].description(), "relacs.feature.mutable", channel_prefix );
+    createFeaturesForOptions( stim_refs[i], "relacs.feature.mutable", channel_prefix);
   }
 }
 
@@ -2286,7 +2287,7 @@ void SaveFiles::NixFile::writeStimulus( const InList &IL, const EventList &EL,
       current_stimulus_info = it->second;
     } else { // no match in store, create a new one
       current_stimulus_info = NixStimulusInfo();
-      createStimulusTag( tag_name, stim_options, stim_info, acquire, stimulus_start_time, 
+      createStimulusTag( tag_name, stim_options, stim_info, stimuliref, acquire, stimulus_start_time, 
                          stimulus_duration, current_stimulus_info );
       stim_info_buffer[tag_name] = current_stimulus_info;
       new_stim = true;
@@ -2362,6 +2363,9 @@ void SaveFiles::NixFile::createFeaturesForOptions( const Options &options, const
 							    type, unit, label, nix::LinkType::Indexed, dtype );
     }
   }
+  for ( Options::const_section_iterator si = options.sectionsBegin(); si != options.sectionsEnd(); ++si ) {
+    createFeaturesForOptions( *(*si), type, name_prefix );
+  }
 }
 
 
@@ -2394,6 +2398,9 @@ void SaveFiles::NixFile::storeOptionsToFeatures( const Options &options , const 
         }
       }    
     }
+  }
+  for ( Options::const_section_iterator si = options.sectionsBegin(); si != options.sectionsEnd(); ++si ) {
+    storeOptionsToFeatures( *(*si), "" );
   }
 }
 

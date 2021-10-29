@@ -78,8 +78,9 @@
       storesize      : true
 
 *AudioMonitor
-  device   : [ "-1 default", "2 HDA Intel PCH: HDMI 0 (hw:0,3) (8 channels)", "3 HDA Intel PCH: HDMI 1 (hw:0,7) (8 channels)", "4 HDA Intel PCH: HDMI 2 (hw:0,8) (8 channels)", "5 HDA Intel PCH: HDMI 3 (hw:0,9) (8 channels)", "6 HDA Intel PCH: HDMI 4 (hw:0,10) (8 channels)", "8 hdmi (8 channels)", "9 pulse (32 channels)", "10 default (32 channels) - default" ]
-  enable   : true
+  device   : [ "-1 default", "1 HDA Intel HDMI: 0 (hw:2,3) (8 channels)", "2 HDA Intel HDMI: 1 (hw:2,7) (8 channels)", "3 HDA Intel HDMI: 2 (hw:2,8) (8 channels)", "4 HDA Intel HDMI: 3 (hw:2,9) (8 channels)", "5 HDA Intel HDMI: 4 (hw:2,10) (8 channels)", "8 pulse (32 channels)", "9 default (32 channels) - default" ]
+  enable   : false
+relacs.cfg
   mute     : false
   gain     : 1
   audiorate: [ "44.1", "8", "16", "22.05", "44.1", "48", "96" ]kHz

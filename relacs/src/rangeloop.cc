@@ -475,8 +475,7 @@ void RangeLoop::set( const string &range, double scale )
       else {
 	static const string seqstrs[8] = 
 	  { "up", "down",
-	    "alternateinup", 
-	    "alternateindown",
+	    "alternateinup", "alternateindown",
 	    "alternateoutup", "alternateoutdown", 
 	    "random", "pseudorandom" };
 	(*sp).lower();

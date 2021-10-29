@@ -320,9 +320,10 @@ if test -z "$1"; then
     kill_comedi
     build_comedi
     install_comedi
-    load_comedi
     next_command
     echo "Successfully built the comedi modules for the running kernel!"
+    echo
+    echo "You need to restart the computer to make the comedi modules available".
     echo
     exit 0
 fi

@@ -20,6 +20,9 @@
 */
 
 #include <relacs/efield/ymaze.h>
+#include <relacs/base/linearattenuate.h>
+#include <relacs/digitalio.h>
+
 #include <QPainter>
 #include <QPicture>
 #include <QPushButton>
@@ -89,7 +92,6 @@ void YMazeSketch::resizeEvent( QResizeEvent *event ) {
   QLabel::resizeEvent(event);
 }
 
-
 void YMazeSketch::setCondition( const MazeCondition &mc ) {
   QString styleStub = "QLabel{font-size: 20; font-weight: bold; color : ";
   QString styleSuffix = "}";
@@ -102,6 +104,15 @@ void YMazeSketch::setCondition( const MazeCondition &mc ) {
   labels[static_cast<int>(mc.neutral)]->setStyleSheet(styleStub +
 						      colors[static_cast<int>(ArmCondition::NEUTRAL)] +
 						      styleSuffix);
+}
+
+void YMazeSketch::reset() {
+  lastRewarded = MazeArm::NONE; 
+  QString style = "QLabel{font-size: 20; font-weight: bold; color : " + colors[static_cast<int>(ArmCondition::NEUTRAL)] + "}";
+  
+  for ( auto l : labels ) {
+    l->setStyleSheet( style );
+  }
 }
 
 //***********************************************************************
@@ -121,19 +132,25 @@ YMaze::YMaze( void )
   startBtn->setEnabled(false);
   startBtn->setToolTip("Start stimulus output...");
   connect( startBtn, SIGNAL( clicked() ), this, SLOT( startTrial() ) );
-  grid->addWidget( startBtn, 5, 6, 1, 1 );
+  grid->addWidget( startBtn, 5, 5, 1, 1 );
 
   stopBtn = new QPushButton("&Stop");
   stopBtn->setEnabled(false);
   stopBtn->setToolTip("Stop stimulus output immediately...");
   connect( stopBtn, SIGNAL( clicked() ), this, SLOT( stopTrial() ) );
-  grid->addWidget( stopBtn, 5, 7, 1, 1 );
+  grid->addWidget( stopBtn, 5, 6, 1, 1 );
 
   nextBtn = new QPushButton("&Next");
   nextBtn->setEnabled(true);
   nextBtn->setToolTip("Prepare next trial, randomize stimulus condition...");
   connect( nextBtn, SIGNAL( clicked() ), this, SLOT( prepareNextTrial() ) );
-  grid->addWidget( nextBtn, 5, 5, 1, 1 );
+  grid->addWidget( nextBtn, 5, 4, 1, 1 );
+
+  resetBtn = new QPushButton("&Reset");
+  resetBtn->setEnabled( true );
+  resetBtn->setToolTip( "Reset the experiment back to defaults" );
+  connect( resetBtn, SIGNAL( clicked() ), this, SLOT( reset() ) );
+  grid->addWidget( resetBtn, 5, 7, 1, 1 );
 
   this->setLayout( grid );  
 }
@@ -141,6 +158,7 @@ YMaze::YMaze( void )
 void YMaze::populateOptions() {
   newSection( "Experiment" );
   addText( "name" , "Prefix used to identify the repro run, auto-generated if empty", "" );
+  addBoolean( "dumbasses", "Simpler task in which the unrewarded stim is switched off", false );
   addNumber( "duration", "Trial duration", 10.0, 0.1, 1000., 0.1, "s" );
   addNumber( "samplerate", "stimulus sampling rate", 20000, 1000., 100000., 100., "Hz" );
   addNumber( "rewardfreq", "Rewarded frequency", 500.0, 1.0, 2500.0, 1.0, "Hz" );
@@ -154,6 +172,8 @@ void YMaze::populateOptions() {
   addNumber( "nonrewardsignalampl", "Amplitude of the non-rewarded signal.", 1.0, 0.1, 10.0, 0.1, "mV" );
   addBoolean( "nofish", "Test mode without fish", false );
   addNumber( "fakefisheodf", "EOD frequency of fake fish", 500.0, 1.0, 10000.0, 1.0, "Hz").setActivation( "noFish", "true" );
+  addBoolean( "fixedstart", "Sets the selected arm as fixed start position for all trials.", false);
+  addSelection( "startbox", "The starting tube in which the fish is upon start",  "Arm-A|Arm-B|Arm-C" );
   
   newSection( "EOD estimation" );
   addSelection( "intrace", "inputTrace" );
@@ -162,6 +182,18 @@ void YMaze::populateOptions() {
   addNumber( "maxeodfreq", "Maximum expected EOD frequency", 2000.0, 0.0, 10000.0, 10.0, "Hz" ).setActivation( "usepsd", "true" );
   addNumber( "eodfreqprec", "Precision of EOD frequency measurement", 1.0, 0.0, 100.0, 0.1, "Hz" ).setActivation( "usepsd", "true" );
   addNumber( "averagetime", "Time for computing EOD frequency", 2.0, 0.0, 100000.0, 1.0, "s" );  
+
+  newSection( "Output channel setup" );
+  addInteger( "arm_a", "Output channel for arm A", 0 );
+  addInteger( "arm_b", "Output channel for arm B.", 1 );
+  addInteger( "arm_c", "Output channel for arm C.", 2 );
+
+  newSection( "LED indicators" );
+  addBoolean( "ledindicators", "Use LEDs attached to DIO lines to indicate rewarded stimulus.", true );
+  addText( "diodevice", "Name of the digital I/O device", "dio-1" ).setActivation( "ledindicators", "true" );
+  addInteger( "ledapin", "DIO line for LED on arm A.", 0 ).setActivation( "ledindicators", "true" );
+  addInteger( "ledbpin", "DIO line for LED on arm B.", 1 ).setActivation( "ledindicators", "true" );
+  addInteger( "ledcpin", "DIO line for LED on arm C.", 2 ).setActivation( "ledindicators", "true" );
 }
   
 void YMaze::setupTable(QGridLayout *grid) {
@@ -197,17 +229,17 @@ void YMaze::setupTable(QGridLayout *grid) {
   grid->addWidget( conditionCpast, 3, 7, 1, 1);
 }
 
-
 bool YMaze::estimateEodFrequency( double &fisheodf ) {
   double averagetime = number( "averagetime" );
   fisheodf = number( "fakefisheodf" );
   if ( !boolean( "nofish" ) ) {
     if ( !boolean( "usepsd" ) ) {
       fisheodf = events( EODEvents ).frequency( currentTime() - averagetime, currentTime() );
+
       if ( EODEvents < 0 ) {
-	warning( "need EOD events of the EOD Trace." );
-	fisheodf = number( "fakefisheodf" );
-	return false;
+	      warning( "need EOD events of the EOD Trace." );
+	      fisheodf = number( "fakefisheodf" );
+	      return false;
       }
       return true;
     } else {
@@ -218,15 +250,15 @@ bool YMaze::estimateEodFrequency( double &fisheodf ) {
       double eodf_prec = number( "eodfreqprec" );
       int intrace = index( "inputTrace" );
       if ( intrace == -1 )
-	return false;
+	      return false;
       int nfft = 1;
 
       nfft = nextPowerOfTwo( (int)::ceil( 1.0/trace( intrace ).stepsize()/eodf_prec ) );
       eodf_prec = 1.0/trace( intrace ).stepsize()/nfft;
       if ( averagetime < 2.0/trace( intrace ).stepsize()/nfft ) {
-	averagetime = 2.0/trace( intrace ).stepsize()/nfft;
-	warning( "averagetime is too small for requested frequency resolution. I set it to " +
-		 Str( averagetime ) + "s for now." );
+	      averagetime = 2.0/trace( intrace ).stepsize()/nfft;
+	      warning( "averagetime is too small for requested frequency resolution. I set it to " +
+		             Str( averagetime ) + "s for now." );
       }
 	
       SampleDataF data( 0.0, averagetime, trace( intrace ).stepsize() );
@@ -239,16 +271,16 @@ bool YMaze::estimateEodFrequency( double &fisheodf ) {
       double maxpower = 0.0;
       double maxfreq = 0.0;
       for ( int i=0; i<powerpeaks.size(); i++ ) {
-	if ( powerpeaks[i] >= min_eodf && powerpeaks[i] <= max_eodf ) {
-	  if ( powerpeaks.eventSize( i ) > maxpower ) {
-	    maxpower = powerpeaks.eventSize( i );
-	    maxfreq = powerpeaks[i];
-	  }
-	}
+	      if ( powerpeaks[i] >= min_eodf && powerpeaks[i] <= max_eodf ) {
+	        if ( powerpeaks.eventSize( i ) > maxpower ) {
+	          maxpower = powerpeaks.eventSize( i );
+	          maxfreq = powerpeaks[i];
+	        }
+	      }
       }
       if ( bigeod < maxpower ) {
-	bigeod = maxpower;
-	bigeodf = maxfreq;
+	      bigeod = maxpower;
+	      bigeodf = maxfreq;
       }
       fisheodf = bigeodf;
       return true;
@@ -256,29 +288,36 @@ bool YMaze::estimateEodFrequency( double &fisheodf ) {
   }
   return true;
 }
-  
-  
+   
 MazeCondition YMaze::nextMazeCondition() {
   MazeCondition mazeCondition;
-  
-  int nextPosition = rand() %3;
-  while ( nextPosition == lastRewardPosition ) {
-    nextPosition = rand() %3;
-  }
   std::vector<MazeArm> arms = {MazeArm::A, MazeArm::B, MazeArm::C};
-  if (lastRewardPosition == static_cast<int> ( MazeArm::NONE ) ) {
-    mazeCondition.rewarded = arms[nextPosition];
-    arms.erase( arms.begin() + nextPosition );
-    mazeCondition.unrewarded = arms[0];
-    mazeCondition.neutral = arms[1];
-    lastRewardPosition = nextPosition;
+  if ( fixedStart ) {
+      mazeCondition.neutral = arms[ lastRewardPosition ];
+      arms.erase( std::find( arms.begin(), arms.end(), static_cast<MazeArm>( lastRewardPosition ) ) );
+
+      int nextPosition = rand() %2;
+      mazeCondition.rewarded = arms[ nextPosition ];
+      mazeCondition.unrewarded = arms[ 1 - nextPosition ];
   } else {
-    mazeCondition.rewarded = arms[nextPosition];
-    mazeCondition.neutral = arms[lastRewardPosition];
-    arms.erase( arms.begin() + nextPosition );
-    arms.erase( std::find( arms.begin(), arms.end(), static_cast<MazeArm>( lastRewardPosition ) ) );
-    mazeCondition.unrewarded = arms[0];
-    lastRewardPosition = nextPosition;
+    int nextPosition = rand() %3;
+    while ( nextPosition == lastRewardPosition ) {
+      nextPosition = rand() %3;
+    }
+    if ( lastRewardPosition == static_cast<int> ( MazeArm::NONE ) ) {
+      mazeCondition.rewarded = arms[nextPosition];
+      arms.erase( arms.begin() + nextPosition );
+      mazeCondition.unrewarded = arms[0];
+      mazeCondition.neutral = arms[1];
+      lastRewardPosition = nextPosition;
+    } else {
+      mazeCondition.rewarded = arms[nextPosition];
+      mazeCondition.neutral = arms[lastRewardPosition];
+      arms.erase( arms.begin() + nextPosition );
+      arms.erase( std::find( arms.begin(), arms.end(), static_cast<MazeArm>( lastRewardPosition ) ) );
+      mazeCondition.unrewarded = arms[0];
+      lastRewardPosition = nextPosition;
+    }
   }
   return mazeCondition;
 }
@@ -286,9 +325,15 @@ MazeCondition YMaze::nextMazeCondition() {
 bool YMaze::drawNonRewardedFrequency( double &freq ) {
   std::vector<double> freqs;
   double range = freqRangeMax - freqRangeMin;
+  if ( range < 1.0e-8 ) {
+    warning( "Invalid frequency range, check options!" );
+    return false;
+  }
   int steps = floor(range/deltaf);
-  if ( steps == 0 )
+  if ( steps == 0 ) {
     error( "Invalid frequency range, check options!" );
+    return false;
+  }
   int step = rand() % steps;
   freq = freqRangeMin + step * deltaf;
   int count = 0;
@@ -297,39 +342,48 @@ bool YMaze::drawNonRewardedFrequency( double &freq ) {
     freq = freqRangeMin + step * deltaf;
     count++;
     if (count > 1000) {
-      error("YMaze: Could not shuffle a valid Non-rewarded stimulus frequency! Please check RePro settings!");
+      warning("YMaze: Could not shuffle a valid Non-rewarded stimulus frequency! Please check RePro settings!");
       return false;
     }
   }
   return true;
 }
 
-StimulusCondition YMaze::nextStimulusConditions() {
+bool YMaze::nextStimulusConditions(StimulusCondition &sc) {
   bool success = estimateEodFrequency( eodf );
   if ( !success ) {
     error("YMaze: Could not get a valid fish frequency!");
   }
   double noRewardFreq;
   bool valid = drawNonRewardedFrequency( noRewardFreq );
-  StimulusCondition sc;
+  if ( !valid ) {
+    return false;
+  }
   sc.rewardedFreq = rewardedFreq;
   sc.unrewardedFreq = noRewardFreq;
   sc.rewardedAmplitude = number("rewardsignalampl");
   sc.unrewardedAmplitude = number("nonrewardsignalampl");
   sc.valid = valid;
-  return sc;
+  return true;
 }
   
-TrialCondition YMaze::nextTrialCondition() {
-  TrialCondition tc;
+bool YMaze::nextTrialCondition(TrialCondition &tc) {
   tc.mazeCondition = nextMazeCondition();
-  tc.stimCondition = nextStimulusConditions();
+  StimulusCondition sc;
+  bool valid = nextStimulusConditions(sc);
+  if ( !valid )
+    return false;
+  
+  tc.stimCondition = sc;
   currentCondition = tc;
-  return tc;
+  return true;
 }
   
 void YMaze::createStimuli( const TrialCondition &tc ) {
   string ident = name.size() == 0 ? "Ymaze" : name;
+  /*for ( int i = 0; i < outList.size(); ++i ) {
+     outList[i].clear();
+     }*/
   outList.clear();
   double sampleInterval = 1./samplerate;
 
@@ -338,36 +392,51 @@ void YMaze::createStimuli( const TrialCondition &tc ) {
   rwStim.setTrace( armTraceMap[tc.mazeCondition.rewarded] );
   rwStim.setSampleInterval( sampleInterval );
   rwStim.sineWave( duration, rwStim.sampleInterval(), tc.stimCondition.rewardedFreq,
-		   0.0, tc.stimCondition.rewardedAmplitude/2., 0.0 );
+		   0.0, 1.0, 0.0 );
+  rwStim.back() = 0.0;
+  rwStim.setIntensity( tc.stimCondition.rewardedAmplitude/2. );
   rwStim.description().addText( "RewardedType", "rewarded" ).addFlags( OutData::Mutable );
   rwStim.description().addText( "Arm", toString(tc.mazeCondition.rewarded) ).addFlags( OutData::Mutable );
   rwStim.description()["Frequency"].addFlags( OutData::Mutable );
   rwStim.setIdent( ident + "_rewarded" );
   outList.push( rwStim );
-  
   // unrewarded stimulus
   OutData nrwStim;
-  nrwStim.setTrace( armTraceMap[tc.mazeCondition.unrewarded] );
-  nrwStim.setSampleInterval( sampleInterval );
-  nrwStim.sineWave( duration, nrwStim.sampleInterval(), tc.stimCondition.unrewardedFreq,
-		    0.0, tc.stimCondition.unrewardedAmplitude/2., 0.0 );
-  nrwStim.description().addText( "RewardedType", "unrewarded" ).addFlags( OutData::Mutable );
-  nrwStim.description().addText( "Arm", toString(tc.mazeCondition.unrewarded) ).addFlags( OutData::Mutable );
-  nrwStim.description()["Frequency"].addFlags( OutData::Mutable );
+  if ( dumbasses ) {
+    nrwStim.setTrace( armTraceMap[tc.mazeCondition.unrewarded] );
+    nrwStim.setSampleInterval( sampleInterval );
+    nrwStim.constWave( duration, nrwStim.sampleInterval(), 0.0 );
+    nrwStim.back() = 0.0; 
+    nrwStim.setIntensity( 0.000001 );
+    nrwStim.description().addText( "RewardedType", "unrewarded" ).addFlags( OutData::Mutable );
+    nrwStim.description().addText( "Arm", toString(tc.mazeCondition.unrewarded) ).addFlags( OutData::Mutable );
+    nrwStim.description().addNumber( "Frequency", 0.0, "Hz" ).addFlags( OutData::Mutable );
+  } else {
+    nrwStim.setTrace( armTraceMap[tc.mazeCondition.unrewarded] );
+    nrwStim.setSampleInterval( sampleInterval );
+    nrwStim.sineWave( duration, nrwStim.sampleInterval(), tc.stimCondition.unrewardedFreq,
+		      0.0, 1.0 , 0.0 );
+    nrwStim.back() = 0.0;
+    nrwStim.setIntensity( tc.stimCondition.unrewardedAmplitude/2. );
+    nrwStim.description().addText( "RewardedType", "unrewarded" ).addFlags( OutData::Mutable );
+    nrwStim.description().addText( "Arm", toString(tc.mazeCondition.unrewarded) ).addFlags( OutData::Mutable );
+    nrwStim.description()["Frequency"].addFlags( OutData::Mutable );
+  }
   nrwStim.setIdent( ident + "_unrewarded" );
   outList.push( nrwStim );
-  
+
   // neutral stimulus
   OutData ntrlStim;
   ntrlStim.setTrace( armTraceMap[tc.mazeCondition.neutral] );
   ntrlStim.setSampleInterval( sampleInterval );
   ntrlStim.constWave( duration, ntrlStim.sampleInterval(), 0.0 );
+  ntrlStim.back() = 0.0; 
+  ntrlStim.setIntensity( 0.000001 );
   ntrlStim.description().addText( "RewardedType", "neutral" ).addFlags( OutData::Mutable );
   ntrlStim.description().addText( "Arm", toString(tc.mazeCondition.neutral) ).addFlags( OutData::Mutable );
   ntrlStim.description().addNumber( "Frequency", 0.0, "Hz" ).addFlags( OutData::Mutable );
   ntrlStim.setIdent( ident + "_neutral" );
   outList.push( ntrlStim );
-  
   postCustomEvent( static_cast<int>(YMazeEvents::STIM_READY) );
 }
   
@@ -381,6 +450,11 @@ void YMaze::prepareNextTrial() {
 
 void YMaze::stopTrial() {
   postCustomEvent ( static_cast<int>(BtnActions::STOP_TRIAL) );
+}
+
+void YMaze::reset() {
+  postCustomEvent ( static_cast<int>(BtnActions::STOP_TRIAL) );
+  postCustomEvent ( static_cast<int>(BtnActions::RESET) );
 }
 
 void YMaze::updateUI( const TrialCondition &tc ) {
@@ -400,6 +474,7 @@ void YMaze::updateTable( const TrialCondition &tc ) {
     QString::number(tc.stimCondition.rewardedAmplitude) + "mV";
   QString uf = QString::number(tc.stimCondition.unrewardedFreq) + "Hz;\n " +
     QString::number(tc.stimCondition.unrewardedAmplitude) + "mV";
+  QString duf = "no stim\n blocked tube";
   QString neutral = "---";
   
   if ( tc.mazeCondition.rewarded == MazeArm::A ) {
@@ -414,13 +489,13 @@ void YMaze::updateTable( const TrialCondition &tc ) {
   }
 
   if ( tc.mazeCondition.unrewarded == MazeArm::A ) {
-    conditionA->setText( uf );
+    conditionA->setText( dumbasses ? duf : uf  );
     conditionA->setStyleSheet( nrwrdStyle );
   } else if ( tc.mazeCondition.unrewarded == MazeArm::B ) {
-    conditionB->setText( uf );
+    conditionB->setText( dumbasses ? duf : uf );
     conditionB->setStyleSheet( nrwrdStyle );
   } else {
-    conditionC->setText( uf );
+    conditionC->setText( dumbasses ? duf : uf );
     conditionC->setStyleSheet( nrwrdStyle );
   }
   
@@ -436,22 +511,52 @@ void YMaze::updateTable( const TrialCondition &tc ) {
   }
 }
 
+void YMaze::resetTable( void ) {
+  vector<QLabel*> labels = {conditionA, conditionApast, conditionB, conditionBpast, conditionC, conditionCpast};
+  QString ntrlStyle = "QLabel{color: black; font-size: 8pt; font-weight: bold}";
+  
+  for ( auto l : labels ) {
+    l->setText( "" );
+    l->setStyleSheet( ntrlStyle );
+  }
+}
+
 void YMaze::customEvent( QEvent *qce ) {
   TrialCondition tc;
+  bool valid;
   switch ( qce->type() - QEvent::User ) {
   case static_cast<int>(BtnActions::NEXT_TRIAL):
-    tc = nextTrialCondition();
-    createStimuli( tc ); 
-    updateUI( tc );
+    valid = nextTrialCondition(tc);
+    if ( !valid ) {
+      message( "Could not get next trial conditions check RePro settings!" );
+      break;
+    }
+    currentCondition = tc;
+    createStimuli( currentCondition ); 
+    updateUI( currentCondition );
     nextBtn->setEnabled( false );
+    resetBtn->setEnabled( true );
     break;
   case static_cast<int>(BtnActions::START_TRIAL):
-    start = true;
     startBtn->setEnabled( false );
     stopBtn->setEnabled( true );
+    if ( useLEDs && dio != 0 && dio->isOpen() ) {
+      int rewarded_line = armLEDMap[currentCondition.mazeCondition.rewarded];
+      int value, r;
+      for ( auto l : ledLines ) {
+        value = l == rewarded_line ? 1 : 0;
+        r = dio->configureLine( l, true );
+	r = dio->write( l, value );
+        if ( r != 0 ) {
+          warning( "Failed to set level on DIO line <b>" + Str( l ) + "</b>!" );
+        }
+      } 
+    }
+    start = true;
     break;
   case static_cast<int>(BtnActions::STOP_TRIAL):
     start = false;
+    stopOutputs();
     stopBtn->setEnabled( false );
     nextBtn->setEnabled( true );
     break;
@@ -461,14 +566,69 @@ void YMaze::customEvent( QEvent *qce ) {
   case static_cast<int>(YMazeEvents::IDLE):
     stopBtn->setEnabled( false );
     nextBtn->setEnabled( true );
+    break;
+  case static_cast<int>(BtnActions::RESET):
+    nextBtn->setEnabled( true );
+    stopBtn->setEnabled( false );
+    startBtn->setEnabled( false );
+    resetBtn->setEnabled( false );
+    sketch->reset();
+    resetTable();
+    TrialCondition tc;
+    currentCondition = tc;
+    stopOutputs();
+    start = false;
+    break;
   default:
     break;
   } 
 }
 
 
+void YMaze::stopOutputs( void ) {
+  stopWrite();
+  stop = true;
+  /*
+  OutList zero;
+  for ( int i = 0; i < outList.size(); ++i ) {
+     OutData z;
+     z.setTrace( outList[i].trace() );
+     z.setIntensity( 1.0 );
+     //z.setSampleInterval( .01 ); 
+     z.pulseWave( 10, -1, 0.0, 0.0 );
+     zero.push( z );
+  }
+  write( zero );
+  */
+  /* 
+  for ( int i = 0; i < outList.size(); ++i ) {
+    writeZero( outList[i].trace() );
+  }
+  
+  if ( useLEDs && dio != 0 && dio->isOpen() ) {
+    for ( auto l : ledLines ) {
+      int r = dio->write( l, 0 );
+      if ( r != 0 ) {
+	warning( "Failed to set level on DIO line <b>" + Str( l ) + "</b>!" );
+      }
+    }
+  }
+  */
+}
+
+
 bool YMaze::configureOutputTraces() {
   bool success = true;
+  if ( outTracesSize()  < 3 ) {
+    warning( "ERROR! Need three configured output traces! only 2 found" );
+    success = false;
+  }
+  std::vector<string> channel_names;
+  channel_names.push_back( outTraceName( armTraceMap[MazeArm::A] ) );
+  channel_names.push_back( outTraceName( armTraceMap[MazeArm::B] ) );
+  channel_names.push_back( outTraceName( armTraceMap[MazeArm::C] ) );
+  /*
+
   for (int i = 0; i < outTracesSize(); ++i) {
     std::string name = outTraceName( i );
     std::map<std::string, MazeArm>::iterator it = channelArmMap.find( name );
@@ -479,6 +639,40 @@ bool YMaze::configureOutputTraces() {
       break;
     }
   }
+  */
+  if ( success && useLEDs ) {
+    ledLines = {led_a_pin, led_b_pin, led_c_pin};
+    dio = digitalIO( device );
+    if ( dio == 0 || !dio->isOpen() ) {
+      warning( "ERROR! Digital I/O device <b>" + device + "</b> not found!" );
+      success = false;
+    } else { 
+      armLEDMap[MazeArm::A] = led_a_pin;
+      armLEDMap[MazeArm::B] = led_b_pin;
+      armLEDMap[MazeArm::C] = led_c_pin;
+      int r = 0;
+      for ( int l : ledLines ) {
+        r = dio->configureLine( l, true );
+        if (r != 0 ) {
+          warning ( "Failed to configure on DIO line <b>" + Str( l ) + "</b>!" );
+          success = false;
+        }
+      }
+    }
+  }
+
+  base::LinearAttenuate *latt_a = dynamic_cast<base::LinearAttenuate*>( attenuator( channel_names[0] ) );
+  base::LinearAttenuate *latt_b = dynamic_cast<base::LinearAttenuate*>( attenuator( channel_names[1] ) );
+  base::LinearAttenuate *latt_c = dynamic_cast<base::LinearAttenuate*>( attenuator( channel_names[2] ) );
+
+  if ( latt_a == 0 || latt_b == 0 || latt_c == 0 ) { 
+     success = false;
+     warning( "Attenuators are not open!!" );
+  }
+
+  if ( latt_a != 0 && fabs( latt_a->gain() - 1.0 ) < 1.0e-8 )
+     warning( "Attenuator gain is probably not set!<br>(it is set to 1.0)", 2.0 );
+
   return success;
 }
 
@@ -514,7 +708,6 @@ void YMaze::keyPressEvent( QKeyEvent *e ) {
 //************************************************************************
 int YMaze::main( void ) {
   string msg;
-  
   duration = number( "duration" );
   samplerate = number( "samplerate" );
   rewardedFreq = number( "rewardfreq" );
@@ -523,14 +716,32 @@ int YMaze::main( void ) {
   minFreqDiff = number( "minfreqdiff" );
   deltaf = number( "deltaf" );
   name = text( "name" );
-  start = false;
+  useLEDs = boolean( "ledindicators" );
+  led_a_pin = integer( "ledapin" );
+  led_b_pin = integer( "ledbpin" );
+  led_c_pin = integer( "ledcpin" );
+  device = text( "diodevice" );
+  start_arm = text( "startbox" );
+  int arm_a_trace = integer( "arm_a" );
+  int arm_b_trace = integer( "arm_b" );
+  int arm_c_trace = integer( "arm_c" );
+  armTraceMap[MazeArm::A] = arm_a_trace;
+  armTraceMap[MazeArm::B] = arm_b_trace;
+  armTraceMap[MazeArm::C] = arm_c_trace;
 
+  lastRewardPosition = static_cast<int>( channelArmMap[start_arm] );
+  dumbasses = boolean( "dumbasses" );
+  fixedStart = boolean( "fixedstart" );
+  
+  start = false;
+  reset();
   bool success = configureOutputTraces();
   if ( !success ) {
     warning( "configuration of output channels failed!" );
-    warning( "expecting 3 output traces names Arm-A, Arm-B, and Arm-C" );
+    warning( "check output channels: expecting 3 output traces, check ditial io device, check attenuators!" );
     return Failed;
   }
+  stopOutputs();
   keepFocus();
 
   while ( softStop() == 0 ) {
@@ -540,23 +751,46 @@ int YMaze::main( void ) {
         sleep(0.2);
         continue;
       }
+
       msg = "Stimulation is running.<br>Rewarded arm is " + toString(currentCondition.mazeCondition.rewarded) ;
-      message(msg);
+      message( msg );
+      stop = false;
       write( outList );
+      if (stop) {
+	outList.clearError();
+	for ( int i = 0; i < outList.size(); ++i ) {
+	  writeZero( outList[i].trace() );
+	}
+	
+	if ( useLEDs && dio != 0 && dio->isOpen() ) {
+	  for ( auto l : ledLines ) {
+	    int r = dio->write( l, 0 );
+	    if ( r != 0 ) {
+	      warning( "Failed to set level on DIO line <b>" + Str( l ) + "</b>!" );
+	    }
+	  }
+	}
+	stop = false;
+      }
+      message( "" );
       if ( outList.failed() ) {
 	msg = "Output of stimulus failed!<br>Error code is <b>";
 	msg += outList.errorText() + "</b>";
+	message( msg );
 	for ( int i = 0; i < outList.size(); ++i )
 	  writeZero( outList[i].trace() );
         return Failed;
       }
-
+      if ( useLEDs && dio != 0 && dio->isOpen() ) {
+        for (int l : ledLines)
+          dio->write( l, 0 );
+      }
       start = false;
       postCustomEvent( static_cast<int>(YMazeEvents::IDLE) );
   }
+  stopOutputs();
   return Completed;
 }
-
 
 addRePro( YMaze, efield );
 

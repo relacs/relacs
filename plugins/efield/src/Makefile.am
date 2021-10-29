@@ -574,6 +574,7 @@ libefieldymaze_la_CPPFLAGS = \
     -I$(top_srcdir)/plot/include \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
+    -I$(top_srcdir)/plugins/base/include \
     -I$(srcdir)/../include \
     $(QT_CPPFLAGS) $(NIX_CPPFLAGS)$(GSL_CPPFLAGS)
 
@@ -590,6 +591,7 @@ libefieldymaze_la_LIBADD = \
     $(top_builddir)/options/src/librelacsoptions.la \
     $(top_builddir)/shapes/src/librelacsshapes.la \
     $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(builddir)/../../base/src/libbaselinearattenuate.la \
     $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
 
 $(libefieldymaze_la_OBJECTS) : moc_ymaze.cc

@@ -25,6 +25,7 @@
 #include <relacs/repro.h>
 #include <relacs/efield/traces.h>
 #include <relacs/efield/eodtools.h>
+#include <relacs/digitalio.h>
 
 #include <QLabel>
 #include <QObject>
@@ -45,7 +46,7 @@ namespace efield {
 enum class MazeOrientation { UPRIGHT = 0, BOTTOMUP = 1, LEFT = 2, RIGHT = 3 };
 enum class MazeArm { NONE = -1, A = 0, B = 1, C = 2 };
 enum class ArmCondition { REWARDED = 0, UNREWARDED = 1, NEUTRAL = 2 };
-enum class BtnActions { NEXT_TRIAL = 11, START_TRIAL = 12, STOP_TRIAL = 13 };
+enum class BtnActions { RESET = 10, NEXT_TRIAL = 11, START_TRIAL = 12, STOP_TRIAL = 13 };
 enum class YMazeEvents { STIM_READY = 14, IDLE = 15 };
 
 struct MazeCondition {
@@ -76,7 +77,7 @@ public:
   YMazeSketch( MazeOrientation orientation=MazeOrientation::UPRIGHT, QWidget *parent = nullptr );
 
   void setCondition( const MazeCondition &mazeCondition );
-
+  void reset( void );
 private:
   void setupUI();
   void drawSketch();
@@ -101,34 +102,41 @@ public:
 
 private:
   YMazeSketch *sketch;
-  std::string name;
+  std::string name, device;
   double duration, eodf, samplerate;
   double rewardedFreq;
   double freqRangeMin, freqRangeMax, minFreqDiff, deltaf;
   int numberOfTrials;
   int lastRewardPosition = -1;
   int currentRewardPosition;
-  bool start;
+  int led_a_pin, led_b_pin, led_c_pin;
+  bool start, useLEDs, stop, dumbasses, fixedStart;
+  DigitalIO *dio;
   QLabel *conditionA, *conditionApast, *conditionB, *conditionBpast, *conditionC, *conditionCpast;
-  QPushButton *nextBtn, *startBtn, *stopBtn;
+  QPushButton *nextBtn, *startBtn, *stopBtn, *resetBtn;
   OutList outList;
   TrialCondition currentCondition;
-  std::map<MazeArm, int> armTraceMap;
+  std::vector<int> ledLines;
+  std::map<MazeArm, int> armTraceMap; 
+  std::map<MazeArm, int> armLEDMap;
   std::map<std::string, MazeArm> channelArmMap = {{"Arm-A", MazeArm::A},
 						  {"Arm-B", MazeArm::B},
 						  {"Arm-C", MazeArm::C}};
-
+  string start_arm;
+  
   std::string toString(const MazeArm &arm) const;
   void setupTable( QGridLayout *grid );
   void updateTable( const TrialCondition &tc );
+  void resetTable( void );
+  void stopOutputs( void );
   void updateUI( const TrialCondition &tc );
 
   void populateOptions();
   bool configureOutputTraces();
   
   MazeCondition nextMazeCondition();
-  TrialCondition nextTrialCondition();
-  StimulusCondition nextStimulusConditions();
+  bool nextTrialCondition(TrialCondition &tc);
+  bool nextStimulusConditions(StimulusCondition &sc);
 
   void createStimuli( const TrialCondition &tc );
   bool estimateEodFrequency( double &fisheodf );
@@ -138,6 +146,7 @@ private slots:
   void startTrial();
   void stopTrial();
   void prepareNextTrial();
+  void reset();
   
 protected:
   virtual void keyPressEvent( QKeyEvent *e );

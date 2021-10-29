@@ -156,8 +156,9 @@ ResearchProgram1: parameter1=(4..10..2)ms;
 			(4,6..8,10) is expanded to 4,6,7,8,10.</para>
 
 			<para>You can specify in which order you want the sequence to be generated.
-			The default is 'up'. Alternatively you can specify 'down', 'alternate', 
-			or 'random' like this:
+			The default is 'up'. Alternatively you can specify 'down', 'alternateinup',
+			'alternateindown', 'alternateoutup', 'alternateoutdown', or 'random'
+			like this:
 			<programlisting>
 ResearchProgram1: parameter1=(4..10..2,down)ms;
 			</programlisting>
@@ -167,7 +168,7 @@ ResearchProgram1: parameter1=(4..10..2,down)ms;
 			The default resolution is one.
 			For example, defining an initial resolution of two
 			<programlisting>
-ResearchProgram1: parameter1=(4..10..2,down,r:2)ms;
+ResearchProgram1: parameter1=(4..10..2,down,i:2)ms;
 			</programlisting>
 			produces the sequence 10, 6, 2, 8, 4.</para>
 
