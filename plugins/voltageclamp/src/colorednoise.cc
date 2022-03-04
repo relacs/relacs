@@ -195,6 +195,7 @@ OutData ColoredNoise::getColoredNoiseStimulus() {
   double noisestd = number( "noisestd" );
   double noisemaxamplitude = number( "noisemaxamplitude" );
   double noiseminamplitude = number( "noiseminamplitude" );
+  noisestd = 50;
 
   // colored noise parameters
   ArrayD expParam( 3, 1.0 );
@@ -212,21 +213,44 @@ OutData ColoredNoise::getColoredNoiseStimulus() {
   while(power < signal.size()) {
     power *=2;
   }
+  ////frequency range
+  //SampleDataD f( power );
+  //for (int k=0; k<f.size(); k++) {
+  //  f[k] = k / (power * signal.stepsize());
+  //};
+  //SampleDataD f2( power );
+  //for (int k=0; k<f2.size(); k++) {
+  //  f2[k] = -f[f.size()-k];
+  //};
+  //f.append( f2 );
+  //
+  ////draw random numbers on fourier space and transfer to time space
+  //SampleDataD data( power );
+  //for ( int k=0; k<data.size(); k++ ) {
+  //  data[k] = expFunc2(abs(f[k]), expParam) * (rnd() - 0.5);
+  //}
+  //hcFFT( data );
+  //double datastd = 0.0;
+  //for ( int k=0; k<data.size(); k++ ) {
+  //  datastd += data[k]*data[k] / (data.size() - 1);
+  //}
+  //datastd = sqrt(datastd);
+  //data *= noisestd/datastd;
   //frequency range
-  SampleDataD f( power );
+  SampleDataD f( power/2 );
   for (int k=0; k<f.size(); k++) {
     f[k] = k / (power * signal.stepsize());
   };
-  SampleDataD f2( power );
+  SampleDataD f2( power/2 );
   for (int k=0; k<f2.size(); k++) {
-    f2[k] = -f[f.size()-k];
+    f2[k] = f[f.size()-k];
   };
   f.append( f2 );
 
   //draw random numbers on fourier space and transfer to time space
   SampleDataD data( power );
   for ( int k=0; k<data.size(); k++ ) {
-    data[k] = expFunc2(abs(f[k]), expParam) * (rnd() - 0.5);
+    data[k] = expFunc2(f[k], expParam) * rnd.gaussian(); // * (rnd() - 0.5);
   }
   hcFFT( data );
   double datastd = 0.0;
