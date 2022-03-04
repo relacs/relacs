@@ -36,7 +36,7 @@ ManualJAR::ManualJAR( void )
 {
   // dialog:
   addNumber( "eodf", "Current EOD frequency", 0.0, 0.0, 10000.0, 1.0, "Hz", "Hz", "%.1f" ).setFlags( 2+4 );
-  addNumber( "deltaf", "Difference frequency", 0.0, -1000.0, 1000.0, 1.0, "Hz", "Hz", "%.1f" ).setFlags( 2+8 );
+  addNumber( "deltaf", "Difference frequency", 0.0, -10000.0, 10000.0, 1.0, "Hz", "Hz", "%.1f" ).setFlags( 2+8 );
   addBoolean( "lineardeltaf", "Change difference frequency linearly", false ).setFlags( 2+8 );
   addNumber( "deltaf2", "Difference frequency at end", 0.0, -1000.0, 1000.0, 1.0, "Hz", "Hz", "%.1f" ).setFlags( 2+8 );
   addNumber( "amplitude", "Amplitude", 1.0, 0.0, 1000.0, 0.1, "mV", "mV", "%.1f" ).setFlags( 2+8 );

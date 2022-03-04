@@ -217,6 +217,7 @@ OutData CombinedStimulus::ColoredNoise() {
   double noisestd = number( "noisestd" );
   double noisemaxamplitude = number( "noisemaxamplitude" );
   double noiseminamplitude = number( "noiseminamplitude" );
+    
 
   // colored noise parameters
   ArrayD expParam( 3, 1.0 );

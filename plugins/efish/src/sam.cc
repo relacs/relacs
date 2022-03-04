@@ -229,6 +229,8 @@ int SAM::createSignal( const InData &data, const EventData &events )
     }
   }
   Duration = Signal->duration();
+  Signal->description().addNumber( "EODf", FishRate, "Hz" );
+  Signal->description()["EODf"].addFlags( OutData::Mutable );
   Signal->description().insertNumber( "DeltaF", "Phase", DeltaF, "Hz" );
   Signal->description().insertNumber( "Contrast", "Frequency", 100.0*Contrast, "%" );
   if ( settings().flags( "deltaf", OutData::Mutable ) ) {
