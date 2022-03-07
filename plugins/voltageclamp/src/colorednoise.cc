@@ -44,7 +44,7 @@ ColoredNoise::ColoredNoise( void )
   addNumber( "noiseduration", "duration (ColoredNoise)", 300, 0.001, 100000.0, 0.001, "s", "s" );
   addNumber( "noiseVbase", "Base Potential (ColoredNoise)", -60.0, -200.0, 200.0, 0.1, "mV" );
   addNumber( "noisefrequencyconstant", "Frequency Constant (ColoredNoise)", 0.3, 0.001, 10000.0, 0.001, "Hz" );
-  addNumber( "noisestd", "Standard Deviation (ColoredNoise)", 50.0, 1.0, 200.0, 1.0, "mV" );
+  addNumber( "noise_std", "Standard Deviation (ColoredNoise)", 50.0, 1.0, 200.0, 1.0, "mV" );
   addNumber( "noisemaxamplitude", "Maximum Amplitude (ColoredNoise)", 100.0, 0.0, 200.0, 1.0, "mV" );
   addNumber( "noiseminamplitude", "Minumum Amplitude (ColoredNoise)", -190.0, -200.0, 0.0, 1.0, "mV" );
 
@@ -192,10 +192,10 @@ OutData ColoredNoise::getColoredNoiseStimulus() {
   double noiseduration = number( "noiseduration" );
   double noiseVbase = number( "noiseVbase" );
   double noisefrequencyconstant = number( "noisefrequencyconstant" );
-  double noisestd = number( "noisestd" );
+  double noise_std = number( "noise_std" );
   double noisemaxamplitude = number( "noisemaxamplitude" );
   double noiseminamplitude = number( "noiseminamplitude" );
-  noisestd = 50;
+  //noise_std = 50;
 
   // colored noise parameters
   ArrayD expParam( 3, 1.0 );
@@ -235,7 +235,7 @@ OutData ColoredNoise::getColoredNoiseStimulus() {
   //  datastd += data[k]*data[k] / (data.size() - 1);
   //}
   //datastd = sqrt(datastd);
-  //data *= noisestd/datastd;
+  //data *= noise_std/datastd;
   //frequency range
   SampleDataD f( power/2 );
   for (int k=0; k<f.size(); k++) {
@@ -258,7 +258,7 @@ OutData ColoredNoise::getColoredNoiseStimulus() {
     datastd += data[k]*data[k] / (data.size() - 1);
   }
   datastd = sqrt(datastd);
-  data *= noisestd/datastd;
+  data *= noise_std/datastd;
 
     //go back to holdingpotential
   OutData signal3;

@@ -43,7 +43,7 @@ CombinedStimulus::CombinedStimulus( void )
   addNumber( "noiseduration", "duration (ColoredNoise)", 3, 0.001, 100000.0, 0.001, "s", "s" );
   addNumber( "noiseVbase", "Base Potential (ColoredNoise)", -60.0, -200.0, 200.0, 0.1, "mV" );
   addNumber( "noisefrequencyconstant", "Frequency Constant (ColoredNoise)", 800.0, 0.001, 10000.0, 0.001, "Hz" );
-  addNumber( "noisestd", "Standard Deviation (ColoredNoise)", 80.0, 1.0, 200.0, 1.0, "mV" );
+  addNumber( "noise_std", "Standard Deviation (ColoredNoise)", 80.0, 1.0, 200.0, 1.0, "mV" );
   addNumber( "noisemaxamplitude", "Maximum Amplitude (ColoredNoise)", 100.0, 0.0, 200.0, 1.0, "mV" );
   addNumber( "noiseminamplitude", "Minumum Amplitude (ColoredNoise)", -190.0, -200.0, 0.0, 1.0, "mV" );
 
@@ -92,8 +92,8 @@ int CombinedStimulus::main( void )
   double noiseduration = number( "noiseduration" );
 
   double maxDurationForIVPlot = 50;
-  double noisestd = number( "noisestd" );
-  cerr << "noisestd=" << noisestd << "\n\n";
+  double noise_std = number( "noise_std" );
+  //cerr << "noise_std=" << noise_std << "\n\n";
 
   // don't print repro message:
   noMessage();
@@ -216,11 +216,13 @@ OutData CombinedStimulus::ColoredNoise() {
   double noiseduration = number( "noiseduration" );
   double noiseVbase = number( "noiseVbase" );
   double noisefrequencyconstant = number( "noisefrequencyconstant" );
-  double noisestd = number( "noisestd" );
+  double noise_std = number( "noise_std" );
   double noisemaxamplitude = number( "noisemaxamplitude" );
   double noiseminamplitude = number( "noiseminamplitude" );
-  noisestd = 50;
+  //noise_std = 80;
 
+    
+  cerr << "noise_std=" << noise_std << "\n";
 
   // colored noise parameters
   ArrayD expParam( 3, 1.0 );
@@ -260,7 +262,7 @@ OutData CombinedStimulus::ColoredNoise() {
     datastd += data[k]*data[k] / (data.size() - 1);
   }
   datastd = sqrt(datastd);
-  data *= noisestd/datastd;
+  data *= noise_std/datastd;
 
     //go back to holdingpotential
   OutData signal3;
