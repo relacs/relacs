@@ -92,6 +92,8 @@ int CombinedStimulus::main( void )
   double noiseduration = number( "noiseduration" );
 
   double maxDurationForIVPlot = 50;
+  double noisestd = number( "noisestd" );
+  cerr << "noisestd=" << noisestd << "\n\n";
 
   // don't print repro message:
   noMessage();
@@ -217,7 +219,8 @@ OutData CombinedStimulus::ColoredNoise() {
   double noisestd = number( "noisestd" );
   double noisemaxamplitude = number( "noisemaxamplitude" );
   double noiseminamplitude = number( "noiseminamplitude" );
-    
+  noisestd = 50;
+
 
   // colored noise parameters
   ArrayD expParam( 3, 1.0 );
@@ -258,11 +261,6 @@ OutData CombinedStimulus::ColoredNoise() {
   }
   datastd = sqrt(datastd);
   data *= noisestd/datastd;
-  cerr << "datastd=" << datastd << "\n\n";
-  cerr << "min=" << min(data) << "\n\n";
-  cerr << "max=" << max(data) << "\n\n";
-  cerr << "max=" << max(data) << "\n\n";
-  cerr << "noiseduration=" << number("noiseduration") << "\n\n";
 
     //go back to holdingpotential
   OutData signal3;
