@@ -51,9 +51,11 @@ PNSubtraction::PNSubtraction( const string &name,
 
   addSection( "Chirp Prepulse" );
   addBoolean( "qualitycontrol", "Quality control", true );
+  addSelection( "chirpmethod", "Kind of frequency sweep", "linear|logarithmic"); 
   addNumber( "pulseduration", "Pulse duration", 0.1, 0.0, 1000.0, 0.001, "sec", "ms").setActivation( "qualitycontrol", "true" );
-  addNumber( "f0", "minimum pulse frequency", 10.0, 0.0, 1000.0, 1.0, "Hz", "Hz" ).setActivation( "qualitycontrol", "true" );
-  addNumber( "f1", "maximum pulse frequency", 500.0, 0.0, 5000.0, 1.0, "Hz", "Hz" ).setActivation( "qualitycontrol", "true" );
+  addNumber( "f0", "minimum pulse frequency", 10.0, 1.0, 1000.0, 1.0, "Hz", "Hz" ).setActivation( "qualitycontrol", "true" );
+  addNumber( "f1", "maximum pulse frequency", 500.0, 1.0, 5000.0, 1.0, "Hz", "Hz" ).setActivation( "qualitycontrol", "true" );
+  addNumber( "phi", "phase of cosine", 270.0, 0.0, 360.0, 0.1, "degrees", "degrees" ).setActivation( "qualitycontrol", "true" );
 //  addNumber( "PCS_derivativekernelwidth", "derivative kernel width", 1.0, 1.0, 1000.0, 1.0 ).setActivation( "qualitycontrol", "true" );
 
   addSection( "WhiteNoise Prepulse" );
@@ -81,6 +83,8 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
   double pulseduration = number( "pulseduration" );
   double f0 = number( "f0" );
   double f1 = number( "f1" );
+  double phi = number( "phi" );
+  std::string chirpmethod = text( "chirpmethod" );
 
   bool qualitycontrol_whitenoise = boolean( "qualitycontrol_whitenoise");
   double noiseduration = number( "noiseduration_wn" );
@@ -236,17 +240,26 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
     OutData qc_signal3;
     qc_signal3.setTrace( PotentialOutput[0] );
     qc_signal3.constWave( stepduration, -1.0, holdingpotential-20.0 );
-
+    
     OutData qc_signal4;
     qc_signal4.setTrace( PotentialOutput[0] );
-    qc_signal4.sweepWave( pulseduration, -1.0, f0, f1, 20.0, 0.0 );
-
-    double beta = pulseduration / log(f1 / f0);
-    for ( int i=0; i<pulseduration/samplerate; i++ ) {
-      double a1 = f1/f0;
-      double a2 = i/samplerate/pulseduration;
-      qc_signal4[i] = sin(2 * 3.14159265358979323846 * beta * f0 * (std::pow(a1, a2) - 1.0))*20.0;
+    
+    cerr << chirpmethod << "\n";
+    if ( chirpmethod == "linear" ) {    
+      cerr << "entered if" << "\n";  
+      qc_signal4.sweepWave( pulseduration, -1.0, f0, f1, 20.0, 0.0 );
     }
+    else if ( chirpmethod == "logarithmic" ) { 
+      cerr << "entered else if" << "\n";
+      qc_signal4.constWave( pulseduration, -1.0, -100 );
+      double phase = 0.0;
+      for (int i=0; i<pulseduration*samplerate; i++ ) {
+          phase += 2 * 3.14159265358979323846 * f0 * std::pow(f1/f0, (i/samplerate)/pulseduration) / samplerate;  
+          cerr << i << ", " << phase << "\n";
+          qc_signal4[i] = cos(phase + 3.14159265358979323846/180*phi) * 20.0;
+      }
+    }
+
     qc_signal4 += holdingpotential - 20.0;
 //    qc_signal4 = qc_signal4 + holdingpotential - 20;
 
