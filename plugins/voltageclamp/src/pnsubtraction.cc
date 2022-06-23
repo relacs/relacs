@@ -51,7 +51,7 @@ PNSubtraction::PNSubtraction( const string &name,
 
   addSection( "Chirp Prepulse" );
   addBoolean( "qualitycontrol", "Quality control", true );
-  addSelection( "chirpmethod", "Kind of frequency sweep", "linear|logarithmic"); 
+  addSelection( "chirpmethod", "Kind of frequency sweep", "linear|logarithmic|combined"); 
   addNumber( "pulseduration", "Pulse duration", 0.1, 0.0, 1000.0, 0.001, "sec", "ms").setActivation( "qualitycontrol", "true" );
   addNumber( "f0", "minimum pulse frequency", 10.0, 1.0, 1000.0, 1.0, "Hz", "Hz" ).setActivation( "qualitycontrol", "true" );
   addNumber( "f1", "maximum pulse frequency", 500.0, 1.0, 5000.0, 1.0, "Hz", "Hz" ).setActivation( "qualitycontrol", "true" );
@@ -246,18 +246,36 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
     
     cerr << chirpmethod << "\n";
     if ( chirpmethod == "linear" ) {    
-      cerr << "entered if" << "\n";  
       qc_signal4.sweepWave( pulseduration, -1.0, f0, f1, 20.0, 0.0 );
     }
     else if ( chirpmethod == "logarithmic" ) { 
-      cerr << "entered else if" << "\n";
       qc_signal4.constWave( pulseduration, -1.0, -100 );
       double phase = 0.0;
       for (int i=0; i<pulseduration*samplerate; i++ ) {
-          phase += 2 * 3.14159265358979323846 * f0 * std::pow(f1/f0, (i/samplerate)/pulseduration) / samplerate;  
-          cerr << i << ", " << phase << "\n";
-          qc_signal4[i] = cos(phase + 3.14159265358979323846/180*phi) * 20.0;
+        phase += 2 * 3.14159265358979323846 * f0 * std::pow(f1/f0, (i/samplerate)/pulseduration) / samplerate;  
+        cerr << i << ", " << phase << "\n";
+        qc_signal4[i] = cos(phase + 3.14159265358979323846/180*phi) * 20.0;
       }
+    }
+    else if ( chirpmethod == "combined" ) {
+      OutData qc_signal4_lin;
+      qc_signal4_lin.setTrace( PotentialOutput[0] );
+      qc_signal4_lin.sweepWave( pulseduration, -1.0, f0, f1, 20.0, 0.0 );
+
+      OutData qc_signal4_intermediate;
+      qc_signal4_intermediate.setTrace( PotentialOutput[0] );
+      qc_signal4_intermediate.constWave( 0.025, -1.0, 0.0 );
+        
+      qc_signal4.constWave( pulseduration, -1.0, -100 );
+      double phase = 0.0;
+      for (int i=0; i<pulseduration*samplerate; i++ ) {
+        phase += 2 * 3.14159265358979323846 * f0 * std::pow(f1/f0, (i/samplerate)/pulseduration) / samplerate;  
+        cerr << i << ", " << phase << "\n";
+        qc_signal4[i] = cos(phase + 3.14159265358979323846/180*phi) * 20.0;
+      }
+      qc_signal4.append( qc_signal4_intermediate );
+      qc_signal4.append( qc_signal4_lin );
+        
     }
 
     qc_signal4 += holdingpotential - 20.0;
