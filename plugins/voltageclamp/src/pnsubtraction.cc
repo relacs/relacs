@@ -51,7 +51,7 @@ PNSubtraction::PNSubtraction( const string &name,
 
   addSection( "Chirp Prepulse" );
   addBoolean( "qualitycontrol", "Quality control", true );
-  addSelection( "chirpmethod", "Kind of frequency sweep", "linear|logarithmic|combined"); 
+  addSelection( "chirpmethod", "Kind of frequency sweep", "linear|logarithmic|combined|combined_backwards"); 
   addNumber( "pulseduration", "Pulse duration", 0.1, 0.0, 1000.0, 0.001, "sec", "ms").setActivation( "qualitycontrol", "true" );
   addNumber( "f0", "minimum pulse frequency", 10.0, 1.0, 1000.0, 1.0, "Hz", "Hz" ).setActivation( "qualitycontrol", "true" );
   addNumber( "f1", "maximum pulse frequency", 500.0, 1.0, 5000.0, 1.0, "Hz", "Hz" ).setActivation( "qualitycontrol", "true" );
@@ -276,6 +276,28 @@ SampleDataD PNSubtraction::PN_sub( OutData signal, Options &opts, double &holdin
       qc_signal4.append( qc_signal4_intermediate );
       qc_signal4.append( qc_signal4_lin );
         
+    }
+
+    else if ( chirpmethod == "combined_backwards" ) {       
+      // logarithmic sweep
+      qc_signal4.constWave( pulseduration, -1.0, -100 );
+      double phase = 0.0;
+      for (int i=0; i<pulseduration*samplerate+1; i++ ) {
+        phase += 2 * 3.14159265358979323846 * f0 * std::pow(f1/f0, (i/samplerate)/pulseduration) / samplerate;  
+        qc_signal4[i] = cos(phase + 3.14159265358979323846/180*phi) * 20.0;
+      }
+      // backwards linear sweep 
+      OutData qc_signal4_lin;
+      qc_signal4_lin.setTrace( PotentialOutput[0] );
+      qc_signal4_lin.constWave( pulseduration, -1.0, -100 );
+      double f = 0.0;
+      //phase = 0.0;
+      for (int i=0; i<pulseduration*samplerate+1; i++ ) {
+        f = f1 + (f0 - f1) * i / samplerate / pulseduration;
+        phase += 2 * 3.14159265358979323846 * f / samplerate;
+        qc_signal4_lin[i] = cos(phase + 3.14159265358979323846/180*phi) * 20.0;
+      }
+      qc_signal4.append( qc_signal4_lin );
     }
 
     qc_signal4 += holdingpotential - 20.0;
