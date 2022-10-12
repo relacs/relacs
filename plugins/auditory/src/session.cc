@@ -375,7 +375,8 @@ MapD Session::fICurve( int side, double carrierfreq, bool lockit ) const
   }
   if ( ::fabs( carrierfreq ) < 1.0e-8 ) {
     lockMetaData();
-    carrierfreq = metaData().number( "Cell>" + side > 0 ? "right frequency" : "left frequency" );
+  
+    carrierfreq = metaData().number( Str( "Cell>" ) + (side > 0 ? "right frequency" : "left frequency") );
     if ( carrierfreq < 0.0 )
       carrierfreq = metaData().number( "Cell>best frequency" );
     unlockMetaData();
@@ -437,7 +438,7 @@ MapD Session::onFICurve( int side, double carrierfreq ) const
   }
   if ( ::fabs( carrierfreq ) < 1.0e-8 ) {
     lockMetaData();
-    carrierfreq = metaData().number( "Cell>" + side > 0 ? "right frequency" : "left frequency" );
+    carrierfreq = metaData().number( Str( "Cell>" ) + (side > 0 ? "right frequency" : "left frequency") );
     if ( carrierfreq < 0.0 )
       carrierfreq = metaData().number( "Cell>best frequency" );
     unlockMetaData();
@@ -497,7 +498,7 @@ MapD Session::ssFICurve( int side, double carrierfreq ) const
   }
   if ( ::fabs( carrierfreq ) < 1.0e-8 ) {
     lockMetaData();
-    carrierfreq = metaData().number( "Cell>" + side > 0 ? "right frequency" : "left frequency" );
+    carrierfreq = metaData().number( Str( "Cell>" ) + (side > 0 ? "right frequency" : "left frequency") );
     if ( carrierfreq < 0.0 )
       carrierfreq = metaData().number( "Cell>best frequency" );
     unlockMetaData();
