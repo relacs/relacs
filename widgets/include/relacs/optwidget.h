@@ -260,12 +260,12 @@ public:
 
     /*! Constructs an empty OptWidget.
         To add Options to the widget use assign(). */
-  OptWidget( QWidget *parent=0, Qt::WindowFlags f=0 );
+  OptWidget( QWidget *parent=0, Qt::WindowFlags f=Qt::Widget );
     /*! Constructs an OptWidget for the Options \a o. 
         All Options are displayed and are editable.
         \sa assign() */
   OptWidget( Options *o, QMutex *mutex=0, 
-	     QWidget *parent=0, Qt::WindowFlags f=0 );
+	     QWidget *parent=0, Qt::WindowFlags f=Qt::Widget );
     /*! Constructs an OptWidget for the Options \a o. 
         Only Options with their flags() & \a selectmask > 0 are displayed.
 	If \a selectmask ist less or equal to zero,
@@ -282,7 +282,7 @@ public:
         used to choose hotkeys for tabs. The new hotkeys are added to
         the string. */
   OptWidget( Options *o, int selectmask, int romask, bool contupdate, int style,
-	     QMutex *mutex=0, string *tabhotkeys=0, QWidget *parent=0, Qt::WindowFlags f=0 );
+	     QMutex *mutex=0, string *tabhotkeys=0, QWidget *parent=0, Qt::WindowFlags f=Qt::Widget );
     /*! Destructs the OptWidget. */
   ~OptWidget( void );
 

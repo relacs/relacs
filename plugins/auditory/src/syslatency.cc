@@ -114,7 +114,7 @@ int SysLatency::main( void )
   if ( side > 1 )
     side = metaData().index( "Cell>best side" );
   if ( usebestfreq ) {
-    double cf = metaData().number( "Cell>" + side > 0 ? "right frequency" :  "left frequency" );
+    double cf = metaData().number( Str( "Cell>" ) + (side > 0 ? "right frequency" :  "left frequency") );
     if ( cf > 0.0 )
       carrierfrequency += cf;
   }
