@@ -22,6 +22,8 @@
 
 #include <QResizeEvent>
 #include <relacs/scaledimage.h>
+#include <cmath>
+
 
 namespace relacs {
 
@@ -36,7 +38,10 @@ ScaledImage::ScaledImage( QWidget *parent )
 ScaledImage::ScaledImage( const QPixmap &image, QWidget *parent )
   : QLabel( parent )
 {
+  setContentsMargins( 0, 0, 0, 0 );
+  setMinimumSize( 0, 0 );
   setImage( image );
+  setAlignment( Qt::AlignLeft | Qt::AlignVCenter );
 }
 
 
@@ -64,13 +69,9 @@ void ScaledImage::resizeEvent( QResizeEvent *event )
   if ( event->size().width() <= 0 || Image.width() <= 0 )
     return;
 
-  if ( (double)event->size().height()/(double)event->size().width() > 
-       (double)Image.height()/(double)Image.width() ) {
-    setPixmap( Image.scaledToWidth( event->size().width()-4, Qt::SmoothTransformation ) );
-  }
-  else {
-    setPixmap( Image.scaledToHeight( event->size().height()-4, Qt::SmoothTransformation ) );
-  }
+  setContentsMargins(0, 0, 0, 0);
+  setPixmap( Image.scaled( width() - 20, height() - 20,
+			   Qt::KeepAspectRatio, Qt::SmoothTransformation ) );
 }
 
 }; /* namespace relacs */
