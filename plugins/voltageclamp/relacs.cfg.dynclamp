@@ -1,17 +1,19 @@
 *Settings
   Plugins:
-      pluginpathes    : [ base*, calibration*, ephys*, patchclamp*, patchclampprojects*, rtaicomedi*, dynclampsim, misc* ]
+      pluginpathes    : [ base*, base*, calibration*, ephys*, patchclamp*, voltageclamp*, comedi*, rtaicomedi*, dynclampsim ]
       pluginhelppathes: ~
-      controlplugin   : [ Session, AmplifierControl, SpectrumAnalyzer, PeriodHistogram ]
+      controlplugin   : [ Session, Session, AmplifierControl, SpectrumAnalyzer, PeriodHistogram ]
       modelplugin     : NeuronModels
   Pathes:
-      pathformat : %04Y-%02m-%02d-%a2a
-      defaultpath: dry/
+      pathformat : /home/sonnenberg/ephysdata/%04Y-%02m-%02d-%a2a
+      defaultpath: dry
       repropath  : [ stimuli/repros/, reprodata, stimuli/repros/ ]
       infofile   : info.dat
   Save:
       saverelacsfiles  : true
       saveodmlfiles    : false
+      savenixfiles     : true
+      savenixcompressed: true
       saverelacscore   : true
       saverelacsplugins: true
       saverelacslog    : true
@@ -40,27 +42,27 @@
 *RELACS
   input data:
       inputsamplerate    : 20kHz
-      inputtracecapacity : 600s
+      inputtracecapacity : 60s
       inputunipolar      : false
-      inputtraceid       : [ V-1, Stimulus-Current-1, Interval ]
-      inputtracescale    : [ 1000, 1, 1e+06 ]
+      inputtraceid       : [ V-1, Current-1, Interval ]
+      inputtracescale    : [ 100, 2, 1e+06 ]
       inputtraceunit     : [ mV, nA, us ]
       inputtracedevice   : [ ai-1, ai-1, ai-1 ]
-      inputtracechannel  : [ 0, 1000, 1001 ]
+      inputtracechannel  : [ 1, 2, 1000 ]
       inputtracereference: [ ground, ground, ground ]
-      inputtracemaxvalue : [ 100, 10, 100 ]
-      inputtracecenter   : [ true, false, false ]
+      inputtracemaxvalue : [ 1000, 20, 100 ]
+      inputtracecenter   : [ true, true, true ]
   output data:
-      outputtraceid      : Current-1
-      outputtracedevice  : ao-1
-      outputtracechannel : 0
-      outputtracescale   : 1
-      outputtraceunit    : nA
-      outputtracemaxrate : 20kHz
-      outputtracemodality: voltage
+      outputtraceid      : [ Current-1, Potential-1 ]
+      outputtracedevice  : [ ao-1, ao-1 ]
+      outputtracechannel : [ 0, 1 ]
+      outputtracescale   : [ 0.1, 0.01 ]
+      outputtraceunit    : [ nA, mV ]
+      outputtracemaxrate : [ 20kHz, 20kHz ]
+      outputtracemodality: [ current, voltage ]
 
 *Macros
-  file            : [ macros.cfg, macrosmoreswitch.cfg, macrosmore.cfg ]
+  file            : macros.cfg
   mainfile        : macros.cfg
   fallbackonreload: true
 
@@ -74,7 +76,6 @@
       plot           : true
       buffersize     : 300000
       storesize      : true
-      storewidth     : false
 
 *AudioMonitor
   device   : [ "-1 default", "1 HDA Intel HDMI: 0 (hw:2,3) (8 channels)", "2 HDA Intel HDMI: 1 (hw:2,7) (8 channels)", "3 HDA Intel HDMI: 2 (hw:2,8) (8 channels)", "4 HDA Intel HDMI: 3 (hw:2,9) (8 channels)", "5 HDA Intel HDMI: 4 (hw:2,10) (8 channels)", "8 pulse (32 channels)", "9 default (32 channels) - default" ]
@@ -86,12 +87,13 @@
 *Devices
   Device1:
       plugin       : AmplMode
-      device       : dio-1
       ident        : ampl-1
+      device       : dio-1
       bridgepin    : 2
       cclamppin    : 1
-      dclamppin    : 5
       vclamppin    : 0
+      dclamppin    : 5
+      syncpin      : 6
       resistancepin: 3
       buzzerpin    : 4
 
@@ -109,9 +111,7 @@
 
 *Digital I/O Devices
   Device1:
-      plugin        : DynClampDigitalIO
-      device        : /dev/comedi0
-      ident         : dio-1
-      syncpulseline : 6
-      syncpulsewidth: 9.82us
+      plugin: DynClampDigitalIO
+      device: /dev/comedi0
+      ident : dio-1
 

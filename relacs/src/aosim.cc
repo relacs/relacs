@@ -114,7 +114,7 @@ int AOSim::bits( void ) const
 
 double AOSim::maxRate( void ) const
 {
-  return 500000.0;
+  return 2000000.0;
 }
 
 

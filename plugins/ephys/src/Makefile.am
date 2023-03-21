@@ -20,7 +20,8 @@ pluginlib_LTLIBRARIES = \
     libephysiontophoresis.la \
     libephyssetvgate.la \
     libephyssetleak.la \
-    libephyscalibratesyncpulse.la
+    libephyscalibratesyncpulse.la \
+    libephysupdatedcparameters.la
 
 
 
@@ -306,6 +307,7 @@ libephyscapacitycompensation_la_CPPFLAGS = \
     -I$(top_srcdir)/plot/include \
     -I$(top_srcdir)/widgets/include \
     -I$(top_srcdir)/relacs/include \
+    -I$(top_srcdir)/plugins/ephys/include \
     -I$(srcdir)/../include \
     $(QT_CPPFLAGS) $(NIX_CPPFLAGS)
 
@@ -316,6 +318,7 @@ libephyscapacitycompensation_la_LDFLAGS = \
 libephyscapacitycompensation_la_LIBADD = \
     $(builddir)/libephystraces.la \
     $(top_builddir)/relacs/src/librelacs.la \
+    $(top_builddir)/plugins/ephys/src/libephysamplifiercontrol.la \
     $(top_builddir)/widgets/src/librelacswidgets.la \
     $(top_builddir)/plot/src/librelacsplot.la \
     $(top_builddir)/datafile/src/librelacsdatafile.la \
@@ -525,6 +528,43 @@ libephyscalibratesyncpulse_la_include_HEADERS = $(HEADER_PATH)/calibratesyncpuls
 
 
 
+libephysupdatedcparameters_la_CPPFLAGS = \
+    -I$(top_srcdir)/shapes/include \
+    -I$(top_srcdir)/daq/include \
+    -I$(top_srcdir)/numerics/include \
+    -I$(top_srcdir)/options/include \
+    -I$(top_srcdir)/datafile/include \
+    -I$(top_srcdir)/plot/include \
+    -I$(top_srcdir)/widgets/include \
+    -I$(top_srcdir)/relacs/include \
+    -I$(srcdir)/../include \
+    $(QT_CPPFLAGS) $(NIX_CPPFLAGS)$(GSL_CPPFLAGS)
+
+libephysupdatedcparameters_la_LDFLAGS = \
+    -module -avoid-version \
+    $(QT_LDFLAGS) $(NIX_LDFLAGS) $(GSL_LDFLAGS)
+
+libephysupdatedcparameters_la_LIBADD = \
+    $(top_builddir)/relacs/src/librelacs.la \
+    $(top_builddir)/widgets/src/librelacswidgets.la \
+    $(top_builddir)/plot/src/librelacsplot.la \
+    $(top_builddir)/datafile/src/librelacsdatafile.la \
+    $(top_builddir)/daq/src/librelacsdaq.la \
+    $(top_builddir)/options/src/librelacsoptions.la \
+    $(top_builddir)/shapes/src/librelacsshapes.la \
+    $(top_builddir)/numerics/src/librelacsnumerics.la \
+    $(QT_LIBS) $(NIX_LIBS) $(GSL_LIBS)
+
+$(libephysupdatedcparameters_la_OBJECTS) : moc_updatedcparameters.cc
+
+libephysupdatedcparameters_la_SOURCES = updatedcparameters.cc
+
+libephysupdatedcparameters_la_includedir = $(pkgincludedir)/ephys
+
+libephysupdatedcparameters_la_include_HEADERS = $(HEADER_PATH)/updatedcparameters.h
+
+
+
 check_PROGRAMS = \
     linktest_librelacsspikingneuron_la \
     linktest_libephystraces_la \
@@ -539,7 +579,8 @@ check_PROGRAMS = \
     linktest_libephysiontophoresis_la \
     linktest_libephyssetvgate_la \
     linktest_libephyssetleak_la \
-    linktest_libephyscalibratesyncpulse_la
+    linktest_libephyscalibratesyncpulse_la \
+    linktest_libephysupdatedcparameters_la
 
 linktest_librelacsspikingneuron_la_SOURCES = linktest.cc
 linktest_librelacsspikingneuron_la_LDADD = librelacsspikingneuron.la
@@ -582,5 +623,8 @@ linktest_libephyssetleak_la_LDADD = libephyssetleak.la
 
 linktest_libephyscalibratesyncpulse_la_SOURCES = linktest.cc
 linktest_libephyscalibratesyncpulse_la_LDADD = libephyscalibratesyncpulse.la
+
+linktest_libephysupdatedcparameters_la_SOURCES = linktest.cc
+linktest_libephysupdatedcparameters_la_LDADD = libephysupdatedcparameters.la
 
 TESTS = $(check_PROGRAMS)
