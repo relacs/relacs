@@ -33,6 +33,7 @@ DigitalIO::DigitalIO( const string &deviceclass )
   freeLines();
   for ( unsigned int k=0; k<MaxDIOLines;  k++ )
     DIOLineWriteable[k] = false;
+  AOTTLLine = -1;
 }
 
 
@@ -49,19 +50,18 @@ int DigitalIO::open( const string &device )
   Info.clear();
   Settings.clear();
   setDeviceFile( device );
+  AOTTLLine = integer( "aottlpin", "", -1 );
+  if ( AOTTLLine >= 0 && AOTTLLine < lines() ) {
+    allocateLine( AOTTLLine );
+    configureLine( AOTTLLine, true );
+  }
   return InvalidDevice;
 }
 
 
 int DigitalIO::open( Device &device )
 {
-  freeLines();
-  for ( unsigned int k=0; k<MaxDIOLines;  k++ )
-    DIOLineWriteable[k] = false;
-  Info.clear();
-  Settings.clear();
-  setDeviceFile( device.deviceIdent() );
-  return InvalidDevice;
+  return open( device.deviceIdent() );
 }
 
 
@@ -84,6 +84,7 @@ void DigitalIO::setInfo( void )
   Info.clear();
   Device::addInfo();
   Info.addInteger( "lines", lines() );
+  Info.addInteger( "aottlpin", AOTTLLine );
 }
 
 
@@ -288,6 +289,12 @@ int DigitalIO::setSyncPulse( int modemask, int modebits, unsigned int line,
 int DigitalIO::clearSyncPulse( int modemask, int modebits )
 {
   return InvalidDevice;
+}
+
+  
+void DigitalIO::initOptions( void ) {
+  Device::initOptions();
+  addInteger( "aottlpin", "AOTTLPin", -1 );
 }
 
 

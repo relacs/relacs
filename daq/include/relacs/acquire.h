@@ -35,6 +35,7 @@
 #include <relacs/eventlist.h>
 #include <relacs/analoginput.h>
 #include <relacs/analogoutput.h>
+#include <relacs/digitalio.h>
 #include <relacs/attenuate.h>
 
 using namespace std;
@@ -63,12 +64,14 @@ Acquisition devices must be added to Acquire with the functions addInput()
 and addOutput() for analog input and output, respectively.
 Attenuators are operated via the Attenuate interface.
 They must be added with the addAttLine() function to Acquire.
+For TTL pulses you need to add DigitalIO device via addDIO().
 
 The number of known (added) data acquisition devices 
-can be retrieved by inputsSize(), outputsSize(), and attLinesSize().
+can be retrieved by inputsSize(), outputsSize(), dioSize(), and attLinesSize().
 The list of devices can be cleared by clearInputs(), clearOutputs(),
-and clearAttLines().
-Devices can be closed with closeInputs(), closeOutputs(), and closeAttLines().
+clearDIOs, and clearAttLines().
+Devices can be closed with closeInputs(), closeOutputs(), cloaseDIOs(),
+and closeAttLines().
 
 Analog input is initiated by read(). 
 It takes an InList as argument. The settings of the individual
@@ -199,6 +202,27 @@ public:
         to the actual signal start for all channels of the
 	analog output device \a device to \a delay. */
   void setSignalDelay( int device, double delay );
+
+    /*! Add the digital output device \a dio to
+	the list of digital output devices.
+        \return
+	- 0 on success.
+	- -1: \a dio == 0
+	- -2: \a dio not opened
+	\sa dioSize(), clearDIOs(), closeDIOs() */
+  int addDIO( DigitalIO *dio );
+    /*! The number of digital output lines
+        stored in this Acquire.
+	\sa addDIO(), clearDIOs(), closeDIOs() */
+  int dioSize( void ) const;
+    /*! Clear the list of digital output devices
+        without closing the devices.
+	\sa addDIO(), dioSize(), closeDIOs() */
+  void clearDIOs( void );
+    /*! Close all devices from the list
+        of digitl output devices and clear the list.
+	\sa addDIO(), dioSize(), clearDIOs() */
+  void closeDIOs( void );
 
     /*! Add the attenuator \a att to the list of attenuators.
         The attenuator is connected to the output channel
@@ -640,6 +664,11 @@ protected:
     /*! \return a string with the current time. */
   string currentTime( void );
 
+    /*! Set DIO lines for indicating analog output low. */
+  void setAOTTLLinesLow( void );
+    /*! Set DIO lines for indicating analog output high. */
+  void setAOTTLLinesHigh();
+
   struct AIData {
       /*! Construct an AIData. */
     AIData( AnalogInput *ai )
@@ -735,6 +764,11 @@ protected:
   SyncModes SyncMode;
     /*! Human readable strings describing the synchronization methods. */
   static const string SyncModeStrs[3];
+
+    /*! Time in \a InList when DIOLines were set high. */
+  double AOTTLTime;
+    /*! All DigitalIO devices. */
+  vector < DigitalIO* > DIO;
 
   struct AttData {
     AttData( Attenuate *att )

@@ -115,6 +115,8 @@ int DAQFlexDigitalIO::lines( void ) const
 
 int DAQFlexDigitalIO::configureLineUnlocked( unsigned int line, bool output )
 {
+  if ( DigitalIO::configureLineUnlocked( line, output ) != 0 )
+    return WriteError;
   int ern = DAQFlexDevice->setValue( "DIO{0/" + Str( line ) + "}:DIR", output ? "OUT" : "IN" );
   return ern != DAQFlexCore::Success ? WriteError : 0;
 }
@@ -124,6 +126,7 @@ int DAQFlexDigitalIO::configureLines( unsigned int lines, unsigned int output )
 {
   QMutexLocker diolocker( mutex() );
   QMutexLocker corelocker( DAQFlexDevice->mutex() );
+  DigitalIO::configureLines( lines, output );
   unsigned int bit = 1;
   for ( int channel=0; channel<DAQFlexDigitalIO::lines(); channel++ ) {
     if ( ( lines & bit ) > 0 ) {

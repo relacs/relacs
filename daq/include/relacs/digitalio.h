@@ -263,6 +263,12 @@ public:
 	\sa setSyncPulse() */
   virtual int clearSyncPulse( int modemask, int modebits );
 
+    /*! The digital line for indicating ongoing analog output. */
+  int aoTTLLine( void ) const { return AOTTLLine; };
+  
+    /*! Add aottlline to available options */
+  virtual void initOptions( void );
+
   using Device::lock;
   using Device::unlock;
 
@@ -288,6 +294,9 @@ private:
   int DIOLineIDs[MaxDIOLines];
     /*! The configuration of all digitial I/O lines. */
   bool DIOLineWriteable[MaxDIOLines];
+
+    /*! Output line for TTL pulse indicating analog output. */
+  int AOTTLLine;
 
 
 };

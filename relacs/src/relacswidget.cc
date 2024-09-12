@@ -668,6 +668,10 @@ int RELACSWidget::setupHardware( int n )
       (*ATI)[k].init();
     }
 
+    for ( int k=0; k<DIOD->size(); k++ ) {
+      AQ->addDIO( &(*DIOD)[k] );
+    }
+
     AQ->setAdjustFlag( 4096 );
 
     AQ->initSync();

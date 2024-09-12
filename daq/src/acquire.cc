@@ -58,7 +58,9 @@ Acquire::Acquire( void )
   RestartEvents = 0;
 
   SyncMode = NoSync;
-
+  AOTTLTime = -1.0;
+  
+  DIO.clear();
   Att.clear();
 }
 
@@ -213,6 +215,63 @@ void Acquire::setSignalDelay( int device, double delay )
   if ( device >= 0 && device < (int)AO.size() && AO[device].AO != 0 ) {
     AO[device].AO->setDelay( delay );
   }
+}
+
+
+int Acquire::addDIO( DigitalIO *dio )
+{
+  if ( dio == 0 )
+    return -1;
+
+  if ( ! dio->isOpen() )
+    return -2;
+
+  DIO.push_back( dio );
+
+  return 0;
+}
+
+
+int Acquire::dioSize( void ) const
+{
+  int ds = DIO.size();
+  return ds;
+}
+
+
+void Acquire::clearDIOs( void )
+{
+  DIO.clear();
+}
+
+
+void Acquire::closeDIOs( void )
+{
+  for ( unsigned int k=0; k < DIO.size(); k++ ) {
+    if ( DIO[k]->isOpen() )
+      DIO[k]->close();
+  }
+  DIO.clear();
+}
+
+  
+void Acquire::setAOTTLLinesLow( void ) {
+  for ( unsigned int k=0; k<DIO.size(); k++ ) {
+    if ( DIO[k]->aoTTLLine() >= 0 ) {
+      DIO[k]->write( DIO[k]->aoTTLLine(), false );
+    }
+  }
+  AOTTLTime = -1.0;
+}
+
+  
+void Acquire::setAOTTLLinesHigh( void ) {
+  for ( unsigned int k=0; k<DIO.size(); k++ ) {
+    if ( DIO[k]->aoTTLLine() >= 0 ) {
+      DIO[k]->write( DIO[k]->aoTTLLine(), true );
+    }
+  }
+  AOTTLTime = InTraces.currentTimeRaw();
 }
 
 
@@ -456,6 +515,7 @@ void Acquire::clear( void )
 {
   clearInputs();
   clearOutputs();
+  clearDIOs();
   clearAttLines();
   clearOutTraces();
 }
@@ -465,6 +525,7 @@ void Acquire::close( void )
 {
   closeInputs();
   closeOutputs();
+  closeDIOs();
   closeAttLines();
   clearOutTraces();
 }
@@ -856,7 +917,9 @@ int Acquire::stopRead( void )
 	si = AI[i].Traces[0].sampleInterval();
     }
   }
-
+  
+  setAOTTLLinesLow();
+  
   // sleep for two sampleintervals:
   usleep( long( 2000000.0 * si ) );
 
@@ -869,6 +932,8 @@ int Acquire::stopRead( void )
 
 int Acquire::restartRead( void )
 {
+  setAOTTLLinesLow();
+  
   {
     QWriteLocker readlocker( &ReadMutex );
     bool success = true;
@@ -1230,6 +1295,7 @@ int Acquire::getRawData( InList &data, EventList &events, double &signaltime,
   // update raw data:
   data.updateRaw();
   events.updateRaw();
+    
   // check data:
   bool error = InTraces.failed();
   return error ? -1 : ( interrupted ? 0 : 1 );
@@ -1238,12 +1304,16 @@ int Acquire::getRawData( InList &data, EventList &events, double &signaltime,
 
 int Acquire::waitForData( double &signaltime )
 {
+  // Terminate TTL pulse indicating stimulus output:
+  if (AOTTLTime > 0.0 && InTraces.currentTimeRaw() - AOTTLTime > 0.005)
+    setAOTTLLinesLow();
+    
   ReadMutex.lockForWrite();
   /*
   // XXX the writes restart are not a problem, as long as ai is really restarted.
   // XXX The problem (waiting for ever) arises, when analog input fails.
   // XXX We can only check this, when write() does not restart analog input!
-  // XXX For this we woud need an additional mutex, since stopRead cannot be within the ReadMutex lock.
+  // XXX For this we would need an additional mutex, since stopRead cannot be within the ReadMutex lock.
   // check whether all threads are really running:
   for ( unsigned int i=0; i<AI.size(); i++ ) {
     if ( ! AI[i].Traces.empty() && ! AI[i].AI->running() ) {
@@ -1814,6 +1884,8 @@ int Acquire::write( OutData &signal, bool setsignaltime )
 {
   QWriteLocker locker( &WriteMutex );
 
+  setAOTTLLinesLow();
+  
   signal.clearError();
 
   // set trace:
@@ -1962,6 +2034,8 @@ int Acquire::write( OutData &signal, bool setsignaltime )
     LastDelay = signal.delay();
   }
 
+  setAOTTLLinesHigh();
+
   return finished ? 0 : 1;
 }
 
@@ -1969,6 +2043,8 @@ int Acquire::write( OutData &signal, bool setsignaltime )
 int Acquire::write( OutList &signal, bool setsignaltime )
 {
   QWriteLocker locker( &WriteMutex );
+
+  setAOTTLLinesLow();
 
   bool success = true;
   signal.clearError();
@@ -2223,6 +2299,8 @@ int Acquire::write( OutList &signal, bool setsignaltime )
     LastDelay = signal[0].delay();
   }
 
+  setAOTTLLinesHigh();
+
   return finished ? 0 : 1;
 }
 
@@ -2297,6 +2375,8 @@ void Acquire::unlockWrite( void )
 int Acquire::directWrite( OutData &signal, bool setsignaltime )
 {
   QWriteLocker locker( &WriteMutex );
+
+  setAOTTLLinesLow();
 
   signal.clearError();
 
@@ -2428,6 +2508,8 @@ int Acquire::directWrite( OutData &signal, bool setsignaltime )
 int Acquire::directWrite( OutList &signal, bool setsignaltime )
 {
   QWriteLocker locker( &WriteMutex );
+
+  setAOTTLLinesLow();
 
   if ( signal.size() == 0 ) {
     signal.addError( DaqError::NoData );
@@ -2734,7 +2816,9 @@ int Acquire::stopWrite( void )
   }
   // wake up all jobs sleeping on AOSemaphore:
   AOSemaphore.release( 1000 );
-
+  
+  setAOTTLLinesLow();
+  
   return success ? 0 : -1;
 }
 
