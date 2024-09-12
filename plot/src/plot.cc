@@ -217,13 +217,13 @@ void Plot::construct( KeepMode keep, bool subwidget, int id, MultiPlot *mp )
   XTics[0] = 1;
   YTics[0] = 1;
 
-  TicsColor = Black;
+  TicsColor = TextForeground;
   TicsLen = 4;
   TicsPos = Out;
   TicsWidth = 1;
   TicsLabelSize = 1.0;
   TicsLabelFont = DefaultF;
-  TicsLabelColor = Black;
+  TicsLabelColor = TextForeground;
   X1TicsLen = 0;
   Y1TicsLen = 0;
   X2TicsLen = 0;
@@ -240,7 +240,7 @@ void Plot::construct( KeepMode keep, bool subwidget, int id, MultiPlot *mp )
   XLabel[0].setYPos( -1.0, FirstAxis );
   XLabel[0].Just = Right;
   XLabel[0].Angle = 0.0;
-  XLabel[0].LColor = Black;
+  XLabel[0].LColor = TextForeground;
 
   YLabel[0].setXPos( 0.0, FirstMargin );
   YLabel[0].setYPos( 0.0, SecondAxis );
@@ -252,25 +252,25 @@ void Plot::construct( KeepMode keep, bool subwidget, int id, MultiPlot *mp )
   YLabel[0].Just = Center;
   YLabel[0].Angle = -90.0;
   */
-  YLabel[0].LColor = Black;
+  YLabel[0].LColor = TextForeground;
 
   XLabel[1].setXPos( 1.0, Graph );
   XLabel[1].setYPos( 0.0, SecondAxis );
   XLabel[1].Just = Right;
   XLabel[1].Angle = 0.0;
-  XLabel[1].LColor = Black;
+  XLabel[1].LColor = TextForeground;
 
   YLabel[1].setXPos( 2.0, SecondAxis );
   YLabel[1].setYPos( 0.5, Graph );
   YLabel[1].Just = Center;
   YLabel[1].Angle = -90.0;
-  YLabel[1].LColor = Black;
+  YLabel[1].LColor = TextForeground;
 
   Title.setXPos( 1.0, Graph );
   Title.setYPos( 0.0, SecondAxis );
   Title.Just = Right;
   Title.Angle = 0.0;
-  Title.LColor = Black;
+  Title.LColor = TextForeground;
 
   DefaultLabel.setXPos( 0.0, First );
   DefaultLabel.setYPos( 0.0, First );
@@ -295,6 +295,8 @@ void Plot::construct( KeepMode keep, bool subwidget, int id, MultiPlot *mp )
 
   QColor pbc = palette().color( QPalette::Window );
   addColor( RGBColor( pbc.red(), pbc.green(), pbc.blue() ) );  // WidgetBackground
+  QColor ptc = palette().color( QPalette::WindowText );
+  addColor( RGBColor( ptc.red(), ptc.green(), ptc.blue() ) );  // TextForeground
   addColor( RGBColor( 0, 0, 0 ) );  // Black
   addColor( RGBColor( 127, 127, 127 ) );  // Gray
   addColor( RGBColor( 255, 255, 255 ) );  // White
@@ -1189,7 +1191,7 @@ Plot::Label::Label( void )
   Just = Plot::Left;
   Angle = 0.0;
   Text = "";
-  LColor = Plot::Black;
+  LColor = Plot::TextForeground;
   LFont = Plot::DefaultF;
   LSize = 1.0;
   BColor = Plot::Transparent;

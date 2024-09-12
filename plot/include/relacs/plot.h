@@ -90,10 +90,11 @@ public:
   enum Color {
     Transparent=-1,
     WidgetBackground=0, 
+    TextForeground, 
     Black, Gray, White, Red, Green, Blue, Yellow,
     Magenta, Cyan, Orange, DarkOrange, OrangeRed, Gold,
     Chartreuse, DeepPink, DeepSkyBlue, SpringGreen, DarkGreen,
-    DarkCyan, DarkTurquoise
+    DarkCyan, DarkTurquoise    
   };
 
     /*! Dash styles for drawing lines. */
