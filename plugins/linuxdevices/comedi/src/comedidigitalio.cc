@@ -74,8 +74,6 @@ int ComediDigitalIO::open( const string &device )
   if ( isOpen() )
     return -5;
 
-  DigitalIO::open( device );
-
   // open comedi device:
   DeviceP = comedi_open( device.c_str() );
   if ( DeviceP == NULL ) {
@@ -127,6 +125,8 @@ int ComediDigitalIO::open( const string &device )
   // get maximum number of output lines:
   MaxLines = comedi_get_n_channels( DeviceP, SubDevice );
 
+  DigitalIO::open( device );
+  
   setInfo();
   
   return 0;
