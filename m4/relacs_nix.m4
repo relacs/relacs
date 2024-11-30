@@ -42,13 +42,13 @@ fi
 if test "x$with_nix" != "xno"; then
 
    echo -n "checking for nix..."
-   if test "x${PKG_CONFIG}" != "x" && ${PKG_CONFIG} --exists nix; then
+   if test "x${PKG_CONFIG}" != "x" && ${PKG_CONFIG} --exists nixio; then
       RELACS_NIX=yes
-      NIX_CPPFLAGS="`${PKG_CONFIG} --cflags nix`"
-      NIX_LIBS="`${PKG_CONFIG} --libs-only-l nix`"
-      NIX_LDFLAGS="`${PKG_CONFIG} --libs-only-L nix`"
-      NIX_VERSION="`${PKG_CONFIG} --modversion nix`"
-      AC_DEFINE([HAVE_NIX], [1], [Define if you have libnix])
+      NIX_CPPFLAGS="`${PKG_CONFIG} --cflags nixio`"
+      NIX_LIBS="`${PKG_CONFIG} --libs-only-l nixio`"
+      NIX_LDFLAGS="`${PKG_CONFIG} --libs-only-L nixio`"
+      NIX_VERSION="`${PKG_CONFIG} --modversion nixio`"
+      AC_DEFINE([HAVE_NIX], [1], [Define if you have libnixio])
       echo " yes ($NIX_VERSION)"
    else
       echo " no"
