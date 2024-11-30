@@ -157,6 +157,22 @@ void NeuronModels::operator()( double t, double *x, double *dxdt, int n )
   double vcerror = 0.0;
   if ( VCMode ) {
     // voltage-clamp current:
+/*
+ * //    double vccurrent = VCGain*(x[0] - signal( 0.001 * t, PotentialOutput[0] ));
+
+    double Err = x[0] - signal( 0.001 * t, PotentialOutput[0] );
+    if (abs(signal( 0.001 * t, PotentialOutput[0] ) - signal( 0.001 * t - 0.001, PotentialOutput[0] )) < 1e-8) {
+      IntErr += Err;
+    }
+    else {
+//      cerr << "t = " << 0.001*t << ", diff = " << abs(signal( 0.001 * t, PotentialOutput[0] ) - signal( 0.001 * t - 0.001, PotentialOutput[0] )) << "\n";
+      IntErr = Err;
+    };
+
+    double dt = 0.001;
+    double vccurrent = KProp*Err + KInt*IntErr*dt + KDer*(Err-DerErr)/dt;
+    DerErr = Err;
+*/
     vcerror = x[0] - signal( 0.001 * t, PotentialOutput[0] );
     double vccurrent = VCGain;
     if ( VCInx >= 0 )
@@ -241,6 +257,7 @@ void NeuronModels::addModels( void )
   add( new MorrisLecar() );
   add( new HodgkinHuxley() );
   add( new Connor() );
+  add( new SodiumCurrent() );
   //  add( new RushRinzel() );
   //  add( new Awiszus() );
   //  add( new TraubMiles() );

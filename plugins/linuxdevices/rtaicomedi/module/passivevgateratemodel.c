@@ -115,6 +115,9 @@ void computeModel( void )
     vgate = valpha/(valpha + vbeta);
   else
     vgate += loopInterval*(valpha*(1.0-vgate) - vbeta*vgate);
+  if ( vgate > 1.0 | vgate < 0.0)
+    vgate = valpha/(valpha + vbeta);
+
   paramInput[2] = -0.001*paramOutput[3]*vgate*(input[0]-paramOutput[4]);
   // total injected current:
   output[0] = paramInput[0] + paramInput[1] + paramInput[2];
