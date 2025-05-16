@@ -43,7 +43,7 @@ Beats::Beats( void )
   addNumber( "ramp", "Duration of linear ramp", 0.5, 0, 10000.0, 0.1, "seconds" );
   addText( "deltafrange", "Range of delta f's", "10" ).setUnit( "Hz" );
   addSelection( "deltafshuffle", "Order of delta f's", RangeLoop::sequenceStrings() );
-  addInteger( "eodmult", "EOD multiples", 1, 0, 100, 1 );
+  addNumber( "eodmult", "EOD multiples", 1, 0, 100, 0.1 );
   addBoolean( "fixeddf", "Keep delta f fixed", false );
   addNumber( "amplitude", "Amplitude", 1.0, 0.0, 1000.0, 0.1, "mV/cm" );
   addSelection( "amtype", "Amplitude modulation of signal", "none|sine|rectangular" );
@@ -674,7 +674,7 @@ int Beats::main( void )
       // meassage:
       Str s = "Delta f: <b>" + Str( deltaf, "%g" ) + "Hz</b>";
       if ( eodmult != 1 ) {
-	s += "  @ EOD multiple: <b>" + Str( eodmult, "%d" ) + "</b>";
+	s += "  @ EOD multiple: <b>" + Str( eodmult, "%.2f" ) + "</b>";
 	s += "  (=<b>" + Str( stimulusrate, "%.1f" ) + "Hz)</b>";
       }
       s += "  Amplitude: <b>" + Str( amplitude, "%g" ) + "mV/cm</b>";
@@ -981,7 +981,7 @@ void Beats::save( double deltaf, int eodmult, double amplitude, double duration,
   header.addNumber( "EODf", fishrate, "Hz", "%.1f" );
   header.addNumber( "Delta f", deltaf, "Hz", "%.1f" );
   header.addNumber( "StimulusFrequency", stimulusrate, "Hz", "%.1f" );
-  header.addInteger( "EODMultiple", eodmult );
+  header.addNumber( "EODMultiple", eodmult, "", "%.3f" );
   header.addNumber( "Amplitude", amplitude, "mV/cm", "%.3f" );
   if ( amtype > 0 ) {
     header.addText( "AMType", amtype == 2? "Rectangular" : "Sine" );
