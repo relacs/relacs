@@ -47,7 +47,7 @@ namespace efield {
     - \c ramp=0.5seconds: Duration of linear ramp (\c number)
     - \c deltafrange=10: Range of delta f's (\c string)
     - \c deltafshuffle=Up: Order of delta f's (\c string)
-    - \c eodmult=1: EOD multiples (\c integer)
+    - \c eodmult=1: EOD multiples (\c float)
     - \c fixeddf=false: Keep delta f fixed (\c boolean)
     - \c amplitude=1mV/cm: Amplitude (\c number)
     - \c amtype=none: Amplitude modulation of signal (\c string)
@@ -117,7 +117,7 @@ public:
   void initPlot( double deltaf, double amplitude, double duration, double eodf,
 		 const MapD &eodfrequency, const EventData &fishchirps,
 		 bool showstimulus, const MapD &stimfrequency, const EventData &chirptimes );
-  void save( double deltaf, int eodmult, double amplitude, double duration, double pause,
+  void save( double deltaf, float eodmult, double amplitude, double duration, double pause,
 	     int amtype, const vector<double> &amampls, const vector<double> &amfreqs,
 	     double fishrate, double stimulusrate, int nfft, double eodfreqprec,
 	     const MapD eodfrequencies[], const MapD eodamplitudes[], const MapD &eodfrequency,

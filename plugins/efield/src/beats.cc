@@ -106,7 +106,7 @@ int Beats::main( void )
   amas.range( amampls );
   string deltafrange = text( "deltafrange" );
   RangeLoop::Sequence deltafshuffle = RangeLoop::Sequence( index( "deltafshuffle" ) );
-  int eodmult = integer( "eodmult" );
+  float eodmult = number( "eodmult" );
   bool fixeddf = boolean( "fixeddf" );
   int repeats = integer( "repeats" );
   bool generatechirps = boolean( "generatechirps" );
@@ -969,7 +969,7 @@ void Beats::initPlot( double deltaf, double amplitude, double duration, double e
 }
 
 
-void Beats::save( double deltaf, int eodmult, double amplitude, double duration, double pause,
+void Beats::save( double deltaf, float eodmult, double amplitude, double duration, double pause,
 		  int amtype, const vector<double> &amampls, const vector<double> &amfreqs,
 		  double fishrate, double stimulusrate, int nfft, double eodfreqprec,
 		  const MapD eodfrequencies[], const MapD eodamplitudes[], const MapD &eodfrequency, 
