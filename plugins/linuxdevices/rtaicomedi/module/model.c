@@ -38,15 +38,15 @@ float loopInterval;
 float loopRate;
 
   /*! Analog input that is read from the DAQ board. */
-#define INPUT_N 1
+#define INPUT_N 2
   /*! The \a inputNames are used to match the \a input variables with
       analog input traces in Relacs. */
-const char *inputNames[INPUT_N] = { "V-1" };
-const char *inputUnits[INPUT_N] = { "mV" };
+const char *inputNames[INPUT_N] = { "V-1", "Current-1" };
+const char *inputUnits[INPUT_N] = { "mV", "nA" };
   /*! The \a inputChannels are set automatically. */
 int inputChannels[INPUT_N];
   /*! \a input holds the current value that was read in from the DAQ board. */
-float input[INPUT_N] = { 0.0 };
+float input[INPUT_N] = { 0.0, 0.0 };
 
   /*! Analog output that is written to the DAQ board. */
 #define OUTPUT_N 1
@@ -94,7 +94,7 @@ void computeModel( void )
   int k;
 
   // leak:
-  paramInput[0] = -0.001*paramOutput[0]*(input[0]-paramOutput[1]);
+  paramInput[0] = -0.001*paramOutput[0]*(input[0]) + paramOutput[1];
    // capacitive current:
    paramInput[1] = -1e-6*paramOutput[2]*(input[0]-previnputs[0])*loopRate;
    for ( k=0; k<MAXPREVINPUTS-1; k++ )
@@ -115,6 +115,9 @@ void computeModel( void )
     vgate = valpha/(valpha + vbeta);
   else
     vgate += loopInterval*(valpha*(1.0-vgate) - vbeta*vgate);
+  if ( vgate > 1.0 | vgate < 0.0)
+    vgate = valpha/(valpha + vbeta);
+
   paramInput[2] = -0.001*paramOutput[3]*vgate*(input[0]-paramOutput[4]);
   // total injected current:
   output[0] = paramInput[0] + paramInput[1] + paramInput[2];

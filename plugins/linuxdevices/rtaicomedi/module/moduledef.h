@@ -17,10 +17,10 @@
 // Alternatively, you can enable the following defines by uncommenting them.
 
   /*! Compute a model. */
-// #define ENABLE_COMPUTATION
+#define ENABLE_COMPUTATION
 
   /*! Include rtai_math.h . */
-// #define ENABLE_MATHH
+#define ENABLE_MATHH
 
   /*! Generate lookup tables and do not use rtai_math module
       (--enable-dynclamp-lookuptables). */

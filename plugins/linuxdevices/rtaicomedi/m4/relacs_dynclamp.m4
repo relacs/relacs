@@ -5,17 +5,17 @@ AC_DEFUN([RELACS_DYNCLAMP], [
 
 RELACS_DYNCLAMP_SUMMARY=""
 
-#    AC_ARG_ENABLE([dynclamp_computation],
-#        [AS_HELP_STRING([--enable-dynclamp-computation],[Compute a model in each cycle of the dynamic clamp loop])],
-#        [AS_IF([test "x$enableval" != "xno"],[AC_DEFINE( ENABLE_COMPUTATION ); RELACS_DYNCLAMP_SUMMARY="$RELACS_DYNCLAMP_SUMMARY comp"])], [])
-    AC_DEFINE( ENABLE_COMPUTATION )
-    RELACS_DYNCLAMP_SUMMARY="$RELACS_DYNCLAMP_SUMMARY comp"
+    AC_ARG_ENABLE([dynclamp_computation],
+        [AS_HELP_STRING([--enable-dynclamp-computation],[Compute a model in each cycle of the dynamic clamp loop])],
+        [AS_IF([test "x$enableval" != "xno"],[RELACS_DYNCLAMP_SUMMARY="$RELACS_DYNCLAMP_SUMMARY comp"; AC_DEFINE( ENABLE_COMPUTATION )])], [])
+#    AC_DEFINE( ENABLE_COMPUTATION )
+#    RELACS_DYNCLAMP_SUMMARY="$RELACS_DYNCLAMP_SUMMARY comp"
 
-#    AC_ARG_ENABLE([dynclamp_mathh],
-#        [AS_HELP_STRING([--enable-dynclamp-mathh],[include rtai_math.h])],
-#        [AS_IF([test "x$enableval" != "xno"],[AC_DEFINE( ENABLE_MATHH ); RELACS_DYNCLAMP_SUMMARY="$RELACS_DYNCLAMP_SUMMARY mathh"])], [])
-    AC_DEFINE( ENABLE_MATHH )
-    RELACS_DYNCLAMP_SUMMARY="$RELACS_DYNCLAMP_SUMMARY mathh"
+    AC_ARG_ENABLE([dynclamp_mathh],
+        [AS_HELP_STRING([--enable-dynclamp-mathh],[include rtai_math.h])],
+        [AS_IF([test "x$enableval" != "xno"],[RELACS_DYNCLAMP_SUMMARY="$RELACS_DYNCLAMP_SUMMARY mathh"; AC_DEFINE( ENABLE_MATHH )])], [])
+#    AC_DEFINE( ENABLE_MATHH )
+#    RELACS_DYNCLAMP_SUMMARY="$RELACS_DYNCLAMP_SUMMARY mathh"
 
     AC_ARG_ENABLE([dynclamp_lookuptables],
         [AS_HELP_STRING([--enable-dynclamp-lookuptables],[Enable lookup tables for the dynamic clamp model.])],

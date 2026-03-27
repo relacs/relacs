@@ -62,6 +62,8 @@ class MembraneResistance : public RePro, public ephys::Traces
 {
   Q_OBJECT
 
+//  friend Ramp;
+
 public:
 
   MembraneResistance( void );
@@ -108,6 +110,7 @@ protected:
   double RMOff;
   double CMOff;
   double TauMOff;
+  double EM;
   SampleDataF ExpOn;
   SampleDataF ExpOff;
   int Count;
